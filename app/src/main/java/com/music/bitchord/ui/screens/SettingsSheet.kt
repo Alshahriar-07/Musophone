@@ -647,7 +647,7 @@ fun SettingsScreen(
                     title = exportDownloadsTitle,
                     checked = exportDownloads,
                     onCheckedChange = AppSettings::setExportDownloads,
-                    subtitle = "Music/BitChord".takeIf { exportDownloads },
+                    subtitle = "Music/MusoPhone".takeIf { exportDownloads },
                 )
             }
             val syncPlaylistsTitle = stringResource(R.string.sync_downloaded_playlists)
@@ -1949,29 +1949,25 @@ fun SettingsScreen(
         if (section == null && searchQuery.isBlank()) {
         Text(
             text = buildAnnotatedString {
-                append("bitchord $version  ")
+                append("MusoPhone $version  ")
                 val linkStyles = TextLinkStyles(
                     style = SpanStyle(
                         color = MaterialTheme.colorScheme.primary,
                         textDecoration = TextDecoration.Underline,
                     ),
                 )
-                withLink(LinkAnnotation.Url("https://github.com/kushagrasinghx/BitChord", linkStyles)) {
+                withLink(LinkAnnotation.Url("https://github.com/Alshahriar-07/Musophone", linkStyles)) {
                     append("GitHub")
                 }
                 append("  ")
-                withLink(LinkAnnotation.Url("https://github.com/kushagrasinghx", linkStyles)) {
+                withLink(LinkAnnotation.Url("https://github.com/Alshahriar-07", linkStyles)) {
                     append("Developer")
                 }
                 append("  ")
-                withLink(LinkAnnotation.Url("https://discord.gg/pDdKfrdHY6", linkStyles)) {
-                    append("Discord")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://bitchord.kushagrasingh.in/", linkStyles)) {
+                withLink(LinkAnnotation.Url("https://musophone.vercel.app", linkStyles)) {
                     append("Website")
                 }
-                append("\n~YouTube Music & Listen Together Backend")
+                append("\n~Based on BitChord · YouTube Music & Listen Together Backend")
             },
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

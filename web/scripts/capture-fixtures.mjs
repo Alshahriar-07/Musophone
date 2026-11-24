@@ -269,7 +269,7 @@ async function lyrics() {
   } catch { /* not JSON */ }
 
   // 13. LRCLIB.
-  const lrclib = { 'User-Agent': 'BitChord (https://github.com/bitchord)' };
+  const lrclib = { 'User-Agent': 'MusoPhone (https://github.com/Alshahriar-07/Musophone)' };
   await capture('lyrics/lrclib-get.json', q('https://lrclib.net/api/get', {
     track_name: t.title, artist_name: t.artist, duration: t.durationSec,
   }), { headers: lrclib });

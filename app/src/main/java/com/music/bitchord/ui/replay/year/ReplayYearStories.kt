@@ -451,7 +451,7 @@ private fun YearChrome(
             )
             Spacer(Modifier.width(7.dp))
             Text(
-                text = "BitChord",
+                text = "MusoPhone",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.W700,
                 color = Color.White.copy(alpha = 0.9f),
