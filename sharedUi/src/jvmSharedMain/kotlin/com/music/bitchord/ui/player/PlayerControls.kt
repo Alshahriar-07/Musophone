@@ -699,6 +699,10 @@ internal fun TransportRow(
                 onClick = onPlayPause,
                 haptic = if (isPlaying) Haptic.Pause else Haptic.Resume,
                 playPauseMotion = playPauseMotion,
+                // The one coral object on the player. Skip glyphs stay white
+                // over the artwork; the primary transport is the identity.
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
             )
         }
         TransportGlyph(
@@ -1167,6 +1171,8 @@ private fun TransportGlyph(
     skipMotion: PlayerSkipMotion? = null,
     skipPrevious: Boolean = false,
     playPauseMotion: ExpandedPlayPauseMotion? = null,
+    containerColor: Color? = null,
+    contentColor: Color = Color.White,
 ) {
     val haptics = rememberHaptics()
     val interactionSource = remember { MutableInteractionSource() }
@@ -1175,21 +1181,31 @@ private fun TransportGlyph(
         targetValue = if (enabled) 1f else 0.3f,
         label = "transportAlpha",
     )
+    val tint = if (containerColor == null) Color.White.copy(alpha = alpha) else contentColor.copy(alpha = alpha)
     Box(
         modifier = Modifier
             .size(touchSize)
+            .then(
+                if (containerColor != null) {
+                    Modifier
+                        .clip(CircleShape)
+                        .background(containerColor.copy(alpha = alpha))
+                } else {
+                    Modifier
+                },
+            )
             .then(
                 if (skipMotion != null) Modifier.playerSkipPressCircle(
                     motion = skipMotion,
                     interactionSource = interactionSource,
                     enabled = enabled,
-                    tint = Color.White.copy(alpha = alpha),
+                    tint = tint,
                     glyphSize = size,
                     diameter = PLAYER_PRESS_CIRCLE_DIAMETER,
                 ) else if (playPauseMotion != null) Modifier.expandedPlayPausePressCircle(
                     motion = playPauseMotion,
                     interactionSource = interactionSource,
-                    tint = Color.White.copy(alpha = alpha),
+                    tint = tint,
                     glyphSize = size,
                     diameter = PLAYER_PRESS_CIRCLE_DIAMETER,
                 ) else Modifier,
@@ -1210,7 +1226,7 @@ private fun TransportGlyph(
             PlayerSkipGlyph(
                 motion = skipMotion,
                 contentDescription = contentDescription,
-                tint = Color.White.copy(alpha = alpha),
+                tint = tint,
                 modifier = Modifier
                     .size(size)
                     .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),
@@ -1223,14 +1239,14 @@ private fun TransportGlyph(
                 playPainter = painterResource(Res.drawable.ic_player_play),
                 pausePainter = painterResource(Res.drawable.ic_player_pause),
                 contentDescription = contentDescription,
-                tint = Color.White.copy(alpha = alpha),
+                tint = tint,
                 modifier = Modifier.size(size),
             )
         } else {
             Icon(
                 painter = painterResource(icon),
                 contentDescription = contentDescription,
-                tint = Color.White.copy(alpha = alpha),
+                tint = tint,
                 modifier = Modifier
                     .size(size)
                     .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),

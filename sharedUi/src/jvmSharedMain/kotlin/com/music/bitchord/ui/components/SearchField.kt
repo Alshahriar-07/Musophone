@@ -3,6 +3,7 @@ package com.music.bitchord.ui.components
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -71,6 +72,7 @@ fun SearchField(
         onSubmit()
         focusManager.clearFocus()
     }
+    val fieldShape = RoundedCornerShape(16.dp)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -78,10 +80,13 @@ fun SearchField(
                 if (LocalSearchFieldOnSurface.current) {
                     Modifier.fillMaxHeight()
                 } else {
-                    // Fixed height prevents the row from growing when text is entered
+                    // Fixed height prevents the row from growing when text is entered.
+                    // A glass panel rather than a flat pill: translucent fill and a
+                    // warm hairline, with a little more room for the eye to rest.
                     Modifier
-                        .height(46.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(11.dp))
+                        .height(50.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f), fieldShape)
+                        .border(0.5.dp, MaterialTheme.colorScheme.outline, fieldShape)
                 },
             )
             // Asymmetric: the magnifier is a button now and wants a real touch

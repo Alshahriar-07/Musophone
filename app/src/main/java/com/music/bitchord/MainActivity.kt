@@ -24,6 +24,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -114,6 +116,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -187,6 +190,7 @@ import com.music.bitchord.ui.screens.DiscordDialogHost
 import com.music.bitchord.ui.screens.DiscordScreen
 import com.music.bitchord.ui.screens.EqualizerScreen
 import com.music.bitchord.ui.screens.HistoryScreen
+import com.music.bitchord.ui.screens.ProfileScreen
 import com.music.bitchord.ui.screens.LibraryReplayEntry
 import com.music.bitchord.ui.screens.libraryDeviceItems
 import com.music.bitchord.ui.screens.SPOTIFY_BROWSE_ID
@@ -1390,6 +1394,7 @@ private fun BitChordApp(
     val radioLabel = stringResource(R.string.radio)
     val searchLabel = stringResource(R.string.search)
     val historyLabel = stringResource(R.string.history)
+    val profileLabel = stringResource(R.string.profile_title)
     val replayLabel = stringResource(R.string.replay)
     val queueLabel = stringResource(R.string.queue)
     val sharedLinkLabel = stringResource(R.string.shared_link)
@@ -2953,7 +2958,18 @@ private fun BitChordApp(
     Box(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            // A coral wash at the very top, settling into ink. Every tab and
+            // settings page sits on it, so the identity is present even before
+            // a page has drawn anything of its own.
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.075f),
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
+                    ),
+                ),
+            )
             // Nothing of the page under a portrait player that is fully up:
             // that player is its own window, opaque from edge to edge, and
             // this one drawing on behind it — the page, the glass bar and the
@@ -3047,7 +3063,17 @@ private fun BitChordApp(
                         if (tabSwap || libraryShowAllSwap) {
                             EnterTransition.None togetherWith ExitTransition.None
                         } else {
-                            fadeIn(tween(180)) togetherWith fadeOut(tween(180))
+                            // A page push now arrives from a fraction of the edge
+                            // with a short cross-fade, rather than appearing from
+                            // nowhere. The travel is deliberately small: it is
+                            // orientation, not a carousel.
+                            (
+                                fadeIn(tween(220)) +
+                                    slideInHorizontally(tween(300)) { width -> width / 14 }
+                                ) togetherWith (
+                                fadeOut(tween(160)) +
+                                    slideOutHorizontally(tween(220)) { width -> -width / 20 }
+                                )
                         }
                     },
                     modifier = Modifier
@@ -3102,7 +3128,22 @@ private fun BitChordApp(
                         detailListStates.getOrPut(key) { LazyListState() }
                     }
                     val pageContent: @Composable () -> Unit = {
-                        if (pageRoute == AppRoute.History) {
+                        if (pageRoute == AppRoute.Profile) {
+                            ProfileScreen(
+                                account = account,
+                                signedIn = signedIn,
+                                history = historyState,
+                                onSignIn = { webSession = WebSessionMode.SIGN_IN },
+                                onLoadHistory = viewModel::loadHistory,
+                                onOpenHistory = { navigator.push(AppRoute.History) },
+                                onOpenReplay = { navigator.push(AppRoute.Replay) },
+                                onAccountSettings = { navigator.push(AppRoute.AccountScrobbling) },
+                                onSongClick = { song ->
+                                    playRadio(song, QueueSource(profileLabel, PlaybackSourceType.HOME))
+                                },
+                                contentPadding = listPadding,
+                            )
+                        } else if (pageRoute == AppRoute.History) {
                             HistoryScreen(
                                 state = historyState,
                                 listState = historyListState,
@@ -3596,6 +3637,8 @@ private fun BitChordApp(
                                 topPicks = topPicks,
                                 topPicksLoading = topPicksLoading,
                                 listenerName = account?.name,
+                                profileImageUrl = account?.thumbnailUrl?.takeIf { signedIn },
+                                onProfileClick = { navigator.push(AppRoute.Profile) },
                                 // Neither shelf is drawn without its callback.
                                 onTopPickClick = openTopPick.takeUnless { hideTopPicks },
                                 onMoodClick = playMood.takeUnless { hideHomeMoods },
@@ -3994,6 +4037,7 @@ private fun BitChordApp(
                         AppRoute.Downloads -> stringResource(R.string.downloads)
                         AppRoute.Discord -> "Discord"
                         AppRoute.History -> stringResource(R.string.history)
+                        AppRoute.Profile -> stringResource(R.string.profile_title)
                         is AppRoute.LibraryShowAll -> route.shelf.title
                         is AppRoute.ArtistShelf -> route.shelf.title
                         AppRoute.Moods -> stringResource(R.string.find_your_mood)

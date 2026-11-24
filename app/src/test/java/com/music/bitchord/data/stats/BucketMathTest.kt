@@ -126,6 +126,36 @@ class BucketMathTest {
     }
 
     @Test
+    fun playlistCounters_survivePeerMergeAndSubtraction() {
+        val day = "2026-11-03"
+        fun playlist(ms: Long, plays: Int) = NameEntry(
+            name = "Late Night",
+            sub = "Playlist",
+            id = "VLPL123",
+            ms = ms,
+            plays = plays,
+            days = mutableMapOf(day to DayStats(ms, plays)),
+        )
+        val phone = bucket(track("a", 1_000, 1)).copy(
+            playlists = listOf(playlist(1_000, 1)),
+            playlistDays = mapOf(day to DayStats(1_000, 1)),
+        )
+        val tablet = bucket(track("b", 500, 1)).copy(
+            playlists = listOf(playlist(500, 1)),
+            playlistDays = mapOf(day to DayStats(500, 1)),
+        )
+
+        val sum = BucketMath.plus(phone, tablet)
+        assertEquals(1_500L, sum.playlists.single().ms)
+        assertEquals(2, sum.playlists.single().plays)
+        assertEquals(1_500L, sum.playlistDays?.get(day)?.ms)
+
+        val difference = BucketMath.minus(sum, phone)
+        assertEquals(500L, difference.playlists.single().ms)
+        assertEquals(1, difference.playlists.single().plays)
+    }
+
+    @Test
     fun mergeKey_foldsTheSameLocalFileFromTwoPhones_butNotStreamedTracks() {
         val phoneFile = TrackEntry(id = "content://media/external/audio/media/12", title = "Song", artist = "Band")
         val tabletFile = TrackEntry(id = "content://media/external/audio/media/98", title = "song", artist = "band")

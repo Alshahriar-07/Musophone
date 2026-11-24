@@ -148,6 +148,7 @@ import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
 import com.music.bitchord.ui.components.PillSegmentedControl
 import com.music.bitchord.ui.components.isGlassSupported
+import com.music.bitchord.ui.components.lightweightLiquidGlass
 import com.music.bitchord.ui.components.languageDisplayNameRes
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.SearchField
@@ -1947,35 +1948,57 @@ fun SettingsScreen(
         // The version line is the page's colophon, not a setting: it belongs to
         // the whole list, so it goes when the list is narrowed to a few rows.
         if (section == null && searchQuery.isBlank()) {
-        Text(
-            text = buildAnnotatedString {
-                append("MusoPhone $version  ")
-                val linkStyles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline,
-                    ),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 28.dp, bottom = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "ABOUT MUSOPHONE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
                 )
-                withLink(LinkAnnotation.Url("https://github.com/Alshahriar-07/Musophone", linkStyles)) {
-                    append("GitHub")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://github.com/Alshahriar-07", linkStyles)) {
-                    append("Developer")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://musophone.vercel.app", linkStyles)) {
-                    append("Website")
-                }
-                append("\n~Based on BitChord · YouTube Music & Listen Together Backend")
-            },
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp, bottom = 8.dp),
-        )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Version $version",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "An independent music player for Android.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = buildAnnotatedString {
+                        val linkStyles = TextLinkStyles(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline,
+                            ),
+                        )
+                        withLink(LinkAnnotation.Url("https://github.com/Alshahriar-07/Musophone", linkStyles)) {
+                            append("GitHub")
+                        }
+                        append("   ·   ")
+                        withLink(LinkAnnotation.Url("https://github.com/Alshahriar-07", linkStyles)) {
+                            append("Developer")
+                        }
+                        append("   ·   ")
+                        withLink(LinkAnnotation.Url("https://musophone.vercel.app", linkStyles)) {
+                            append("Website")
+                        }
+                        append("\nYouTube Music & Listen Together")
+                    },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 
@@ -2529,7 +2552,7 @@ private fun bitPerfectSubtitle(mode: BitPerfectMode, status: BitPerfectOutput.St
 
 // ---- Building blocks --------------------------------------------------------
 
-internal val GroupShape = RoundedCornerShape(14.dp)
+internal val GroupShape = RoundedCornerShape(22.dp)
 internal val GROUP_INSET = 16.dp
 internal val ROW_INSET = 16.dp
 internal val ICON_SIZE = 22.dp
@@ -2652,12 +2675,18 @@ private inline fun SearchableSettingsGroup(
  */
 @Composable
 internal fun SettingsPageTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.displayLarge,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 14.dp),
-    )
+    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 16.dp)) {
+        Text(
+            text = "MUSOPHONE",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+    }
 }
 
 /**
@@ -2692,7 +2721,10 @@ internal fun SettingsGroup(
             .fillMaxWidth()
             .padding(horizontal = GROUP_INSET)
             .clip(GroupShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .lightweightLiquidGlass(
+                shape = GroupShape,
+                fallbackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+            ),
     ) {
         content()
     }

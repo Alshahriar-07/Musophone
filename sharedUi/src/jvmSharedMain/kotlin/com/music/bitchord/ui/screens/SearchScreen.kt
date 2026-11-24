@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.music.bitchord.ui.components.PillSegmentedControl
 import com.music.bitchord.ui.components.longPressMenuClickable
@@ -45,6 +46,7 @@ import androidx.compose.material.icons.rounded.NorthWest
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -216,6 +218,12 @@ fun SearchScreen(
         // the search field sits cleanly below the bar instead of overlapping it.
         Column(modifier = Modifier.padding(top = topPadding)) {
             if (showField) {
+                Text(
+                    text = "MUSOPHONE SEARCH",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = PAGE_GUTTER + 2.dp, bottom = 7.dp),
+                )
                 SearchField(
                     query = query,
                     onQueryChange = onQueryChange,
@@ -517,18 +525,22 @@ private fun TopResultCard(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val cardShape = RoundedCornerShape(24.dp)
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
             .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 18.dp, bottom = 8.dp)
+            .clip(cardShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
+            .border(0.5.dp, MaterialTheme.colorScheme.outline, cardShape)
+            .padding(18.dp)
             .longPressMenuClickable(onClick = onPlay, onLongClick = onLongPress)
             .contextClick(onLongPress),
     ) {
         Text(
-            text = "Top result",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            text = "TOP RESULT",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
         )
         Spacer(Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -536,7 +548,7 @@ private fun TopResultCard(
                 model = song.thumbnailUrl?.artworkAt(ROW_ART_PX),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.trackArtSize(72.dp, song.isVideo).clip(RoundedCornerShape(10.dp)),
+                modifier = Modifier.trackArtSize(84.dp, song.isVideo).clip(RoundedCornerShape(18.dp)),
             )
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
@@ -564,9 +576,12 @@ private fun TopResultCard(
         }
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedButton(
+            Button(
                 onClick = onPlay,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
             ) {
                 Icon(Icons.Rounded.PlayArrow, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
@@ -574,7 +589,7 @@ private fun TopResultCard(
             }
             OutlinedButton(
                 onClick = onPlaylist,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
             ) {
                 Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = null)
                 Spacer(Modifier.width(6.dp))

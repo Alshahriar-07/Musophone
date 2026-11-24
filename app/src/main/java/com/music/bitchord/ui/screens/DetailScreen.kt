@@ -1619,7 +1619,7 @@ private fun ActionRow(
     /** The artist header's subscribe state, or null where it isn't offered. */
     subscription: SubscriptionState? = null,
     onToggleSubscription: (() -> Unit)? = null,
-    /** Apple's fill for the Play circle; null leaves it white. */
+    /** A release's extracted artwork colour; null leaves it MusoPhone coral. */
     playColor: Color? = null,
 ) {
     Row(
@@ -1641,7 +1641,7 @@ private fun ActionRow(
             onClick = onPlay,
             size = ARTIST_PLAY_BUTTON,
             iconScale = ARTIST_PLAY_ICON_SCALE,
-            containerColor = playColor ?: Color.White,
+            containerColor = playColor ?: MaterialTheme.colorScheme.primary,
         )
 
         if (subscription != null) {
@@ -1685,19 +1685,23 @@ private fun ActionPill(
     // Resume rather than a flat tap: both start a queue, and the rising pair
     // says so.
     val haptics = rememberHaptics()
-    val content = if (filled) Color.Black else MaterialTheme.colorScheme.onSurface
+    val content = if (filled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
     Row(
         modifier = modifier
             .height(size)
             .clip(CircleShape)
             .then(
                 if (filled) {
-                    Modifier.background(Color.White)
+                    Modifier.background(MaterialTheme.colorScheme.primary)
                 } else {
                     Modifier
                         .background(Color.White.copy(alpha = LIGHT_FILL_ALPHA), CircleShape)
                         .liquidGlassRim(CircleShape)
-                        .border(1.dp, Color.White.copy(alpha = TOP_RELEASE_EDGE_ALPHA), CircleShape)
+                        .border(
+                            0.5.dp,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                            CircleShape,
+                        )
                 },
             )
             .clickable {

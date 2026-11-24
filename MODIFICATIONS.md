@@ -1,211 +1,176 @@
-# MusoPhone — modifications from BitChord
+# MusoPhone — project and modification record
 
-MusoPhone is a **modified version** of the free software project **BitChord**
-(<https://github.com/kushagrasinghx/BitChord>), distributed under the
-**GNU General Public License v3.0**. The original `LICENSE` file is unchanged and
-the original authors retain copyright over their work.
+MusoPhone is an independent Android music player distributed under the
+**GNU General Public License v3.0**. It is a modified derivative of the
+open-source **BitChord** project. The original [`LICENSE`](LICENSE) is preserved
+unchanged, and upstream copyright notices and license headers remain in the
+source tree.
 
-- Upstream revision this build is based on: `21356206` (`1.10`, version code 42).
-- Modifications made: **24 November 2026**.
-- Official website: <https://musophone.vercel.app>
-- Official repository and corresponding source: <https://github.com/Alshahriar-07/Musophone>
-- Project owner: **Al Shahriar Sowan**. AI-assisted development: ChatGPT (OpenAI)
-  and DeepSeek. Full attribution is in [`Credit.md`](Credit.md).
+- **Developed by:** EAGOX STUDIO TEAM — <eagoxstudio@gmail.com>
+- **Product owner:** Al Shahriar Sowan
+- **Official repository and corresponding source:** <https://github.com/Alshahriar-07/Musophone>
+- **Official website:** <https://musophone.vercel.app>
+- **Upstream revision:** `21356206` (BitChord 1.10, version code 42)
+- **Current MusoPhone version:** 1.11 (version code 43)
+- **Complete attribution:** [`Credit.md`](Credit.md)
 
-MusoPhone is not affiliated with, endorsed by, or connected to BitChord, Google
-LLC or YouTube. The project is a derivative work, not a replacement or
-re-licensing of the upstream project.
+MusoPhone does not claim authorship of the upstream BitChord architecture,
+playback engine, backend or other inherited components. The distinction between
+upstream work and MusoPhone modifications is recorded in `Credit.md`.
 
 ## Repository layout
 
-MusoPhone develops directly from the repository root. The upstream BitChord tree
-was moved up from an intermediate `BitChord/` directory, so `app/`, `shared/`,
-`sharedUi/`, `tv/`, `wearos/`, `backend/`, `web/`, `native/`, Gradle files,
-`.git` and the GPL `LICENSE` all live beside [`PLAN.md`](PLAN.md) and
-[`Credit.md`](Credit.md). The supplied brand artwork stays in [`assets/`](assets).
-Git history and the upstream branches were preserved; `origin` points at the
-official Musophone repository and `upstream` at `kushagrasinghx/BitChord`.
+MusoPhone develops from the repository root. `app/`, `shared/`, `sharedUi/`,
+`tv/`, `wearos/`, `backend/`, `web/`, `native/`, the Gradle files and the GPL
+`LICENSE` live beside [`PLAN.md`](PLAN.md) and [`Credit.md`](Credit.md). Supplied
+brand artwork remains in [`assets/`](assets), with release builds archived under
+[`release/`](release).
 
-## What changed
+## Application identity
 
-Only branding and the minimum configuration needed for an independent Android
-application identity were changed. No screen was redesigned and no feature,
-service, dependency or integration was removed.
+| Item | Value |
+|---|---|
+| Display name (prod) | MusoPhone |
+| Display name (dev) | MusoPhone Dev |
+| Application id (prod) | `com.musophone.player` |
+| Application id (dev) | `com.dev.musophone.player` |
+| TV application id | `com.musophone.player.tv` |
+| TV dev application id | `com.dev.musophone.player.tv` |
+| Wear application id | `com.musophone.player` |
+| Wear dev application id | `com.dev.musophone.player` |
 
-### Application identity
+The Kotlin/Java **namespace remains `com.music.bitchord`**. Android permits the
+application id to differ from the namespace. Keeping the namespace preserves
+JNI lookups, reflection-based integrations, provider authorities, deep links and
+the existing database/preference keys without a risky source-wide package
+rename. Those identifiers are technical compatibility contracts, not product
+branding.
 
-| Item | BitChord | MusoPhone |
-|---|---|---|
-| Display name (prod) | BitChord | MusoPhone |
-| Display name (dev) | BitChord Dev | MusoPhone Dev |
-| Application id (prod) | `com.music.bitchord` | `com.musophone.player` |
-| Application id (dev) | `com.dev.bitchord` | `com.dev.musophone.player` |
-| TV application id | `com.music.bitchord.tv` | `com.musophone.player.tv` |
-| TV dev application id | `com.dev.bitchord.tv` | `com.dev.musophone.player.tv` |
-| Wear application id | `com.music.bitchord` | `com.musophone.player` |
-| Wear dev application id | `com.dev.bitchord` | `com.dev.musophone.player` |
+Gradle root project name is `MusoPhone`; phone artefacts use the `MusoPhone`
+prefix. The watch application id is aligned with the phone so the Wearable Data
+Layer pairing continues to work.
 
-The Kotlin/Java **namespace remains `com.music.bitchord`**. Android allows the
-application id to differ from the namespace, and keeping the namespace avoids a
-751-file package rewrite that would have risked breaking the existing source,
-JNI classes, reflection-based integrations and the manifest aliases. The watch
-application id is aligned with the phone's so the Wearable Data Layer pairing
-feature continues to work.
+## 1.11 — Coral Glass redesign
 
-Gradle root project name is `MusoPhone`; phone APK/AAB artefact names use the
-`MusoPhone` prefix (`MusoPhone-dev-debug.apk`, etc.).
+Version 1.11 replaces the inherited interface with an original MusoPhone visual
+identity while retaining the playback, authentication, database, API and
+integration layers.
 
-### Icons and visual assets
+### Design system
 
-The supplied MusoPhone assets were integrated without modifying the originals:
+- Coral, apricot, teal, warm-obsidian and porcelain colour schemes for dark and
+  light themes.
+- An 8/12/18/24/32 dp shape scale and editorial display typography.
+- Reusable glass surfaces, pills, stat tiles, section headings, avatars and fact
+  rows.
+- Coral selection indicator in the floating navigation bar.
 
-- `assets/icon.png` → legacy launcher icons at every density
-  (`mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher.webp`) and circular round icons
-  (`ic_launcher_round.webp`).
-- Adaptive launcher icon: the supplied artwork, cropped to a disc and placed in
-  the 72dp safe zone of the 108dp adaptive canvas
-  (`drawable-nodpi/ic_launcher_foreground.png`), on the supplied near-black
-  background (`drawable/ic_launcher_background.xml`).
-- Monochrome/themed launcher layer (`mipmap-*/ic_monochrome_foreground.png`)
-  derived from the same mark for Android 13+ themed icons.
-- Play Store artwork (`app/src/main/ic_launcher-playstore.png`), 512×512.
-- In-app mark (`drawable-nodpi/ic_logo.png` and the shared-UI equivalent) uses
-  the same MusoPhone mark while keeping the original 730×484 drawable box, so
-  onboarding, Replay and the lyrics share card keep their existing layouts.
-- Notification / Quick Settings tile silhouette
-  (`drawable-nodpi/ic_notification_logo.png`).
-- The Wear OS companion app received the same launcher, monochrome, logo and
-  notification assets.
+### Screens and surfaces
 
-Android 12+ system splash screens use the application icon automatically; no
-separate splash screen existed in the original and none was invented.
+- **Home:** complete lockup in the upper-left, account portrait in the upper-right,
+  coral light wash, oversized “Listen now” masthead and listener name.
+- **Library / Explore:** shared editorial mastheads; inherited shelf and row
+  behaviour preserved.
+- **Profile:** a new destination with real on-device listening totals, rhythm,
+  recent account history and top songs, artists, albums and playlists.
+- **Settings:** every category page uses the new group surfaces, brand eyebrow
+  and an About colophon with version and project links; all existing rows,
+  values and controls remain.
+- **Now Playing:** coral primary transport, original type and glass chrome over
+  the existing artwork-driven backdrop.
+- **Mini Player:** 24 dp glass slab, coral transport treatment and larger
+  artwork corners instead of the inherited pill.
+- **Search:** glass search field, editorial result card and coral primary action.
+- **Release and artist pages:** coral primary Play action and glass secondary
+  controls.
+- **Onboarding:** retained animated artwork backdrop and rebuilt motion/CTA
+  treatment.
+- Dialogs, sheets and menus inherit the app-wide Material theme and shape scale.
 
-Original icon and branding files are backed up under
-`branding-backup/original-res/` (not part of the application).
+### Profile data
 
-### Text and metadata
+`ListeningStats` records real playback on the device. Playlist context is now
+recorded from the player's existing `playbackSource` metadata when a queue was
+started from a playlist page. Profile does not use hard-coded or demo figures;
+new installs show an honest empty state. The monthly bucket schema is backwards
+compatible: months written before playlist tracking load with empty playlists.
 
-- `app_name` is `MusoPhone` in all 20 phone locale files; dev builds use
-  `MusoPhone Dev`.
-- User-facing references to the app name in the phone and shared-UI string
-  catalogues were changed to `MusoPhone`.
-- The Settings colophon, Replay share cards, notification/widget labels, FLAC
-  vendor tag, gallery save folder (`Pictures/MusoPhone`), download folder
-  (`Music/MusoPhone`) and the Last.fm/ListenBrainz/lyrics User-Agent all say
-  `MusoPhone`.
-- Project links now point at <https://musophone.vercel.app> and
-  <https://github.com/Alshahriar-07/Musophone>: the README badges and download
-  links, the in-app About links, the in-app update feed, Discord Rich Presence'
-  project button, the web player's Android download link, the web extension's
-  manifest name/description, and the Listen Together invite page.
-- Withdrawn: no. The following intentionally still name the upstream project or
-  service, because they refer to it rather than to this app:
-  - `listen_together_official_server_dialog_message` — the party server really
-    is the official BitChord server.
-  - `tester_code_message` — the upstream addon attestation tester programme.
-  - Discord Rich Presence's registered Discord application id, which is issued
-    by Discord to the upstream application and cannot be re-registered without
-    a new Discord account/app; the visible project URL and button text are
-    MusoPhone's.
-  - Log tags, preference keys, database names, deep-link scheme
-    (`bitchord://`), provider authorities and package/class names, which are
-    internal identifiers or live integration endpoints. The Kotlin namespace is
-    deliberately still `com.music.bitchord`; renaming it would touch most of the
-    1,491 tracked files and every JNI/reflection lookup for no user-visible gain.
-  - External service endpoints hosted by the upstream project: the Listen
-    Together server (`bitchord.kushagrasingh.in`,
-    `bitchord-listen-together.onrender.com`), the presence/party API
-    (`api.bitchord.kushagrasingh.in`), the addon attestation service, and the
-    Automix model downloads. These are live servers/assets, not branding, and
-    pointing them at a non-existent MusoPhone deployment would break features.
-  - The browser extension's package names, storage keys, gecko id and the
-    `bitchord.in` origin allow-list, which are deployment/integration
-    identifiers.
-- Downloads now go to **`Music/MusoPhone`** instead of `Music/BitChord`
-  (`DownloadStore.FOLDER`, the settings subtitle and the corresponding string).
-- The Last.fm / ListenBrainz client identification, the lyrics-provider
-  User-Agent and the image-fetching User-Agent now say `MusoPhone` and point at
-  the official repository; upstream authorship is recorded in `Credit.md` and
-  the preserved `LICENSE`/`MAINTAINERS.md`.
-- README, `MusoPhoneIcon.png` and `MusoPhoneBanner.png` present the MusoPhone
-  branding. The original `Logo.png`, `Banner.png`, `README.md` history, credits,
-  `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `MAINTAINERS.md`,
-  `ADDITIONAL.md` and third-party notices were preserved.
+### Performance
 
-## Deliberately unchanged
+- Infinite/continuously drifting decoration is avoided on static screens.
+- The Profile activity chart uses draw-time bar heights rather than per-frame
+  layout.
+- Player text remains a draw-only scale during collapse rather than animating
+  font size, preserving the existing recomposition work.
+- Glass surfaces use the lightweight implementation and respect the existing
+  “reduce dynamic blur” preference.
 
-- UI, layouts, navigation, animations, colours, typography and components.
-- Playback engine, Media3 session, background playback, notifications, media
-  controls, widgets, Quick Settings tile, Cast, Android Auto, TV and Wear apps.
-- Local scanning, playlists, favourites, search, history, lyrics, Replay,
-  Automix, equaliser, USB/bit-perfect output, downloads, WebDAV, SMB, addons,
-  YouTube/Spotify/Discord/Last.fm/ListenBrainz/Google Drive integrations.
-- Dependencies, Gradle/AGP/Kotlin versions, min/target SDK, and project
-  architecture.
-- GPL-3.0 `LICENSE` and all original copyright/attribution notices.
+### Icons
 
-## Known effects of the new application id (not silently ignored)
+All nine legacy neon launcher variants were removed from `AppIcon`, strings,
+manifest aliases and drawable/mipmap resources. Default, monochrome and the
+MusoPhone glass family remain. Icon switching and adaptive/notification icons
+continue to work through the existing alias mechanism.
 
-These are inherent to giving the app its own identity; they were not "fixed" by
-removing features:
+### Release archive
 
-1. **In-app updates** read the MusoPhone release feed
-   (`Alshahriar-07/Musophone`, `UPDATE_APK_PREFIX = "MusoPhone-"`). The feed is
-   empty until a MusoPhone release is published, so the check is a no-op until
-   then. Release assets must keep the `MusoPhone-` prefix and be signed with
-   the same key as the installed build.
-2. **Addon hardware attestation** (`ADDON_AUTH_URL`) is issued for the upstream
-   package/signing certificate. Addons that require that attestation will not
-   verify for this build. No client-side workaround was added.
-3. **Google Drive backup / Google sign-in** authorization is registered per
-   package name and signing certificate. A new OAuth client for
-   `com.musophone.player` is required in the Google Cloud console before Drive
-   backup works.
-4. **Listen Together deep links** keep the upstream scheme/host
-   (`bitchord://party`, `bitchord.kushagrasingh.in`) because the upstream server
-   generates those links. Changing them would break party invitations.
-5. **Alternative launcher icons** offered by the original icon picker (liquid
-   glass, neon, Samsung/Pixel variants) still use the original BitChord mark.
-   Only the default/round/themed launcher identity was replaced. Recolouring 22
-   style variants was out of scope for a branding build.
-6. **TV and Wear** remain separate applications with their own ids; both were
-   rebranded and build from this repository, but were not part of the APK
-   runtime validation run.
-7. **The audio model downloader** (`AutomixModels`) still fetches the upstream
-   `model_*` assets from BitChord's releases. Those files are model data, not
-   application branding, and no MusoPhone mirror exists. Changing the URL would
-   break Automix.
+The existing 1.10 APK/AAB remain untouched at their original paths in `release/`.
+The 1.11 APK/AAB, checksums and build metadata are written to `release/v1.11/`.
+Release signing remains outside the repository (`keystore.properties` and
+`musophone-release.jks` are gitignored).
 
-## Building
+## Earlier branding work
 
-Requirements:
+The initial MusoPhone identity changed the application name, launcher and
+notification artwork, application ids, download folders, project links and
+service User-Agent strings. The supplied artwork was integrated without
+modifying the originals. Project links point at the MusoPhone repository and
+website.
 
-- JDK 17 or newer (JDK 21 used for validation).
-- Android SDK with `platforms;android-37.0`, `build-tools;37.0.0`,
-  `platform-tools`, CMake 3.22.1 and an NDK compatible with AGP 8.10.1
-  (`27.0.12077973` used here).
-- `local.properties` containing `sdk.dir=...`.
+Technical identifiers retained deliberately include:
 
-```bash
-# from the repository root
-./gradlew :app:assembleDevDebug
-```
+- the `com.music.bitchord` namespace and JNI/reflection class names;
+- database, preference and backup-rule keys;
+- the `bitchord://` deep-link scheme and provider authorities;
+- addon authentication headers and upstream live service endpoints;
+- the registered Discord application id and browser-extension identifiers.
 
-Outputs are under `app/build/outputs/apk/` and `app/build/outputs/bundle/`.
-Release builds require `keystore.properties` (see `keystore.properties.example`);
-without it the release APK and AAB are unsigned, exactly as upstream behaves.
+These are compatibility contracts, not user-facing branding. Pointing them at
+non-existent MusoPhone deployments would break existing features. External
+services hosted by the upstream project are used as-is.
 
-ABI splits are disabled only when a Gradle invocation contains a `bundle`
-task. AGP 8.9/8.10 otherwise fails `buildProdReleasePreBundle` with "Sequence
-contains more than one matching element" (Google issue 402800800); the bundle
-splits by ABI on its own, so APK split configuration is irrelevant to it. This
-is a build-tool workaround, not an application change.
+## Preserved functionality
 
-## Licence
+The redesign does not change:
 
-MusoPhone is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version. It is distributed in the hope that it will be useful, but **WITHOUT ANY
-WARRANTY**; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE. See `LICENSE` for the full text.
+- playback, Media3 media sessions, background playback, audio focus or
+  notifications;
+- authentication, account switching or WebView sign-in;
+- local scanning, playlists, favourites, history, lyrics, Replay, Automix,
+  equalizer, downloads, WebDAV/SMB, addons or cast;
+- deep links, API contracts, database/preference formats or third-party
+  integrations;
+- GPL-3.0 `LICENSE`, copyright notices or third-party acknowledgements.
+
+## Known effects of the independent identity
+
+1. **In-app updates** use the MusoPhone release feed
+   (`Alshahriar-07/Musophone`, `UPDATE_APK_PREFIX = "MusoPhone-"`). Release assets
+   must keep that prefix and be signed with the same key.
+2. **Addon hardware attestation** was issued for the upstream package/signing
+   certificate. Addons that require that attestation will not verify for this
+   build. No client-side workaround is included.
+3. **Google Drive backup and Google sign-in** authorization are still associated
+   with the existing OAuth client configuration; changing the Android package
+   does not create a new Google Cloud project. Existing configuration remains in
+   place.
+4. **Discord Rich Presence** uses the upstream application registration, which
+   cannot be replaced without a new Discord application. Visible project links
+   point at MusoPhone.
+
+## Licensing
+
+MusoPhone is distributed under GPL-3.0. The complete source is this repository.
+Anyone distributing a MusoPhone binary must also make the corresponding source
+available under the same license. See [`LICENSE`](LICENSE) and
+[`Credit.md`](Credit.md).

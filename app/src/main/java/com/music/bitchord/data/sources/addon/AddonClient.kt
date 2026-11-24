@@ -103,7 +103,7 @@ class AddonClient(rawBaseUrl: String, private val pickedQuality: String? = null)
             }
             if (!manifest.isPlayable) {
                 val declared = manifest.resources.joinToString(", ")
-                throw AddonException("This addon declares $declared — BitChord needs search")
+                throw AddonException("This addon declares $declared — MusoPhone needs search")
             }
             if (manifest.requiresBitChordAuth) authRequired = true
             manifest
@@ -418,7 +418,7 @@ class AddonClient(rawBaseUrl: String, private val pickedQuality: String? = null)
                     // sends people to re-paste a URL that was always correct.
                     response.code >= 500 -> throw AddonUnavailable("HTTP ${response.code}")
                     response.code != 429 -> throw AddonException("HTTP ${response.code}")
-                    attempt >= MAX_RETRIES -> throw AddonUnavailable("This addon is rate limiting BitChord")
+                    attempt >= MAX_RETRIES -> throw AddonUnavailable("This addon is rate limiting MusoPhone")
                     else -> retryAfterMs(response.header("Retry-After"), attempt)
                 }
             }
@@ -441,7 +441,7 @@ class AddonClient(rawBaseUrl: String, private val pickedQuality: String? = null)
         val parsed = url.toHttpUrlOrNull() ?: throw AddonException("Invalid addon URL")
         val loopback = parsed.host == "localhost" || parsed.host == "127.0.0.1" || parsed.host == "::1"
         if (!parsed.isHttps && !loopback) {
-            throw AddonException("This addon asks for BitChord verification but isn't using HTTPS")
+            throw AddonException("This addon asks for app verification but isn't using HTTPS")
         }
         return AddonAuth.headersFor(parsed.host, rejectedToken)
     }

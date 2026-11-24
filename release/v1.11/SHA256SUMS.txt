@@ -1,0 +1,2 @@
+5a393b076d3b1742e4dc6daaf365615026bc94a3d166c3f4c2e4a1881e9b214a *MusoPhone-prod-universal-release.apk
+2fee0c9f19303f1b16e3d22dd84df82bded8e25448d302f5a234b60415a4515f *MusoPhone-prod-release.aab

@@ -458,7 +458,7 @@ internal suspend fun saveVideoToGallery(context: Context, video: File, label: St
                 val values = ContentValues().apply {
                     put(MediaStore.Video.Media.DISPLAY_NAME, name)
                     put(MediaStore.Video.Media.MIME_TYPE, VIDEO_MIME)
-                    put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/BitChord")
+                    put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/MusoPhone")
                     put(MediaStore.Video.Media.IS_PENDING, 1)
                 }
                 val uri: Uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
@@ -481,7 +481,7 @@ internal suspend fun saveVideoToGallery(context: Context, video: File, label: St
                 }
             } else {
                 @Suppress("DEPRECATION")
-                val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "BitChord")
+                val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "MusoPhone")
                 dir.mkdirs()
                 video.copyTo(File(dir, name), overwrite = true)
             }

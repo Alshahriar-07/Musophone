@@ -1,18 +1,23 @@
-# Maintainers
+# Maintainers and contributors
 
-This document lists the maintainers responsible for BitChord.
+MusoPhone is developed and maintained by **EAGOX STUDIO TEAM**
+(<eagoxstudio@gmail.com>), with **Al Shahriar Sowan**
+([@Alshahriar-07](https://github.com/Alshahriar-07)) as project owner.
+Complete product and upstream attribution is in [`Credit.md`](Credit.md).
 
-| Maintainer | GitHub | Responsibilities |
+The list below records the maintainer and contributors of the original
+open-source project whose code MusoPhone is derived from. It is retained for
+GPL attribution and historical accuracy; it does not describe the current
+MusoPhone maintainership.
+
+| Upstream maintainer | GitHub | Responsibilities |
 |---|---|---|
-| Kushagra Singh | [@kushagrasinghx](https://github.com/kushagrasinghx) | Project creator, core architecture, release management, and PR reviews |
+| Kushagra Singh | [@kushagrasinghx](https://github.com/kushagrasinghx) | Original project creator, core architecture, release management and PR reviews |
 
-## Responsibilities
+## Upstream contributors
 
-Maintainers oversee project direction, repository maintenance, review and merging of contributions, and release management.
-
-## Contributors
-
-This list is automatically generated from GitHub repository contributor data.
+This list is automatically generated from the upstream repository's GitHub
+contributor data.
 
 <!-- BEGIN CONTRIBUTORS -->
 - [@kushagrasinghx](https://github.com/kushagrasinghx)

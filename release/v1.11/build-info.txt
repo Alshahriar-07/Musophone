@@ -1,0 +1,19 @@
+MusoPhone 1.11 (version code 43)
+Package: com.musophone.player
+Build type: prod release
+Built: 2026-11-24
+JDK: 21.0.13.1+2
+Gradle: 8.11.1
+Android Gradle Plugin: 8.10.1
+Kotlin: 2.3.20
+Compile SDK: 37
+Target SDK: 36
+Min SDK: 26
+Signing: release keystore (MusoPhone), APK Signature Scheme v2
+APK certificate SHA-256: 9edcb3cbbad2b7f8c72677daf5d8f6e6a75a19bf7e9e96080746495130a4a847
+Unit tests: :app:testDevDebugUnitTest passed
+Artifacts:
+  MusoPhone-prod-universal-release.apk
+  MusoPhone-prod-release.aab
+Checksums: see SHA256SUMS.txt
+Previous release assets at release/ were not modified or overwritten.

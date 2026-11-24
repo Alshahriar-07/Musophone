@@ -40,17 +40,23 @@ object BucketMath {
         (a.albums + b.albums).forEach { entry ->
             albums.merge(albumKey(entry), entry.deepCopy()) { x, y -> x.also { it.absorb(y) } }
         }
+        val playlists = LinkedHashMap<String, NameEntry>()
+        (a.playlists + b.playlists).forEach { entry ->
+            playlists.merge(playlistKey(entry), entry.deepCopy()) { x, y -> x.also { it.absorb(y) } }
+        }
         return StoredBucket(
             version = maxOf(a.version, b.version),
             month = a.month,
             tracks = tracks.values.toList(),
             artists = artists.values.toList(),
             albums = albums.values.toList(),
+            playlists = playlists.values.toList(),
             hours = List(24) { a.hours.getOrElse(it) { 0L } + b.hours.getOrElse(it) { 0L } },
             days = addMaps(a.days, b.days) { x, y -> x + y },
             trackDays = addDayMaps(a.trackDays, b.trackDays),
             artistDays = addDayMaps(a.artistDays, b.artistDays),
             albumDays = addDayMaps(a.albumDays, b.albumDays),
+            playlistDays = addDayMaps(a.playlistDays, b.playlistDays),
         )
     }
 
@@ -68,6 +74,7 @@ object BucketMath {
         val oldTracks = b.tracks.associateBy { it.id }
         val oldArtists = b.artists.associateBy(::artistKey)
         val oldAlbums = b.albums.associateBy(::albumKey)
+        val oldPlaylists = b.playlists.associateBy(::playlistKey)
         return StoredBucket(
             version = a.version,
             month = a.month,
@@ -81,6 +88,7 @@ object BucketMath {
             },
             artists = a.artists.mapNotNull { it.minus(oldArtists[artistKey(it)]) },
             albums = a.albums.mapNotNull { it.minus(oldAlbums[albumKey(it)]) },
+            playlists = a.playlists.mapNotNull { it.minus(oldPlaylists[playlistKey(it)]) },
             hours = List(24) { (a.hours.getOrElse(it) { 0L } - b.hours.getOrElse(it) { 0L }).coerceAtLeast(0) },
             days = a.days.mapNotNull { (day, ms) ->
                 val left = ms - (b.days[day] ?: 0L)
@@ -89,6 +97,7 @@ object BucketMath {
             trackDays = a.trackDays?.let { subtractDays(it.toMutableMap(), b.trackDays.orEmpty()) },
             artistDays = a.artistDays?.let { subtractDays(it.toMutableMap(), b.artistDays.orEmpty()) },
             albumDays = a.albumDays?.let { subtractDays(it.toMutableMap(), b.albumDays.orEmpty()) },
+            playlistDays = a.playlistDays?.let { subtractDays(it.toMutableMap(), b.playlistDays.orEmpty()) },
         )
     }
 
@@ -121,6 +130,9 @@ object BucketMath {
 
     private fun albumKey(entry: NameEntry): String =
         entry.id ?: (entry.name.lowercase(Locale.ROOT) + SEPARATOR + entry.sub.orEmpty().lowercase(Locale.ROOT))
+
+    private fun playlistKey(entry: NameEntry): String =
+        entry.id ?: entry.name.lowercase(Locale.ROOT)
 
     private val SEPARATOR = Char(31).toString()
 

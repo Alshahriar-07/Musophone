@@ -49,6 +49,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -145,6 +148,10 @@ fun HomeScreen(
     topPicksLoading: Boolean = false,
     /** The signed-in account's name, for the personal station's "Name's Station". */
     listenerName: String? = null,
+    /** The signed-in account's portrait, shown in the header's profile control. */
+    profileImageUrl: String? = null,
+    /** Opens the new Profile page. Null hides the header's account control. */
+    onProfileClick: (() -> Unit)? = null,
     onTopPickClick: ((TopPick, String) -> Unit)? = null,
     onTopPickLongPress: ((TopPick) -> Unit)? = null,
     /** A Find Your Mood tile, and its name. The shelf is only drawn when this is set. */
@@ -187,7 +194,15 @@ fun HomeScreen(
             },
         ) {
             if (title != null) {
-                item { HomeTitle(title, replayYear) }
+                item {
+                    HomeTitle(
+                        title = title,
+                        replayYear = replayYear,
+                        listenerName = listenerName,
+                        profileImageUrl = profileImageUrl,
+                        onProfileClick = onProfileClick,
+                    )
+                }
             }
             if (!signedIn && onSignIn != null) {
                 item {
@@ -350,13 +365,23 @@ private fun RecentSectionHeader(title: String, subtitle: String) {
             .padding(horizontal = PAGE_GUTTER, vertical = 10.dp)
             .fillMaxWidth(),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .height(15.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (subtitle.isNotBlank()) {
             Text(
                 text = subtitle,
@@ -451,56 +476,119 @@ fun CompactTrackRow(
 }
 
 /**
- * Listen now's large heading, with the wordmark stacked above it.
+ * Home's editorial masthead: mark at the left, the listener at the right, then
+ * a deliberately oversized "Listen now" over a wash of coral light.
  *
- * Only the home tab carries it — the top bar no longer shows the logo, so this
- * is where the app's mark lives. Its height is taken from the heading's own
- * font size rather than a fixed dp, so the two keep their proportion under the
- * system font scale.
+ * This replaces the old centred wordmark-and-nothing-else header. The mark
+ * stays a mark rather than a banner, and the account portrait is the one
+ * persistent way into Profile — a sixth bottom tab would have crowded five
+ * already-useful destinations.
  */
 @Composable
 private fun HomeTitle(
     title: String,
     replayYear: ReplayYearBadge? = null,
+    listenerName: String? = null,
+    profileImageUrl: String? = null,
+    onProfileClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val style = MaterialTheme.typography.displayLarge
     val logoHeight = with(LocalDensity.current) { (style.fontSize * LOGO_TO_FONT).toDp() }
-    Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
-        // The wordmark, and the year story's button right after it when there
-        // is a year to tell. Sized off the wordmark so the two keep their
-        // proportion under the system font scale.
-        Row(
-            modifier = Modifier.padding(bottom = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_logo),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onBackground,
+    val coral = MaterialTheme.colorScheme.primary
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .drawBehind {
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(coral.copy(alpha = 0.16f), Color.Transparent),
+                        center = Offset(size.width * 0.12f, 0f),
+                        radius = size.width * 0.9f,
+                    ),
+                )
+            }
+            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 10.dp, bottom = 12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // The complete official lockup — icon and wordmark together — not a
+            // re-set wordmark or the mark on its own. Its own colours are kept,
+            // so no tint is applied; the transparent canvas preserves the
+            // supplied 3:1 proportions.
+            Image(
+                painter = painterResource(Res.drawable.musophone_logo),
+                contentDescription = "MusoPhone",
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .height(logoHeight)
                     .aspectRatio(LOGO_ASPECT),
             )
+            Spacer(Modifier.weight(1f))
             if (replayYear != null) {
-                Spacer(Modifier.width(14.dp))
-                ReplayYearButton(replayYear, height = logoHeight * 0.68f)
+                ReplayYearButton(replayYear, height = logoHeight * 0.62f)
+                Spacer(Modifier.width(10.dp))
             }
+            if (onProfileClick != null) HomeProfileControl(listenerName, profileImageUrl, onProfileClick)
         }
-        // "Listen now" is hidden for now; the wordmark above stays.
-        // Text(
-        //     text = title,
-        //     style = style,
-        //     color = MaterialTheme.colorScheme.onBackground,
-        // )
+
+        Spacer(Modifier.height(26.dp))
+        Text(
+            text = title,
+            style = style,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        if (!listenerName.isNullOrBlank()) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = listenerName.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = coral,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Small portrait control at the top of Home; falls back to the initial. */
+@Composable
+private fun HomeProfileControl(
+    name: String?,
+    imageUrl: String?,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(42.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (imageUrl.isNullOrBlank()) {
+            Text(
+                text = name?.trim()?.firstOrNull()?.uppercaseChar()?.toString() ?: "M",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        } else {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape),
+            )
+        }
     }
 }
 
 /** The wordmark's height against the heading's font size. */
-private const val LOGO_TO_FONT = 0.9f
+private const val LOGO_TO_FONT = 1.05f
 
-/** ic_logo's viewport, 730 x 484. */
-private const val LOGO_ASPECT = 730f / 484f
+/** The supplied full lockup's viewport, 2172 x 724. */
+private const val LOGO_ASPECT = 3f
 
 /**
  * Shared by the home feed, Explore and Library so headings line up across tabs.
@@ -520,13 +608,23 @@ internal fun SectionHeader(title: String, subtitle: String = "", onShowAll: (() 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(
-                text = displayTitle,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .width(3.dp)
+                        .height(15.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = displayTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             if (displaySubtitle.isNotBlank()) {
                 Text(
                     text = displaySubtitle,

@@ -7,13 +7,9 @@
 
 # MusoPhone
 
-### Aesthetic YouTube Music Client
+### An independent, premium Android music player
 
-> **MusoPhone is a branding-modified build of [BitChord](https://github.com/kushagrasinghx/BitChord).**
-> The application name, launcher icon and Android application id have been changed.
-> The original BitChord authors and contributors retain copyright over their work;
-> MusoPhone is distributed under the same GPL-3.0 licence. See [Credit.md](Credit.md)
-> for attribution and [MODIFICATIONS.md](MODIFICATIONS.md) for the complete list of changes.
+**Built by EAGOX STUDIO TEAM** · [eagoxstudio@gmail.com](mailto:eagoxstudio@gmail.com)
 
 <br/>
 
@@ -24,14 +20,14 @@
 
 <br/>
 
-[**Download**](#download) · [**Features**](#features) · [**Contributing**](#contributing) · [**Support**](#support) · [**Disclaimer**](#disclaimer)
+[**Download**](#download) · [**Features**](#features) · [**Contributing**](#contributing) · [**Disclaimer**](#disclaimer)
 
 <br/>
 
 </div>
 
 > [!IMPORTANT]
-> MusoPhone is not affiliated with, endorsed by, or connected to BitChord, YouTube or Google in any way. Use it at your own discretion.
+> MusoPhone is not affiliated with, endorsed by, or connected to YouTube or Google in any way. Use it at your own discretion.
 
 ---
 
@@ -98,7 +94,6 @@ Grab the latest signed APK from the [Releases](https://github.com/Alshahriar-07/
 
 Project website: <https://musophone.vercel.app>
 
-
 </div>
 
 ---
@@ -113,23 +108,9 @@ We welcome contributions to MusoPhone! Please review our [Contributing Guide](CO
 
 ### Thanks to all contributors ❤
 
-BitChord's contributors, and this build's, are credited in [Credit.md](Credit.md).
+**Designed and developed by [EAGOX STUDIO TEAM](mailto:eagoxstudio@gmail.com).**
 
-</div>
-
----
-
-<div align="center">
-
-<h1><a id="support"></a>Support</h1>
-
-MusoPhone has no donation links of its own. The upstream BitChord project, whose work this app is built on, accepts support here:
-
-<a href="https://ko-fi.com/kushagrasinghx" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/donate/kofi-singular-alt/cozy.svg" alt="Support me on Ko-fi" height="55"/></a>
-<a href="https://paypal.me/kuxhagrasingh" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/donate/paypal-plural/cozy.svg" alt="Support us on PayPal" height="55"/></a>
-
-<br/>
-<img src="upi_support.jpg" alt="UPI Support" width="250" />
+**Special Thanks:** See [`Credit.md`](Credit.md) for complete project credits and acknowledgements.
 
 </div>
 
@@ -141,10 +122,10 @@ MusoPhone has no donation links of its own. The upstream BitChord project, whose
 
 MusoPhone is an independent, community-driven third-party audio player and client. It is **not** associated with Google LLC, YouTube Music, Deezer, Telegram, or any of their parent companies.
 
-* **No Media Hosting:** MusoPhone does not host, upload, or store copyrighted music files. It operates strictly as an interface to scan local device storage or stream media directly from public, public-facing, or user-authenticated APIs.
-* **Fair Use & API Usage:** This software is created solely for personal research, educational, and fair-use purposes. The user is entirely responsible for ensuring their usage aligns with their local copyright laws and YouTube Terms of Service.
-* **No Ad-Blocking Guarantee:** While MusoPhone focuses on providing a clean listening environment, it does not guarantee permanent bypasses or modifications to commercial third-party platform conditions.
-* **Copyleft:** MusoPhone is free software under the GPLv3. The license does not let anyone forbid others from selling or redistributing copies, but any distribution must come with the Corresponding Source under the same license.
+- **No Media Hosting:** MusoPhone does not host, upload, or store copyrighted music files. It operates strictly as an interface to scan local device storage or stream media directly from public, public-facing, or user-authenticated APIs.
+- **Fair Use & API Usage:** This software is created solely for personal research, educational, and fair-use purposes. The user is entirely responsible for ensuring their usage aligns with their local copyright laws and YouTube Terms of Service.
+- **No Ad-Blocking Guarantee:** While MusoPhone focuses on providing a clean listening environment, it does not guarantee permanent bypasses or modifications to commercial third-party platform conditions.
+- **Copyleft:** MusoPhone is free software under the GPLv3. The license does not let anyone forbid others from selling or redistributing copies, but any distribution must come with the Corresponding Source under the same license.
 
 </div>
 

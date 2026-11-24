@@ -49,6 +49,7 @@ import com.music.bitchord.data.model.MoodGenreSection
 import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.ui.components.MessageState
+import com.music.bitchord.ui.components.MusoPageTitle
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.PullToRefresh
 import com.music.bitchord.ui.components.ShimmerBox
@@ -84,19 +85,7 @@ fun ExploreScreen(
             ) {
                 if (showTitle) {
                     item {
-                        Text(
-                            text = stringResource(Res.string.explore),
-                            style = MaterialTheme.typography.displayLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            // 14dp under the title, the same gap Library leaves
-                            // above its first card (8dp title + 6dp Replay row).
-                            modifier = Modifier.padding(
-                                start = PAGE_GUTTER,
-                                end = PAGE_GUTTER,
-                                top = 8.dp,
-                                bottom = 14.dp,
-                            ),
-                        )
+                        MusoPageTitle(title = stringResource(Res.string.explore))
                     }
                 }
                 when (state) {

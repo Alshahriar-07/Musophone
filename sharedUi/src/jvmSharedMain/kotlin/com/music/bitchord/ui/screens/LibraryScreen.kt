@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import com.music.bitchord.ui.components.ShelfRow
+import com.music.bitchord.ui.components.MusoPageTitle
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -134,12 +135,7 @@ fun LibraryScreen(
         ) {
             if (showTitle) {
                 item {
-                    Text(
-                        text = stringResource(Res.string.library),
-                        style = MaterialTheme.typography.displayLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
-                    )
+                    MusoPageTitle(title = stringResource(Res.string.library))
                 }
             }
             item(key = "replay") { replay() }
