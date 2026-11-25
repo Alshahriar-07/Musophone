@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 
 // The development extension's id, pinned by its manifest `key`
 // (web/extension/dev-key/). Read at build time so the page can message it.
@@ -14,18 +14,7 @@ function devExtensionId(): string {
   }
 }
 
-// The party server's address stays out of the repo: .env.local here, a
-// Cloudflare Pages variable in production. Without it Listen Together can't
-// make a party, so a production build stops instead of shipping that.
-function requirePartyServer(mode: string): void {
-  const env = loadEnv(mode, fileURLToPath(new URL('.', import.meta.url)), 'VITE_');
-  if (!env.VITE_PARTY_SERVER_URL?.trim()) {
-    throw new Error('VITE_PARTY_SERVER_URL is not set (app/.env.local, or the Cloudflare Pages environment).');
-  }
-}
-
-export default defineConfig(({ command, mode }) => {
-  if (command === 'build') requirePartyServer(mode);
+export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     define: {

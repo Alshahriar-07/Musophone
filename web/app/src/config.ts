@@ -8,6 +8,10 @@ export const config = {
   /** The version the zips above hold, for the "update available" notice. */
   extensionManifestUrl: import.meta.env.VITE_EXTENSION_MANIFEST_URL || '/downloads/extension.json',
   androidAppUrl: import.meta.env.VITE_ANDROID_APP_URL || 'https://github.com/Alshahriar-07/Musophone/releases/latest',
-  /** The Listen Together server this client talks to. vite.config.ts refuses a production build without it. */
+  /**
+   * The Listen Together server and presence host. Production's default is in
+   * app/.env.production; a Vercel project variable overrides it. Empty is
+   * supported: Listen Together then asks for a server, and presence is off.
+   */
   partyServerUrl: import.meta.env.VITE_PARTY_SERVER_URL ?? '',
 } as const;
