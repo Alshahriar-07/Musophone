@@ -7,7 +7,7 @@
 <p><b>An independent, premium Android music player.</b><br/>
 True-black AMOLED design · hi-res audio · word-synced lyrics</p>
 
-<p><b>Built by <a href="mailto:eagoxstudio@gmail.com">EAGOX STUDIO TEAM</a></b></p>
+<p><b>Built by <a href="mailto:eagoxstudio@gmail.com">EAGOX STUDIO </a></b></p>
 
 [![Latest release](https://img.shields.io/github/v/release/Alshahriar-07/Musophone?style=for-the-badge&labelColor=0d1117&color=8b5cf6)](https://github.com/Alshahriar-07/Musophone/releases)
 [![Downloads](https://img.shields.io/github/downloads/Alshahriar-07/Musophone/total?style=for-the-badge&labelColor=0d1117&color=8b5cf6)](https://github.com/Alshahriar-07/Musophone/releases)
