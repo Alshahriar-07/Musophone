@@ -90,6 +90,17 @@ android {
         // Haze falls back to a translucent scrim below that.
         minSdk = 26
         targetSdk = 36
+
+        /*
+         * Three ABIs, and no x86. x86 was never more than the 32-bit slices
+         * that AARs ship: no MusoPhone native library (DSD, exclusive output,
+         * loop-mix, the analysis kernels) is built for it, so an x86 APK would
+         * install and then fail at the first dlopen. Leaving those slices in
+         * the universal APK only made it larger for every real phone.
+         */
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
         versionCode = rootProject.extra["bitchordVersionCode"] as Int
         versionName = rootProject.extra["bitchordVersionName"] as String
 
@@ -174,6 +185,23 @@ android {
                 storePassword = signing.getProperty("storePassword")
                 keyAlias = signing.getProperty("keyAlias")
                 keyPassword = signing.getProperty("keyPassword")
+                /*
+                 * v2 is what Android 7+ verifies and is required from Android
+                 * 11; v3 is what Android 9+ uses for key rotation and what
+                 * Android 11+ checks on an update. Both are on explicitly so a
+                 * future AGP default cannot quietly drop one.
+                 *
+                 * v1 is deliberately absent, and AGP would ignore it here
+                 * anyway: once minSdk is 24 or higher it disables the JAR
+                 * scheme outright rather than merely defaulting it off
+                 * (issuetracker.google.com/134858541). It is redundant on
+                 * Android 8.0+, which is the floor this app supports. A v1
+                 * signature can only be added by re-signing the finished APK
+                 * with apksigner, which is not worth a second signing pass for
+                 * a scheme every supported device ignores.
+                 */
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }

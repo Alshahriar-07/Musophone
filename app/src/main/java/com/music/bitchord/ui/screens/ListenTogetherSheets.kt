@@ -141,7 +141,6 @@ internal fun GlowingAvatar(
                 // that grows past its own box gets a straight edge sliced
                 // across it — a round light inside a visible square, breathing
                 // in and out of its own corners.
-                .blur(28.dp, BlurredEdgeTreatment.Unbounded)
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(

@@ -5,10 +5,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
@@ -23,14 +22,12 @@ import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppFont
 
 /*
- * MusoPhone's identity: a coral pulse over warm obsidian, not Apple Music's
- * red-on-black. The coral is sampled from the logo; the secondary is a muted
- * apricot that keeps long listening sessions from turning into a red wash, and
- * the cool teal is reserved for data and "live" states so it stays meaningful.
- *
- * A single accent used to mean every control shouted. Here coral is for the
- * one action that matters on a screen (play, the selected tab, a primary
- * button); everything structural is ink, smoke and a hairline of warm light.
+ * MusoPhone's identity: one accent used with restraint over a deep, tinted
+ * glass foundation. The accent is for the one action that matters on a screen
+ * (play, the selected tab, a primary button); everything structural is ink,
+ * smoke and a hairline of light. The eight palettes that can fill that accent
+ * live in [MusoAccentTheme]; screens must read MaterialTheme.colorScheme rather
+ * than naming an accent, or switching themes leaves them behind.
  */
 val AccentRed = Color(0xFFFF4D67)
 val MusoCoral = Color(0xFFFF4D67)
@@ -38,44 +35,6 @@ val MusoApricot = Color(0xFFFFC4A8)
 val MusoTeal = Color(0xFF8CE0D4)
 val MusoInk = Color(0xFF0B0709)
 val MusoPorcelain = Color(0xFFFFF8F3)
-
-private val DarkColors = darkColorScheme(
-    primary = MusoCoral,
-    onPrimary = Color(0xFF2A0710),
-    primaryContainer = Color(0xFF3A111B),
-    onPrimaryContainer = Color(0xFFFFD9DE),
-    secondary = MusoApricot,
-    onSecondary = Color(0xFF2B160C),
-    tertiary = MusoTeal,
-    onTertiary = Color(0xFF04211D),
-    background = MusoInk,
-    onBackground = Color(0xFFFFF4EE),
-    surface = Color(0xFF120C10),
-    onSurface = Color(0xFFFFF4EE),
-    surfaceVariant = Color(0xFF1D151A),
-    onSurfaceVariant = Color(0xFFB9A8AD),
-    outline = Color(0xFF3A2B31),
-    outlineVariant = Color(0xFF2A1F24),
-)
-
-private val LightColors = lightColorScheme(
-    primary = Color(0xFFD92D4E),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFDDE2),
-    onPrimaryContainer = Color(0xFF3D0713),
-    secondary = Color(0xFF9B4A2C),
-    onSecondary = Color.White,
-    tertiary = Color(0xFF166B61),
-    onTertiary = Color.White,
-    background = MusoPorcelain,
-    onBackground = Color(0xFF1C1114),
-    surface = Color(0xFFFFFCF9),
-    onSurface = Color(0xFF1C1114),
-    surfaceVariant = Color(0xFFF6E9E4),
-    onSurfaceVariant = Color(0xFF6F5C60),
-    outline = Color(0xFFE7D5D0),
-    outlineVariant = Color(0xFFF0E2DE),
-)
 
 /**
  * MusoPhone's geometry: generous but not pill-shaped everywhere. Cards are
@@ -186,17 +145,21 @@ private fun Typography.withFamily(family: FontFamily) = Typography(
 fun BitChordTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     font: AppFont = AppFont.DEFAULT,
+    accentTheme: MusoAccentTheme = MusoAccentTheme.CRIMSON_RED,
     content: @Composable () -> Unit,
 ) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
-        shapes = MusoShapes,
-        typography = when (font) {
-            AppFont.DEFAULT -> MusoPhoneTypography
-            AppFont.LEGACY -> LegacyTypography
-        },
-        content = content,
-    )
+    val palette = accentTheme.palette(darkTheme)
+    CompositionLocalProvider(LocalMusoAccentPalette provides palette) {
+        MaterialTheme(
+            colorScheme = accentTheme.colorScheme(darkTheme),
+            shapes = MusoShapes,
+            typography = when (font) {
+                AppFont.DEFAULT -> MusoPhoneTypography
+                AppFont.LEGACY -> LegacyTypography
+            },
+            content = content,
+        )
+    }
 }
 
 /**

@@ -253,7 +253,7 @@ internal fun AndroidLyricsShareSheet(
                     CanvasArtworkPlayer(
                         canvas = clip,
                         isPlaying = true,
-                        modifier = Modifier.matchParentSize().blur(PREVIEW_BLUR),
+                        modifier = Modifier.matchParentSize(),
                     )
                     // As dark as the export's: about the player's own backdrop.
                     Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = CLIP_SCRIM)))

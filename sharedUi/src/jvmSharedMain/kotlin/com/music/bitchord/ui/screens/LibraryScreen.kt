@@ -138,10 +138,10 @@ fun LibraryScreen(
                     MusoPageTitle(title = stringResource(Res.string.library))
                 }
             }
-            item(key = "replay") { replay() }
             if (links.isNotEmpty()) {
                 item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
             }
+            item(key = "replay") { replay() }
             if (deviceItems.isNotEmpty()) {
                 item(key = "shelf:$onDevice") {
                     val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)

@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import com.music.bitchord.ui.components.ShelfRow
@@ -94,7 +95,7 @@ import com.music.bitchord.ui.player.MeshGradientBackground
 import com.music.bitchord.ui.player.MeshPalette
 
 /** How far the Listen now heading and feed sit above the shared top inset. */
-private val HOME_TITLE_LIFT = 28.dp
+private val HOME_TITLE_LIFT = 52.dp
 
 private const val RECENTS_TITLE = "Recents"
 private const val RECENT_TRACKS_PER_COLUMN = 4
@@ -508,7 +509,7 @@ private fun HomeTitle(
                     ),
                 )
             }
-            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 10.dp, bottom = 12.dp),
+            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 4.dp, bottom = 10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // The complete official lockup — icon and wordmark together — not a
@@ -521,7 +522,11 @@ private fun HomeTitle(
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .height(logoHeight)
-                    .aspectRatio(LOGO_ASPECT),
+                    .aspectRatio(LOGO_ASPECT)
+                    // A cap for large accessibility font scales: Fit keeps the
+                    // mark's proportions whatever room it is given, so the
+                    // masthead cannot push the avatar off a narrow screen.
+                    .widthIn(max = 190.dp),
             )
             Spacer(Modifier.weight(1f))
             if (replayYear != null) {
@@ -531,7 +536,7 @@ private fun HomeTitle(
             if (onProfileClick != null) HomeProfileControl(listenerName, profileImageUrl, onProfileClick)
         }
 
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(16.dp))
         Text(
             text = title,
             style = style,
@@ -584,8 +589,16 @@ private fun HomeProfileControl(
     }
 }
 
-/** The wordmark's height against the heading's font size. */
-private const val LOGO_TO_FONT = 1.05f
+/**
+ * The wordmark's height against the heading's font size.
+ *
+ * Raised from 1.05 so the lockup reads as the app's masthead rather than a
+ * chip beside the avatar. It is still derived from the type scale, so the mark
+ * grows with the user's font-size preference and keeps its proportion to
+ * "Listen now" beneath it. [LOGO_ASPECT] fixes the width, so raising this
+ * height never distorts the supplied artwork.
+ */
+private const val LOGO_TO_FONT = 1.45f
 
 /** The supplied full lockup's viewport, 2172 x 724. */
 private const val LOGO_ASPECT = 3f

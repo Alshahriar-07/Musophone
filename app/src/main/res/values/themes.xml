@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Compose owns all theming; this just gives an edge-to-edge, action-bar-free window. -->
-    <style name="Theme.BitChord" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="android:windowBackground">@android:color/black</item>
+    <!--
+      Compose owns all theming; this only gives an edge-to-edge, action-bar-free
+      window, and the colour the window is painted before the first frame — the
+      launch surface. It is the light half of the MusoPhone backdrop, so a cold
+      start flashes porcelain rather than black.
+    -->
+    <style name="Theme.MusoPhone" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/muso_launch_background</item>
     </style>
 </resources>

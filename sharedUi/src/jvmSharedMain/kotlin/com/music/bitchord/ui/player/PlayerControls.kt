@@ -2413,3 +2413,206 @@ private fun TrackAnalysisState.localizedLabel(): String = when (this) {
     TrackAnalysisState.WAITING -> stringResource(Res.string.waiting)
     TrackAnalysisState.FAILED -> stringResource(Res.string.failed)
 }
+
+/**
+ * The three queue modes, lifted out of the queue-open capsule and given a row
+ * of their own on the phone player.
+ *
+ * They answer "how does this queue play", which is a different question from
+ * the transport's "what plays now", so they read as a quiet strip of tiles
+ * between the two rather than as controls nested behind the queue button.
+ * Each tile lights in the active accent — the same accent in every one of the
+ * eight themes — and dims back to plain white when its mode is off.
+ */
+@Composable
+internal fun PlayerModesRow(
+    shuffleEnabled: Boolean,
+    repeatMode: Int,
+    autoplayEnabled: Boolean,
+    onToggleShuffle: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onToggleAutoplay: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // The theme accent as Material exposes it: sharedUi does not know the app's
+    // accent enum, and every one of the eight themes sets this role.
+    val accent = MaterialTheme.colorScheme.primary
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        PlayerModeTile(
+            icon = BitChordIcons.Shuffle,
+            label = stringResource(Res.string.shuffle_on).substringBefore(' '),
+            contentDescription = stringResource(
+                if (shuffleEnabled) Res.string.shuffle_on else Res.string.shuffle_off,
+            ),
+            active = shuffleEnabled,
+            accent = accent,
+            onClick = onToggleShuffle,
+            haptic = if (shuffleEnabled) Haptic.ToggleOff else Haptic.ToggleOn,
+            modifier = Modifier.weight(1f),
+        )
+        PlayerModeTile(
+            icon = BitChordIcons.Repeat,
+            label = stringResource(Res.string.repeat_off).substringBefore(' '),
+            badge = "1".takeIf { repeatMode == RepeatModes.ONE },
+            contentDescription = when (repeatMode) {
+                RepeatModes.ONE -> stringResource(Res.string.repeat_one)
+                RepeatModes.ALL -> stringResource(Res.string.repeat_all)
+                else -> stringResource(Res.string.repeat_off)
+            },
+            active = repeatMode != RepeatModes.OFF,
+            accent = accent,
+            onClick = onCycleRepeat,
+            haptic = when (repeatMode) {
+                RepeatModes.OFF -> Haptic.ToggleOn
+                RepeatModes.ONE -> Haptic.ToggleOff
+                else -> Haptic.Select
+            },
+            modifier = Modifier.weight(1f),
+        )
+        PlayerModeTile(
+            icon = BitChordIcons.Infinity,
+            label = stringResource(Res.string.autoplay),
+            contentDescription = stringResource(
+                if (autoplayEnabled) Res.string.autoplay_on else Res.string.autoplay_off,
+            ),
+            active = autoplayEnabled,
+            accent = accent,
+            onClick = onToggleAutoplay,
+            haptic = if (autoplayEnabled) Haptic.ToggleOff else Haptic.ToggleOn,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+/**
+ * One mode tile: a low glass lozenge that carries its own state.
+ *
+ * Deliberately not a pill segment. A segment is a choice inside one control;
+ * these are three switches that stay on independently, and they are always on
+ * screen, so each needs its own resting shape and its own lit edge.
+ */
+@Composable
+private fun PlayerModeTile(
+    icon: ImageVector,
+    label: String,
+    contentDescription: String,
+    active: Boolean,
+    accent: Color,
+    onClick: () -> Unit,
+    haptic: Haptic,
+    modifier: Modifier = Modifier,
+    badge: String? = null,
+) {
+    val haptics = rememberHaptics()
+    val interaction = remember { MutableInteractionSource() }
+    val shape = RoundedCornerShape(13.dp)
+    val ink = if (active) accent else Color.White.copy(alpha = 0.62f)
+    Row(
+        modifier = modifier
+            .height(34.dp)
+            .clip(shape)
+            .background(
+                if (active) {
+                    accent.copy(alpha = 0.16f)
+                } else {
+                    Color.White.copy(alpha = 0.07f)
+                },
+            )
+            .border(
+                width = 0.5.dp,
+                color = if (active) accent.copy(alpha = 0.50f) else Color.White.copy(alpha = 0.10f),
+                shape = shape,
+            )
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                role = Role.Button,
+                onClick = {
+                    haptics.play(haptic)
+                    onClick()
+                },
+            )
+            .semantics { this.contentDescription = contentDescription },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = ink,
+                modifier = Modifier.size(17.dp),
+            )
+            if (badge != null) {
+                Text(
+                    text = badge,
+                    color = accent,
+                    fontSize = 7.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.offset(x = 5.dp, y = (-5).dp),
+                )
+            }
+        }
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = label,
+            color = if (active) accent else Color.White.copy(alpha = 0.52f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * The phone player's bottom action dock: lyrics at one end, the queue at the
+ * other, and the output/party capsule between them.
+ *
+ * This is the same set of actions the old row carried, regrouped so that the
+ * queue reads as one of the three places a listener can go — lyrics, queue,
+ * output — instead of being a glyph that had to be opened before the queue
+ * modes appeared. Those modes now live in [PlayerModesRow].
+ */
+@Composable
+internal fun PortraitActionDock(
+    lyricsOpen: Boolean,
+    queueOpen: Boolean,
+    onToggleLyrics: () -> Unit,
+    onToggleQueue: () -> Unit,
+    onOpenOutput: () -> Unit,
+    onListenTogether: () -> Unit,
+    onOpenListenTogetherMembers: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BottomGlyph(
+            icon = BitChordIcons.LyricsQuote,
+            contentDescription = stringResource(
+                if (lyricsOpen) Res.string.close_lyrics else Res.string.open_lyrics,
+            ),
+            onClick = onToggleLyrics,
+            highlighted = lyricsOpen,
+            vibrant = true,
+        )
+        OutputPartyPill(
+            onOutput = onOpenOutput,
+            onParty = onListenTogether,
+            onOpenMembers = onOpenListenTogetherMembers,
+        )
+        BottomGlyph(
+            icon = BitChordIcons.Queue,
+            contentDescription = stringResource(Res.string.queue),
+            onClick = onToggleQueue,
+            highlighted = queueOpen,
+            haptic = if (queueOpen) Haptic.ToggleOff else Haptic.ToggleOn,
+            vibrant = true,
+        )
+    }
+}

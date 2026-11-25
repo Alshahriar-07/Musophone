@@ -60,6 +60,7 @@ import com.music.bitchord.data.stats.RankedEntry
 import com.music.bitchord.data.stats.ReplayPeriod
 import com.music.bitchord.data.stats.ReplaySummary
 import com.music.bitchord.ui.components.MusoAvatar
+import com.music.bitchord.ui.icons.SfIcons
 import com.music.bitchord.ui.components.MusoFactRow
 import com.music.bitchord.ui.components.MusoGlassCard
 import com.music.bitchord.ui.components.MusoPill
@@ -86,6 +87,9 @@ fun ProfileScreen(
     onLoadHistory: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenReplay: () -> Unit,
+    /** The gear: the app's own settings, not the account's. */
+    onAppSettings: () -> Unit,
+    /** The "Account settings" chip: account, channel and scrobbling. */
     onAccountSettings: () -> Unit,
     onSongClick: (Song) -> Unit,
     contentPadding: PaddingValues,
@@ -112,7 +116,7 @@ fun ProfileScreen(
             ProfileHeader(
                 account = account,
                 signedIn = signedIn,
-                onAccountSettings = onAccountSettings,
+                onAppSettings = onAppSettings,
             )
         }
 
@@ -375,7 +379,7 @@ fun ProfileScreen(
 private fun ProfileHeader(
     account: Account?,
     signedIn: Boolean,
-    onAccountSettings: () -> Unit,
+    onAppSettings: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -413,10 +417,10 @@ private fun ProfileHeader(
                     ),
                 )
             }
-            IconButton(onClick = onAccountSettings) {
+            IconButton(onClick = onAppSettings) {
                 Icon(
-                    imageVector = Icons.Rounded.Settings,
-                    contentDescription = stringResource(R.string.profile_account_settings),
+                    imageVector = SfIcons.Settings,
+                    contentDescription = stringResource(R.string.settings),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

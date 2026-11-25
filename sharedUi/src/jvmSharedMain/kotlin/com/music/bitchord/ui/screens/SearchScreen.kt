@@ -365,8 +365,9 @@ fun SearchScreen(
                                         top = 16.dp,
                                         bottom = 6.dp,
                                     ),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary,
                                 )
                             }
                         }
@@ -840,7 +841,8 @@ private fun LazyListScope.recentSearches(
         ) {
             Text(
                 text = stringResource(Res.string.recent_searches),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.weight(1f),
             )

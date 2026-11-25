@@ -1551,10 +1551,7 @@ private fun PageBackground(
                         .drawWithContent {
                             drawContent()
                             drawRect(SOFT_FOOT_MASK, blendMode = BlendMode.DstIn)
-                        }
-                        // Rectangle keeps the edges clamped to the picture's own
-                        // colour rather than fading to transparent at the foot.
-                        .blur(SOFT_FOOT_BLUR, BlurredEdgeTreatment.Rectangle),
+                        },
                 )
             }
 

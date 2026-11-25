@@ -41,6 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -57,6 +59,10 @@ import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import com.music.bitchord.ui.theme.accentPalette
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlin.math.abs
@@ -250,16 +256,17 @@ fun FloatingBottomBar(
 
     Box(
         modifier = modifier
-            .windowInsetsPadding(floatingBarInsets)
-            .padding(horizontal = NAV_BAR_GUTTER)
-            .padding(bottom = NAV_BAR_LIFT)
+            // Full width and flush with the bottom edge: this is the app's
+            // navigation surface, not a card floating over the page. The
+            // background runs behind the system navigation area; the content
+            // above is inset from it, so labels never sit under the gesture
+            // bar while the surface still reaches the screen's edge.
             .fillMaxWidth()
-            .clip(pillShape)
             .then(
                 if (reduceDynamicBlur) {
                     Modifier.background(container)
                 } else if (useGlass) {
-                    Modifier.liquidGlass(shape = pillShape)
+                    Modifier.liquidGlass(shape = RoundedCornerShape(0.dp))
                 } else {
                     Modifier.optimizedHazeEffect(
                         state = hazeState,
@@ -267,8 +274,20 @@ fun FloatingBottomBar(
                     )
                 },
             )
-            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, pillShape)
-            .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
+            // One hairline along the top edge instead of a border on all four:
+            // the surface is continuous with the page above it, and only the
+            // boundary needs drawn.
+            .drawBehind {
+                val stroke = 0.5.dp.toPx()
+                drawLine(
+                    color = GLASS_EDGE_COLOR,
+                    start = Offset(0f, stroke / 2f),
+                    end = Offset(size.width, stroke / 2f),
+                    strokeWidth = stroke,
+                )
+            }
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(horizontal = 4.dp, vertical = TAB_VERTICAL_PADDING),
     ) {
         if (tabWidthPx > 0f) {
             Box(
@@ -286,7 +305,10 @@ fun FloatingBottomBar(
                         scaleY = 1f - lag * STRETCH * SQUASH
                     }
                     .clip(pillShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                    // The theme's own accent, not a fixed coral: this is the
+                    // surface that makes a Monochrome nav look monochrome and
+                    // an Ocean one look blue at a glance.
+                    .background(accentPalette.accent.copy(alpha = 0.17f)),
             )
         }
 
@@ -426,6 +448,21 @@ private fun BottomBarItem(
             color = tint,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+        )
+        // A short accent rule under the active destination. The glyph alone
+        // carries selection on a busy backdrop poorly; this is the theme's
+        // colour said once, in the place the eye already is.
+        Spacer(Modifier.height(3.dp))
+        val ruleWidth by animateDpAsState(
+            targetValue = if (selected) 14.dp else 3.dp,
+            animationSpec = tween(220),
+            label = "tabRuleWidth",
+        )
+        Box(
+            modifier = Modifier
+                .size(ruleWidth, 2.dp)
+                .clip(CircleShape)
+                .background(if (selected) accentPalette.accent else Color.Transparent),
         )
     }
 }

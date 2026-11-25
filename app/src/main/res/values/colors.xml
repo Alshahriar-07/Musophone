@@ -7,4 +7,6 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- The launch surface on a light appearance: the backdrop's own top stop. -->
+    <color name="muso_launch_background">#F7F5F8</color>
 </resources>

@@ -1657,4 +1657,15 @@
         <item quantity="one">album</item>
         <item quantity="other">albums</item>
     </plurals>
+    <string name="accent_theme">Accent theme</string>
+    <string name="accent_theme_subtitle">Eight palettes, one glass foundation. Changes apply everywhere instantly.</string>
+    <string name="accent_monochrome">Monochrome</string>
+    <string name="accent_orange">Aesthetic Orange</string>
+    <string name="accent_ocean">Ocean Blue</string>
+    <string name="accent_purple">Midnight Purple</string>
+    <string name="accent_sakura">Sakura Pink</string>
+    <string name="accent_emerald">Emerald Green</string>
+    <string name="accent_crimson">Crimson Red</string>
+    <string name="accent_sunset">Sunset Amber</string>
+    <string name="about">About</string>
 </resources>

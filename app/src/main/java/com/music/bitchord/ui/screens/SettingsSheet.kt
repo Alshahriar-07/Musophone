@@ -132,6 +132,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.viewinterop.AndroidView
 import com.music.bitchord.AppIcon
+import com.music.bitchord.ui.components.AccentThemePicker
+import com.music.bitchord.ui.theme.MusoAccentTheme
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -176,7 +178,6 @@ import com.music.bitchord.data.settings.AppFont
 import com.music.bitchord.data.settings.PlayerTheme
 import com.music.bitchord.data.stats.Backup
 import com.music.bitchord.playback.AudioCache
-import com.music.bitchord.ui.player.fullBleedArtworkAvailable
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import java.util.Locale
@@ -252,19 +253,13 @@ fun SettingsScreen(
     val bestPart by AppSettings.showBestPart.collectAsStateWithLifecycle()
     val listenTogetherButton by AppSettings.showListenTogetherButton.collectAsStateWithLifecycle()
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
-    val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val disableBlendEffects by AppSettings.disableBlendEffects.collectAsStateWithLifecycle()
-    val liquidGlass by AppSettings.liquidGlass.collectAsStateWithLifecycle()
     val glassPerformance by AppSettings.glassPerformance.collectAsStateWithLifecycle()
-    val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
     val liquidGlassSupported = isGlassSupported()
-    val lyricsBlur by AppSettings.lyricsBlur.collectAsStateWithLifecycle()
     val animatedCanvas by AppSettings.animatedCanvas.collectAsStateWithLifecycle()
     val canvasOverCellular by AppSettings.canvasOverCellular.collectAsStateWithLifecycle()
     val signatureApiEnabled by AppSettings.signatureApiEnabled.collectAsStateWithLifecycle()
     val signatureApiUrl by AppSettings.signatureApiUrl.collectAsStateWithLifecycle()
-    val fullBleedArtwork by AppSettings.fullBleedArtwork.collectAsStateWithLifecycle()
-    val fullBleedDetailArtwork by AppSettings.fullBleedDetailArtwork.collectAsStateWithLifecycle()
     val showTotalDuration by AppSettings.showTotalDuration.collectAsStateWithLifecycle()
     val playerTheme by AppSettings.playerTheme.collectAsStateWithLifecycle()
     val syncedLyrics by AppSettings.syncedLyrics.collectAsStateWithLifecycle()
@@ -272,6 +267,7 @@ fun SettingsScreen(
     val lyricsSources by AppSettings.lyricsSources.collectAsStateWithLifecycle()
     val translationLanguage by AppSettings.translationLanguage.collectAsStateWithLifecycle()
     val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
+    val accentTheme by AppSettings.accentTheme.collectAsStateWithLifecycle()
     val appFont by AppSettings.appFont.collectAsStateWithLifecycle()
     val sessionId by AppSettings.audioSessionId.collectAsStateWithLifecycle()
     val outputPcmMode by AppSettings.outputPcmMode.collectAsStateWithLifecycle()
@@ -454,14 +450,25 @@ fun SettingsScreen(
         }
     }
 
+    // About is a page in its own right: a column of identity and credit cards
+    // rather than a list of switches. It shares the screen's container so the
+    // back stack, the top bar and the theme are exactly the same as every
+    // other Settings page.
+    if (section == SettingsCategory.ABOUT) {
+        AboutMusoPhoneScreen(contentPadding = contentPadding, modifier = modifier)
+        return
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(scrollState)
             .padding(contentPadding),
     ) {
-        SettingsPageTitle(stringResource(section?.title ?: R.string.settings))
+        // One heading, not two: the frosted top bar already names the page
+        // that was opened, so the in-page title belongs to the root list only.
         if (section == null) {
+            SettingsPageTitle(stringResource(R.string.settings))
             SearchField(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
@@ -470,6 +477,36 @@ fun SettingsScreen(
                 modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 4.dp),
             )
 
+            // The categories, each a page of its own — until there is a query,
+            // when their rows answer here instead (below).
+            if (!searching) {
+                SettingsCategoryList(onOpen = onOpenSection)
+                if (watchAvailable) {
+                    SettingsGroup {
+                        WearOsSettingsRow(onClick = onWearOs)
+                    }
+                }
+            }
+            // About has no switches to match on, so a query gets its own row:
+            // somebody typing "credits" or "version" should find the page.
+            if (searching) {
+                SearchableSettingsGroup(search) {
+                    val aboutTitle = stringResource(R.string.about) + " MusoPhone"
+                    row(aboutTitle, "credits", "version", "license", "developer", "github") {
+                        SettingsRow(
+                            icon = SfIcons.Info,
+                            title = aboutTitle,
+                            onClick = { onOpenSection(SettingsCategory.ABOUT) },
+                        )
+                    }
+                }
+            }
+        }
+
+        // The account lives on its own page now. It still answers the search
+        // field: on the main page a query renders every matching row, so the
+        // rows below are reachable exactly as they were before the move.
+        if (shows(SettingsCategory.ACCOUNT)) {
             SearchableSettingsGroup(search) {
                 val accountTitle = stringResource(R.string.account_integrations)
                 // What the row opens is the scrobbling screen, so the services it
@@ -510,8 +547,25 @@ fun SettingsScreen(
                         onClick = onListenTogether,
                     )
                 }
+                // Signing out lives with the identity it signs out of. It is
+                // only offered while there is a session to end.
+                if (signedIn) {
+                    val signOutTitle = stringResource(R.string.sign_out)
+                    row(signOutTitle, "logout", "google") {
+                        SettingsRow(
+                            icon = SfIcons.Logout,
+                            title = signOutTitle,
+                            onClick = onSignOut,
+                        )
+                    }
+                }
             }
 
+        }
+
+        // Audio quality belongs to Playback now — it is a playback setting
+        // that used to sit above the category list. Gated the same way.
+        if (shows(SettingsCategory.PLAYBACK)) {
             // The row that used to sit at the top of this group was called
             // "Lossless / HQ Audio" and toggled `SourceRegistry.setModuleEnabled` —
             // it switched the *module source* on and off, not lossless. Sources
@@ -602,16 +656,6 @@ fun SettingsScreen(
                 }
             }
 
-            // The categories, each a page of its own — until there is a query,
-            // when their rows answer here instead (below).
-            if (!searching) {
-                SettingsCategoryList(onOpen = onOpenSection)
-                if (watchAvailable) {
-                    SettingsGroup {
-                        WearOsSettingsRow(onClick = onWearOs)
-                    }
-                }
-            }
         }
 
         // Its own group rather than rows bolted onto the two above, because a
@@ -1026,7 +1070,7 @@ fun SettingsScreen(
             }
         }
 
-        if (shows(SettingsCategory.CONTENT_PREFERENCES)) SearchableSettingsGroup(search, header = stringResource(R.string.content_preferences)) {
+        if (shows(SettingsCategory.PLAYBACK)) SearchableSettingsGroup(search, header = stringResource(R.string.content_preferences)) {
             val preferMusicOnlyTitle = stringResource(R.string.prefer_music_only)
             row(preferMusicOnlyTitle, "video", "audio", "music video", "convert", "song") {
                 SettingsRow(
@@ -1117,9 +1161,33 @@ fun SettingsScreen(
         }
 
         if (shows(SettingsCategory.APPEARANCE)) SearchableSettingsGroup(search, header = stringResource(R.string.appearance)) {
+            val accentTitle = stringResource(R.string.accent_theme)
+            val accentSearchWords = MusoAccentTheme.entries.joinToString(" ") { context.getString(it.labelRes) }
+            row(
+                accentTitle,
+                "colour",
+                "color",
+                "palette",
+                "accent",
+                "glass",
+                accentSearchWords,
+            ) {
+                Column {
+                    SettingsRow(
+                        icon = SfIcons.Appearance,
+                        title = accentTitle,
+                        subtitle = stringResource(R.string.accent_theme_subtitle),
+                    )
+                    AccentThemePicker(
+                        selected = accentTheme,
+                        onSelect = AppSettings::setAccentTheme,
+                        modifier = Modifier.padding(bottom = 14.dp),
+                    )
+                }
+            }
             val themeTitle = stringResource(R.string.theme)
             row(themeTitle, "dark mode", "light mode") {
-                SettingsRow(icon = Icons.Rounded.Brightness4, title = themeTitle)
+                SettingsRow(icon = SfIcons.Brightness, title = themeTitle)
                 SegmentedControl(
                     options = ThemeMode.entries.map { it.localizedLabel() },
                     selectedIndex = ThemeMode.entries.indexOf(theme),
@@ -1152,21 +1220,6 @@ fun SettingsScreen(
                     onClick = { AppSettings.setReduceAnimation(!reduceAnimation) },
                 )
             }
-            val reduceDynamicBlurTitle = stringResource(R.string.reduce_dynamic_blur)
-            row(reduceDynamicBlurTitle, "blur", "performance") {
-                SettingsRow(
-                    icon = SfIcons.BlurOff,
-                    title = reduceDynamicBlurTitle,
-                    subtitle = stringResource(R.string.reduce_dynamic_blur_subtitle),
-                    trailing = {
-                        IosSwitch(
-                            checked = reduceDynamicBlur,
-                            onCheckedChange = AppSettings::setReduceDynamicBlur,
-                        )
-                    },
-                    onClick = { AppSettings.setReduceDynamicBlur(!reduceDynamicBlur) },
-                )
-            }
             val disableBlendEffectsTitle = stringResource(R.string.disable_blend_effects)
             row(disableBlendEffectsTitle, "blend", "blending", "colour", "color", "tint", "player", "menu") {
                 SettingsRow(
@@ -1180,90 +1233,6 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setDisableBlendEffects(!disableBlendEffects) },
-                )
-            }
-            val liquidGlassTitle = stringResource(R.string.liquid_glass)
-            row(liquidGlassTitle, "glass", "blur") {
-                SettingsRow(
-                    icon = SfIcons.AutoAwesome,
-                    title = liquidGlassTitle,
-                    subtitle = stringResource(
-                        if (liquidGlassSupported) {
-                            R.string.liquid_glass_subtitle
-                        } else {
-                            R.string.liquid_glass_unavailable
-                        },
-                    ),
-                    enabled = liquidGlassSupported,
-                    trailing = {
-                        IosSwitch(
-                            checked = liquidGlass,
-                            onCheckedChange = AppSettings::setLiquidGlass,
-                            enabled = liquidGlassSupported,
-                        )
-                    },
-                    onClick = { AppSettings.setLiquidGlass(!liquidGlass) },
-                )
-            }
-            // One line each, like Direct Source Stream under Sources, and only
-            // while Liquid Glass is on: they qualify the glass rather than standing
-            // on their own. Progressive Blur has its own switch because it costs
-            // frames of its own. Reduce dynamic blur turns it off.
-            if (liquidGlass && liquidGlassSupported) {
-                val glassPerformanceTitle = stringResource(R.string.glass_performance)
-                row(glassPerformanceTitle, "glass", "performance", "refraction", "frosted", "lag", divided = false) {
-                    SettingsSubRow(
-                        title = glassPerformanceTitle,
-                        checked = glassPerformance,
-                        onCheckedChange = AppSettings::setGlassPerformance,
-                    )
-                }
-                val progressiveBlurTitle = stringResource(R.string.progressive_blur)
-                row(progressiveBlurTitle, "blur", "status bar", "top", divided = false) {
-                    SettingsSubRow(
-                        title = progressiveBlurTitle,
-                        checked = progressiveBlur,
-                        onCheckedChange = AppSettings::setProgressiveBlur,
-                    )
-                }
-            }
-            // Left out where the player won't honour it: a window too wide for
-            // the player to fill and too narrow to stand a page beside it keeps
-            // the sleeve either way. A docked pane is a phone's width, so it does
-            // honour it — see [fullBleedArtworkAvailable].
-            if (fullBleedArtworkAvailable(windowWidth)) {
-                val fullScreenCoverArtTitle = stringResource(R.string.full_screen_cover_art)
-                row(fullScreenCoverArtTitle, "artwork", "player") {
-                    SettingsRow(
-                        icon = SfIcons.Fullscreen,
-                        title = fullScreenCoverArtTitle,
-                        subtitle = stringResource(R.string.full_screen_cover_art_subtitle),
-                        trailing = {
-                            IosSwitch(
-                                checked = fullBleedArtwork,
-                                onCheckedChange = AppSettings::setFullBleedArtwork,
-                            )
-                        },
-                        onClick = { AppSettings.setFullBleedArtwork(!fullBleedArtwork) },
-                    )
-                }
-            }
-            // Listed at every width: the page itself keeps the framed sleeve
-            // wherever a square the window's width wouldn't fit — see
-            // [ReleaseHeader].
-            val fullScreenDetailCoverTitle = stringResource(R.string.full_screen_detail_cover)
-            row(fullScreenDetailCoverTitle, "artwork", "album", "playlist", "cover") {
-                SettingsRow(
-                    icon = SfIcons.Fullscreen,
-                    title = fullScreenDetailCoverTitle,
-                    subtitle = stringResource(R.string.full_screen_detail_cover_subtitle),
-                    trailing = {
-                        IosSwitch(
-                            checked = fullBleedDetailArtwork,
-                            onCheckedChange = AppSettings::setFullBleedDetailArtwork,
-                        )
-                    },
-                    onClick = { AppSettings.setFullBleedDetailArtwork(!fullBleedDetailArtwork) },
                 )
             }
             val showTotalDurationTitle = stringResource(R.string.show_total_duration)
@@ -1416,21 +1385,6 @@ fun SettingsScreen(
             // sources are third-party services being reached on the user's
             // connection — which is the part worth being able to narrow.
             if (syncedLyrics) {
-                val lyricsBlurTitle = stringResource(R.string.blur_unfocused_lyrics)
-                row(lyricsBlurTitle, "lyrics", "blur") {
-                    SettingsRow(
-                        icon = SfIcons.BlurOn,
-                        title = lyricsBlurTitle,
-                        subtitle = stringResource(R.string.blur_unfocused_lyrics_subtitle),
-                        trailing = {
-                            IosSwitch(
-                                checked = lyricsBlur,
-                                onCheckedChange = AppSettings::setLyricsBlur,
-                            )
-                        },
-                        onClick = { AppSettings.setLyricsBlur(!lyricsBlur) },
-                    )
-                }
                 val lyricsSourcesTitle = stringResource(R.string.lyrics_sources)
                 row(lyricsSourcesTitle, "lyrics", "lrclib", "musixmatch") {
                     SettingsRow(
@@ -1462,9 +1416,82 @@ fun SettingsScreen(
                     )
                 }
             }
+            val appIconTitle = stringResource(R.string.app_icon)
+            row(appIconTitle, "icon", "launcher", "logo") {
+                var selectedIcon by remember { mutableStateOf(AppIcon.current(context)) }
+                SettingsRow(icon = SfIcons.Apps, title = appIconTitle)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    AppIcon.entries.forEach { option ->
+                        val selected = option == selectedIcon
+                        Column(
+                            modifier = Modifier
+                                .width(84.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .clickable {
+                                    selectedIcon = option
+                                    AppIcon.apply(context, option)
+                                }
+                                .padding(vertical = 6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            // A glass foreground holds the finished icon in its own shape on the
+                            // central 72 of 108 dp: scaled 1.5× it fills the tile as designed.
+                            // Only the default goes through an adaptive mask.
+                            val preview = option.previewRes
+                            if (preview == null) {
+                                AndroidView(
+                                    factory = { ctx ->
+                                        android.widget.ImageView(ctx).apply { setImageResource(option.iconRes) }
+                                    },
+                                    modifier = Modifier
+                                        .size(68.dp)
+                                        .clip(RoundedCornerShape(22.dp)),
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(preview),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier
+                                        .size(68.dp)
+                                        .scale(1.5f),
+                                )
+                            }
+                            Text(
+                                text = stringResource(option.labelRes),
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier.padding(top = 6.dp),
+                            )
+                        }
+                    }
+                }
+            }        }
+        if (shows(SettingsCategory.APPEARANCE)) SearchableSettingsGroup(search, header = stringResource(R.string.language)) {
+            val appLanguageTitle = stringResource(R.string.app_language)
+            row(appLanguageTitle, "locale", "translate") {
+                val selectedLanguage = AppCompatDelegate.getApplicationLocales().get(0)?.toLanguageTag()
+                    ?: Locale.getDefault().toLanguageTag()
+                SettingsRow(
+                    icon = SfIcons.Language,
+                    title = appLanguageTitle,
+                    subtitle = stringResource(languageDisplayNameRes(selectedLanguage)),
+                    onClick = onAppLanguage,
+                )
+            }
         }
 
-        if (shows(SettingsCategory.PERFORMANCE)) SearchableSettingsGroup(search, header = stringResource(R.string.performance)) {
+        if (shows(SettingsCategory.PLAYBACK)) SearchableSettingsGroup(search, header = stringResource(R.string.performance)) {
             val highPerformanceModeTitle = stringResource(R.string.high_performance_mode)
             row(highPerformanceModeTitle, "frame rate", "refresh rate", "hz", "battery", "smooth") {
                 SettingsRow(
@@ -1519,7 +1546,7 @@ fun SettingsScreen(
             }
         }
 
-        if (shows(SettingsCategory.LOCAL_MUSIC)) SearchableSettingsGroup(search, header = stringResource(R.string.local_music)) {
+        if (shows(SettingsCategory.DOWNLOADS)) SearchableSettingsGroup(search, header = stringResource(R.string.local_music)) {
             val localMusicFolderTitle = stringResource(R.string.local_music_folder)
             row(localMusicFolderTitle, "folder", "offline", "files") {
                 SettingsRow(
@@ -1564,7 +1591,7 @@ fun SettingsScreen(
         val cacheLimitMb = if (cacheUnlimited) CACHE_UNLIMITED_STOP_MB else (cacheLimitBytes / (1024 * 1024)).toInt()
         val unlimitedLabel = stringResource(R.string.song_cache_unlimited)
         val cacheLimitLabel = if (cacheUnlimited) unlimitedLabel else formatCacheSize(cacheLimitMb)
-        if (shows(SettingsCategory.STORAGE)) SearchableSettingsGroup(search, header = stringResource(R.string.storage)) {
+        if (shows(SettingsCategory.DOWNLOADS)) SearchableSettingsGroup(search, header = stringResource(R.string.storage)) {
             val showCacheFolderTitle = stringResource(R.string.show_cache_folder)
             row(showCacheFolderTitle, "cache", "cached songs", "library", "folder") {
                 SettingsRow(
@@ -1637,7 +1664,7 @@ fun SettingsScreen(
             }
         }
 
-        if (shows(SettingsCategory.YOUR_DATA)) SearchableSettingsGroup(search, header = stringResource(R.string.your_data)) {
+        if (shows(SettingsCategory.DOWNLOADS)) SearchableSettingsGroup(search, header = stringResource(R.string.your_data)) {
             val replayTitle = stringResource(R.string.replay)
             row(replayTitle, "stats", "history", "wrapped") {
                 SettingsRow(
@@ -1692,7 +1719,7 @@ fun SettingsScreen(
 
         // No footer: it only restated the stop-on-close row's own subtitle,
         // which sits four rows above it and says the same thing in fewer words.
-        if (shows(SettingsCategory.MISCELLANEOUS)) SearchableSettingsGroup(search, header = stringResource(R.string.miscellaneous)) {
+        if (shows(SettingsCategory.PLAYBACK)) SearchableSettingsGroup(search, header = stringResource(R.string.miscellaneous)) {
             val playNextOnSwipeTitle = stringResource(R.string.play_next_on_swipe)
             row(playNextOnSwipeTitle, "swipe", "queue") {
                 SettingsRow(
@@ -1860,81 +1887,6 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setShowNerdStats(!nerdStats) },
-                )
-            }
-            val appIconTitle = stringResource(R.string.app_icon)
-            row(appIconTitle, "icon", "launcher", "logo") {
-                var selectedIcon by remember { mutableStateOf(AppIcon.current(context)) }
-                SettingsRow(icon = SfIcons.Apps, title = appIconTitle)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    AppIcon.entries.forEach { option ->
-                        val selected = option == selectedIcon
-                        Column(
-                            modifier = Modifier
-                                .width(84.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable {
-                                    selectedIcon = option
-                                    AppIcon.apply(context, option)
-                                }
-                                .padding(vertical = 6.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            // A glass foreground holds the finished icon in its own shape on the
-                            // central 72 of 108 dp: scaled 1.5× it fills the tile as designed.
-                            // Only the default goes through an adaptive mask.
-                            val preview = option.previewRes
-                            if (preview == null) {
-                                AndroidView(
-                                    factory = { ctx ->
-                                        android.widget.ImageView(ctx).apply { setImageResource(option.iconRes) }
-                                    },
-                                    modifier = Modifier
-                                        .size(68.dp)
-                                        .clip(RoundedCornerShape(22.dp)),
-                                )
-                            } else {
-                                Image(
-                                    painter = painterResource(preview),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier
-                                        .size(68.dp)
-                                        .scale(1.5f),
-                                )
-                            }
-                            Text(
-                                text = stringResource(option.labelRes),
-                                textAlign = TextAlign.Center,
-                                maxLines = 2,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (selected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.padding(top = 6.dp),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        if (shows(SettingsCategory.LANGUAGE)) SearchableSettingsGroup(search, header = stringResource(R.string.language)) {
-            val appLanguageTitle = stringResource(R.string.app_language)
-            row(appLanguageTitle, "locale", "translate") {
-                val selectedLanguage = AppCompatDelegate.getApplicationLocales().get(0)?.toLanguageTag()
-                    ?: Locale.getDefault().toLanguageTag()
-                SettingsRow(
-                    icon = SfIcons.Language,
-                    title = appLanguageTitle,
-                    subtitle = stringResource(languageDisplayNameRes(selectedLanguage)),
-                    onClick = onAppLanguage,
                 )
             }
         }
@@ -3078,35 +3030,30 @@ internal fun SegmentedControl(
 // ---- Pages ------------------------------------------------------------------
 
 /**
- * The groups of Settings that are pages of their own, in the order the main
- * page lists them. Account, Listen Together and Audio quality aren't here:
- * they stay on the main page, where they always were.
+ * The five groups of Settings, in the order the main page lists them.
+ *
+ * v2.1 collapsed the old ten categories into these: every row that used to
+ * live on a category page still lives on exactly one of them, only the page
+ * it is reached through changed. Appearance gathers every look-and-feel
+ * control, Playback gathers audio quality, playback behaviour and motion,
+ * Downloads gathers downloads, storage, local files and backup, Account holds
+ * the signed-in identity, and About is the new credits page.
  */
 enum class SettingsCategory(@param:StringRes val title: Int) {
-    DOWNLOADS(R.string.downloads),
-    PLAYBACK(R.string.playback),
-    CONTENT_PREFERENCES(R.string.content_preferences),
     APPEARANCE(R.string.appearance),
-    PERFORMANCE(R.string.performance),
-    LOCAL_MUSIC(R.string.local_music),
-    STORAGE(R.string.storage),
-    YOUR_DATA(R.string.your_data),
-    MISCELLANEOUS(R.string.miscellaneous),
-    LANGUAGE(R.string.language),
+    PLAYBACK(R.string.playback),
+    DOWNLOADS(R.string.downloads),
+    ACCOUNT(R.string.accounts),
+    ABOUT(R.string.about),
     ;
 
     val icon: ImageVector
         get() = when (this) {
-            DOWNLOADS -> SfIcons.Download
-            PLAYBACK -> SfIcons.PlayCircle
-            CONTENT_PREFERENCES -> SfIcons.Video
             APPEARANCE -> SfIcons.Appearance
-            PERFORMANCE -> SfIcons.Performance
-            LOCAL_MUSIC -> SfIcons.LibraryMusic
-            STORAGE -> SfIcons.Storage
-            YOUR_DATA -> SfIcons.YourData
-            MISCELLANEOUS -> SfIcons.Miscellaneous
-            LANGUAGE -> SfIcons.Language
+            PLAYBACK -> SfIcons.PlayCircle
+            DOWNLOADS -> SfIcons.Download
+            ACCOUNT -> SfIcons.Person
+            ABOUT -> SfIcons.Info
         }
 }
 

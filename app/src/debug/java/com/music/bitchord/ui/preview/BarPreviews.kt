@@ -108,10 +108,10 @@ private val PreviewSong = Song(
     thumbnailUrl = null,
 )
 
+// The v2.1 bar: four destinations, Radio no longer among them.
 private val PreviewTabs = listOf(
-    BottomTab("Play", BitChordIcons.Play),
+    BottomTab("Home", BitChordIcons.Home),
     BottomTab("Explore", BitChordIcons.TabExplore),
-    BottomTab("Radio", BitChordIcons.TabRadio),
     BottomTab("Library", BitChordIcons.TabLibrary),
     BottomTab("Search", BitChordIcons.TabSearch),
 )

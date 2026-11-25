@@ -18,6 +18,7 @@ import com.music.bitchord.playback.AutoMixVisualFeed
 import com.music.bitchord.playback.EqLayout
 import com.music.bitchord.playback.EqualizerPreset
 import com.music.bitchord.ui.player.AutoMixArtworkPreferences
+import com.music.bitchord.ui.theme.MusoAccentTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -444,6 +445,8 @@ object AppSettings {
 
     val playbackSpeed = MutableStateFlow(1.0f)
     val themeMode = MutableStateFlow(ThemeMode.DARK)
+    /** The accent family, one of the eight in [MusoAccentTheme]. */
+    val accentTheme = MutableStateFlow(MusoAccentTheme.CRIMSON_RED)
     val appFont = MutableStateFlow(AppFont.DEFAULT)
 
     /** Keep playing similar music once the queue runs out. */
@@ -634,7 +637,9 @@ object AppSettings {
      * way — see the hero notes in
      * [NowPlayingScreen][com.music.bitchord.ui.player.NowPlayingScreen].
      */
-    val fullBleedArtwork = MutableStateFlow(true)
+    // v2.2: the full-screen cover art feature is removed. The flow stays so
+    // the player host contract does not change, but it is always false.
+    val fullBleedArtwork = MutableStateFlow(false)
 
     /**
      * The album and playlist page's answer to [fullBleedArtwork]: the sleeve
@@ -1101,6 +1106,9 @@ object AppSettings {
         themeMode.value = runCatching {
             ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: "DARK")
         }.getOrDefault(ThemeMode.DARK)
+        accentTheme.value = runCatching {
+            MusoAccentTheme.valueOf(prefs.getString(KEY_ACCENT_THEME, null).orEmpty())
+        }.getOrDefault(MusoAccentTheme.CRIMSON_RED)
         appFont.value = runCatching {
             AppFont.valueOf(prefs.getString(KEY_APP_FONT, null) ?: AppFont.DEFAULT.name)
         }.getOrDefault(AppFont.DEFAULT)
@@ -1154,8 +1162,10 @@ object AppSettings {
         updateEffectiveSpotifyCanvasSettings()
         signatureApiEnabled.value = prefs.getBoolean(KEY_SIGNATURE_API_ENABLED, false)
         signatureApiUrl.value = normalizeSignatureApiUrl(prefs.getString(KEY_SIGNATURE_API_URL, "").orEmpty())
-        fullBleedArtwork.value = prefs.getBoolean(KEY_FULL_BLEED_ARTWORK, true)
-        fullBleedDetailArtwork.value = prefs.getBoolean(KEY_FULL_BLEED_DETAIL_ARTWORK, false)
+        // Removed feature: never read the stored value back, so an old install
+        // with it switched on comes back to the framed sleeve.
+        fullBleedArtwork.value = false
+        fullBleedDetailArtwork.value = false
         showTotalDuration.value = prefs.getBoolean(KEY_SHOW_TOTAL_DURATION, false)
         // The old legacy mesh switch answers until a theme has been picked.
         playerTheme.value = runCatching {
@@ -1548,6 +1558,11 @@ object AppSettings {
     fun setThemeMode(value: ThemeMode) {
         themeMode.value = value
         prefs.edit().putString(KEY_THEME, value.name).apply()
+    }
+
+    fun setAccentTheme(value: MusoAccentTheme) {
+        accentTheme.value = value
+        prefs.edit().putString(KEY_ACCENT_THEME, value.name).apply()
     }
 
     fun setAppFont(value: AppFont) {
@@ -2450,6 +2465,7 @@ object AppSettings {
     private const val KEY_EQ_BANDS = "equalizer_bands"
     private const val KEY_SPEED = "playback_speed"
     private const val KEY_THEME = "theme_mode"
+    private const val KEY_ACCENT_THEME = "accent_theme"
     private const val KEY_APP_FONT = "app_font"
     private const val KEY_AUTOPLAY = "autoplay"
     private const val KEY_SHUFFLE_ENABLED = "shuffle_enabled"

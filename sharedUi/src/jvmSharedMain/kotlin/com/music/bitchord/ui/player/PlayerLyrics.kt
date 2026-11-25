@@ -952,7 +952,6 @@ private fun SweptLyricLine(
                 maxLines = maxLines,
                 overflow = overflow,
                 modifier = glowAlphaLayer
-                    .blur(glowRadius, BlurredEdgeTreatment.Unbounded)
                     .then(room)
                     // Each letter is masked to its own brightness with DstIn,
                     // which needs a layer of its own to erase into — against the
@@ -2205,7 +2204,6 @@ internal fun LyricsPanel(
                 ) {
                 Box(
                     modifier = Modifier
-                        .blur(blur, BlurredEdgeTreatment.Unbounded)
                         .clip(RoundedCornerShape(10.dp))
                         // A gap is nothing to pick, so it only ever seeks — and
                         // not even that while a pick is open, where a stray tap
@@ -2347,7 +2345,6 @@ internal fun LyricsPanel(
                                 )
                         }
                     }
-                    .blur(blur, BlurredEdgeTreatment.Unbounded)
                     .clip(RoundedCornerShape(10.dp))
                     // The chosen lines are marked on the row itself rather
                     // than with a mark beside it: a lane down the side would

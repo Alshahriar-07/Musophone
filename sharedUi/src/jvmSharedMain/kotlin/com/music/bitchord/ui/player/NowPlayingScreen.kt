@@ -33,6 +33,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -62,6 +63,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Undo
@@ -4533,17 +4535,66 @@ fun NowPlayingScreen(
                         // read in this scope recomposes the whole player with it.
                         fadeIn = { !lyricsOpen && !queueOpen && p() > 0f },
                     ) {
+                    // The control deck is a surface of its own: a rounded,
+                    // translucent panel that the sleeve meets rather than the
+                    // controls simply hanging in the artwork's lower third.
+                    // Everything inside it is the same block as before — the
+                    // panel changes the composition, not what any control does.
+                    val deckShape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.onSizeChanged { size ->
-                            if (spotifyCanvasPresentation) {
-                                val measuredHeight = with(density) { size.height.toDp() }
-                                if (measuredHeight != spotifyCanvasDeckHeight) {
-                                    spotifyCanvasDeckHeight = measuredHeight
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(deckShape)
+                            // A dark scrim rather than the theme's surface: the
+                            // player's type is white in every theme, so the
+                            // panel has to stay dark in light mode too. The
+                            // accent still reaches it through the play button,
+                            // the scrubber and the nav.
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.Black.copy(alpha = 0.42f),
+                                        Color.Black.copy(alpha = 0.74f),
+                                        Color.Black.copy(alpha = 0.88f),
+                                    ),
+                                ),
+                            )
+                            .border(
+                                width = 0.5.dp,
+                                color = Color.White.copy(alpha = 0.12f),
+                                shape = deckShape,
+                            )
+                            .padding(top = 8.dp)
+                            .onSizeChanged { size ->
+                                if (spotifyCanvasPresentation) {
+                                    val measuredHeight = with(density) { size.height.toDp() }
+                                    if (measuredHeight != spotifyCanvasDeckHeight) {
+                                        spotifyCanvasDeckHeight = measuredHeight
+                                    }
                                 }
-                            }
-                        },
+                            },
                     ) {
+                        // The accent enters the panel once, as a light seam
+                        // along its top edge, rather than tinting the controls.
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            Color.Transparent,
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+                                            Color.Transparent,
+                                        ),
+                                    ),
+                                ),
+                        )
+                        // No grab handle: the player closes by dragging the
+                        // sleeve, and the deck no longer needs the extra row.
+                        // The seam alone separates it from the artwork.
+                        Spacer(Modifier.height(10.dp))
                     Column(
                         modifier = Modifier
                             .widthIn(max = PLAYER_MAX_WIDTH)
@@ -4685,7 +4736,45 @@ fun NowPlayingScreen(
                         Spacer(Modifier.height(run / 2 + lift))
                     }
 
-                    playerActions()
+                    // ---- Queue modes, then the action dock ----
+                    // Shuffle, repeat and autoplay answer how the queue plays,
+                    // so they sit together on a strip of their own between the
+                    // transport and the actions rather than being hidden behind
+                    // the queue button. The dock below carries the three places
+                    // a listener can go — lyrics, output, queue.
+                    Spacer(Modifier.height(10.dp))
+                    PlayerModesRow(
+                        shuffleEnabled = shuffleEnabled,
+                        repeatMode = repeatMode,
+                        autoplayEnabled = autoplayEnabled,
+                        onToggleShuffle = onToggleShuffle,
+                        onCycleRepeat = onCycleRepeat,
+                        onToggleAutoplay = onToggleAutoplay,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    PortraitActionDock(
+                        lyricsOpen = lyricsOpen,
+                        queueOpen = queueOpen,
+                        onToggleLyrics = toggleLyrics,
+                        onToggleQueue = toggleQueue,
+                        onOpenOutput = openAudioOutput,
+                        onListenTogether = onListenTogether,
+                        onOpenListenTogetherMembers = openListenTogetherMembers,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    // The output's name stays under the dock, as it did under
+                    // the old row: the glyph says which kind of device, the
+                    // caption says which one.
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(20.dp),
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        OutputCaption(
+                            accountName = accountName,
+                            onOpenOutput = openAudioOutput,
+                            onOpenMembers = openListenTogetherMembers,
+                        )
+                    }
                     Spacer(Modifier.height(18.dp))
                     }
                     }

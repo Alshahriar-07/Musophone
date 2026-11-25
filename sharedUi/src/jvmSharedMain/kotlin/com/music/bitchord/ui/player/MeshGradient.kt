@@ -10,6 +10,7 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -128,6 +129,7 @@ fun MeshGradientBackground(
         colorFadeMillis, paused, mix = null, snapKey = null, settled = false, currentIsOutgoing = false)
 }
 
+@Suppress("UNREACHABLE_CODE")
 @Composable
 internal fun MeshGradientBackground(
     palette: MeshPalette, modifier: Modifier, trackKey: Any?, driftMillis: Int = 8_000,
@@ -136,6 +138,22 @@ internal fun MeshGradientBackground(
     snapKey: Any?, settled: Boolean, currentIsOutgoing: Boolean,
     directStill: Boolean = false,
 ) {
+    // v2.2: the drifting, blurred mesh is gone. It re-blurred a full screen on
+    // every frame and was the single most expensive thing the app drew. What
+    // remains is the palette itself as a still gradient — the colour of the
+    // artwork, without the orbit or the blur. The signature is unchanged so
+    // every call site keeps working; the branch below is retained for the
+    // reference of what the still replaces.
+    val still = remember(palette) { palette.tunedSlots() }
+    Box(
+        modifier = modifier.background(
+            Brush.verticalGradient(
+                colors = if (still.size >= 2) still else listOf(still.first(), still.first()),
+            ),
+        ),
+    )
+    return
+
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
 
     val lastDrawn = remember { LastLegacyAmbientColors() }

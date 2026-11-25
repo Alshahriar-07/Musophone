@@ -29,6 +29,13 @@ sealed interface AppRoute {
     data object Spotify : AppRoute
     data object Downloads : AppRoute
 
+    /**
+     * The listener's personalised mixes, formerly the Radio tab. Radio left the
+     * bottom bar in v2.1 but the page — and the mix feeds behind it — did not
+     * go anywhere: this is how it is reached now.
+     */
+    data object Mixes : AppRoute
+
     /** Settings → Backup and Restore → Google Drive backup. */
     data object DriveBackup : AppRoute
 

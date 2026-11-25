@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The launch surface on a dark appearance: the backdrop's own top stop. -->
+    <color name="muso_launch_background">#08070A</color>
+</resources>

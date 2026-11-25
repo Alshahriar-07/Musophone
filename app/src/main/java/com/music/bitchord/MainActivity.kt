@@ -306,6 +306,7 @@ import com.music.bitchord.sharedui.resources.search_hint
 import com.music.bitchord.sharedui.resources.search_addons_hint
 import com.music.bitchord.sharedui.resources.search_library_hint
 import com.music.bitchord.ui.components.TopBarDownloadButton
+import com.music.bitchord.ui.icons.SfIcons
 import com.music.bitchord.ui.components.optimizedHazeEffect
 import com.music.bitchord.ui.components.topBarContentPadding
 import com.music.bitchord.ui.components.topBarHeight
@@ -383,6 +384,8 @@ import com.music.bitchord.ui.replay.ReplayStories
 import com.music.bitchord.ui.replay.ReplayStoryPage
 import com.music.bitchord.ui.replay.rememberReplayState
 import com.music.bitchord.ui.theme.BitChordTheme
+import com.music.bitchord.ui.theme.backdropBrush
+import com.music.bitchord.ui.theme.palette
 import com.music.bitchord.ui.theme.rememberArtworkPalette
 import com.music.bitchord.data.canvas.AppleArtistArtRepository
 import com.music.bitchord.data.canvas.keyColors
@@ -442,9 +445,9 @@ class MainActivity : AppCompatActivity() {
         MusicLink.consume(intent)
         setContent {
             val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
+            val accentTheme by AppSettings.accentTheme.collectAsStateWithLifecycle()
             val appFont by AppSettings.appFont.collectAsStateWithLifecycle()
             val highPerformance by AppSettings.highPerformanceMode.collectAsStateWithLifecycle()
-            val liquidGlassEnabled by AppSettings.liquidGlass.collectAsStateWithLifecycle()
             val iosOverscrollFactory = rememberIosOverscrollFactory()
             val performanceRefreshRate by AppSettings.performanceRefreshRate.collectAsStateWithLifecycle()
             val composeView = LocalView.current
@@ -456,7 +459,7 @@ class MainActivity : AppCompatActivity() {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
             }
-            BitChordTheme(darkTheme = darkTheme, font = appFont) {
+            BitChordTheme(darkTheme = darkTheme, font = appFont, accentTheme = accentTheme) {
                 // The glass surfaces sample this layer, and a layer records only
                 // what is drawn into it — which, for BitChord, is a page that
                 // paints no background of its own. Everywhere a page is not
@@ -467,16 +470,47 @@ class MainActivity : AppCompatActivity() {
                 // the floor the pages have always been drawn against, so it is
                 // laid down here too and the recording is opaque like the screen.
                 val windowBackground = MaterialTheme.colorScheme.background
-                val paintBackdrop: ContentDrawScope.() -> Unit = remember(windowBackground) {
-                    {
-                        drawRect(windowBackground)
-                        drawContent()
-                    }
+                // The accent wash every page is composed over. Painted here, at
+                // the window floor, so a page switch never reveals a seam and
+                // the glass bars have something opaque to sample.
+                // Remembered against the theme, not rebuilt every pass: these
+                // are the keys of the backdrop's remember below, and a fresh
+                // Brush each recomposition would invalidate it and re-record
+                // the layer the glass samples.
+                val backdropBrush = remember(accentTheme, darkTheme) {
+                    accentTheme.backdropBrush(darkTheme)
                 }
+                // One soft accent halo in the top corner, over the vertical
+                // wash. It is the same on every page, which is what makes the
+                // theme read as the room the app is in rather than a colour
+                // each screen picks for itself — and it is a single gradient
+                // pass, not another blur.
+                val glowBrush = remember(accentTheme, darkTheme) {
+                    val accent = accentTheme.palette(darkTheme).accent
+                    Brush.radialGradient(
+                        colors = listOf(
+                            accent.copy(alpha = if (darkTheme) 0.17f else 0.11f),
+                            accent.copy(alpha = 0.04f),
+                            Color.Transparent,
+                        ),
+                        center = Offset(0f, 0f),
+                        radius = 900f,
+                    )
+                }
+                val paintBackdrop: ContentDrawScope.() -> Unit =
+                    remember(backdropBrush, glowBrush, windowBackground) {
+                        {
+                            drawRect(brush = backdropBrush)
+                            drawRect(brush = glowBrush)
+                            drawContent()
+                        }
+                    }
                 val appBackdrop = rememberLayerBackdrop(onDraw = paintBackdrop)
                 CompositionLocalProvider(
                     LocalOverscrollFactory provides iosOverscrollFactory,
-                    LocalLiquidGlassEnabled provides liquidGlassEnabled,
+                    // v2.2: the liquid-glass renderer is disabled at the provider,
+                    // so every surface takes its solid fallback.
+                    LocalLiquidGlassEnabled provides false,
                     LocalAppBackdrop provides appBackdrop,
                 ) {
                 // The window's width, measured rather than asked for.
@@ -1273,7 +1307,6 @@ private fun BitChordApp(
     val currentListState = when (selectedTab) {
         TAB_HOME -> homeListState
         TAB_EXPLORE -> if (selectedMoodGenre == null) exploreListState else moodGenreListState
-        TAB_RADIO -> mixesListState
         TAB_LIBRARY -> libraryListState
         else -> searchListState
     }
@@ -1286,11 +1319,13 @@ private fun BitChordApp(
     val mixesPull = rememberPullToRefreshState()
     val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
     val currentFeed = when {
+        // The mixes page outlives its old tab: it loads itself whenever its
+        // route is on screen, from whichever tab opened it.
+        route == AppRoute.Mixes -> MainViewModel.Feed.MIXES
         route != null || detail != null -> null
         selectedTab == TAB_HOME -> MainViewModel.Feed.HOME
         selectedTab == TAB_EXPLORE -> MainViewModel.Feed.EXPLORE
         selectedTab == TAB_LIBRARY -> MainViewModel.Feed.LIBRARY
-        selectedTab == TAB_RADIO -> MainViewModel.Feed.MIXES
         else -> null
     }
     // The lead shelf is listening history, so opening Home after playing
@@ -1399,15 +1434,22 @@ private fun BitChordApp(
     val queueLabel = stringResource(R.string.queue)
     val sharedLinkLabel = stringResource(R.string.shared_link)
     val openedFileLabel = stringResource(R.string.opened_file)
-    val tabs = remember(homeLabel, exploreLabel, radioLabel, libraryLabel, searchLabel) {
+    // Exactly four destinations, in the order the v2.1 navigation specifies.
+    // Radio is not one of them: its personalised mixes remain reachable from
+    // Library's top bar as [AppRoute.Mixes], and the radio queue itself is
+    // untouched — see [beginRadioQueue] and SongActionsMenu.
+    val tabs = remember(homeLabel, exploreLabel, libraryLabel, searchLabel) {
         listOf(
             BottomTab(homeLabel, BitChordIcons.Home),
             BottomTab(exploreLabel, BitChordIcons.TabExplore),
-            BottomTab(radioLabel, BitChordIcons.TabRadio),
             BottomTab(libraryLabel, BitChordIcons.TabLibrary),
             BottomTab(searchLabel, BitChordIcons.TabSearch),
         )
     }
+    // A selected index restored from before v2.1 can name the old Radio slot,
+    // which no longer exists. Everything that indexes [tabs] reads this instead,
+    // so an update lands on Home rather than on an out-of-range crash.
+    val safeTab = selectedTab.coerceIn(0, tabs.lastIndex)
 
     val scope = rememberCoroutineScope()
 
@@ -3027,7 +3069,7 @@ private fun BitChordApp(
                     targetState = when {
                         visibleEntry != null -> AppDestination.Route(visibleEntry)
                         detail != null -> AppDestination.Release(detail.browseId)
-                        else -> AppDestination.Tab(selectedTab)
+                        else -> AppDestination.Tab(safeTab)
                     },
                     // A route's entry is copied when the release pages under it
                     // change, which is not a different page.
@@ -3137,6 +3179,11 @@ private fun BitChordApp(
                                 onLoadHistory = viewModel::loadHistory,
                                 onOpenHistory = { navigator.push(AppRoute.History) },
                                 onOpenReplay = { navigator.push(AppRoute.Replay) },
+                                // Profile's gear was wired to Profile Settings.
+                                // It must open App Settings; account settings
+                                // stay one tap away on their own chip, and are
+                                // also reachable from Settings → Account.
+                                onAppSettings = { navigator.push(AppRoute.Settings) },
                                 onAccountSettings = { navigator.push(AppRoute.AccountScrobbling) },
                                 onSongClick = { song ->
                                     playRadio(song, QueueSource(profileLabel, PlaybackSourceType.HOME))
@@ -3309,6 +3356,32 @@ private fun BitChordApp(
                         } else if (pageRoute == AppRoute.EqualizerPresets) {
                             EqualizerPresetPage(
                                 onChosen = { navigator.pop() },
+                                contentPadding = listPadding,
+                            )
+                        } else if (pageRoute == AppRoute.Mixes) {
+                            MixesScreen(
+                                title = radioLabel,
+                                state = mixesState,
+                                signedIn = signedIn,
+                                listState = mixesListState,
+                                // A mix opens as the playlist it is, as its card
+                                // does on Home and in the web player.
+                                onItemClick = { item ->
+                                    item.browseId?.let { browseId ->
+                                        viewModel.openDetail(
+                                            browseId = browseId,
+                                            title = item.title,
+                                            subtitle = item.subtitle,
+                                            thumbnailUrl = item.thumbnailUrl,
+                                        )
+                                    }
+                                },
+                                onItemLongPress = onShelfLongPress,
+                                onRetry = viewModel::loadMixes,
+                                onSignIn = { webSession = WebSessionMode.SIGN_IN },
+                                refreshing = MainViewModel.Feed.MIXES in refreshing,
+                                onRefresh = { viewModel.refresh(MainViewModel.Feed.MIXES) },
+                                pullState = mixesPull,
                                 contentPadding = listPadding,
                             )
                         } else if (pageRoute is AppRoute.SettingsChoice) {
@@ -3597,7 +3670,7 @@ private fun BitChordApp(
                                     null
                                 },
                             )
-                        } else when ((destination as? AppDestination.Tab)?.index ?: selectedTab) {
+                        } else when ((destination as? AppDestination.Tab)?.index ?: safeTab) {
                             TAB_HOME -> HomeScreen(
                                 state = visibleHomeState,
                                 listState = homeListState,
@@ -3886,31 +3959,6 @@ private fun BitChordApp(
                                     )
                                 },
                             )
-                            TAB_RADIO -> MixesScreen(
-                                title = radioLabel,
-                                state = mixesState,
-                                signedIn = signedIn,
-                                listState = mixesListState,
-                                // A mix opens as the playlist it is, as its card
-                                // does on Home and in the web player.
-                                onItemClick = { item ->
-                                    item.browseId?.let { browseId ->
-                                        viewModel.openDetail(
-                                            browseId = browseId,
-                                            title = item.title,
-                                            subtitle = item.subtitle,
-                                            thumbnailUrl = item.thumbnailUrl,
-                                        )
-                                    }
-                                },
-                                onItemLongPress = onShelfLongPress,
-                                onRetry = viewModel::loadMixes,
-                                onSignIn = { webSession = WebSessionMode.SIGN_IN },
-                                refreshing = MainViewModel.Feed.MIXES in refreshing,
-                                onRefresh = { viewModel.refresh(MainViewModel.Feed.MIXES) },
-                                pullState = mixesPull,
-                                contentPadding = listPadding,
-                            )
                             else -> LibraryScreen(
                                 signedIn = signedIn,
                                 state = libraryState,
@@ -4034,6 +4082,7 @@ private fun BitChordApp(
                 FrostedTopBar(
                     title = when (route) {
                         AppRoute.Spotify -> stringResource(R.string.spotify)
+                        AppRoute.Mixes -> radioLabel
                         AppRoute.Downloads -> stringResource(R.string.downloads)
                         AppRoute.Discord -> "Discord"
                         AppRoute.History -> stringResource(R.string.history)
@@ -4057,7 +4106,7 @@ private fun BitChordApp(
                             detail != null && detailActiveShelf != null -> detailActiveShelf?.title.orEmpty()
                             detail != null -> detail.title
                             selectedMoodGenre != null -> selectedMoodGenre?.title.orEmpty()
-                            else -> tabs[selectedTab].let {
+                            else -> tabs[safeTab].let {
                                 if (it.label == "Play") stringResource(R.string.listen_now) else it.label
                             }
                         }
@@ -4360,13 +4409,33 @@ private fun BitChordApp(
                             // [TopBarDownloadButton], which decides that for
                             // itself rather than being told. Not on the page it
                             // opens, where it would only lead back to itself.
+                            // Radio left the bottom bar in v2.1, but its
+                            // personalised mixes are still here: one quiet
+                            // entry in Library's bar, only on Library itself.
+                            if (
+                                route == null &&
+                                detail == null &&
+                                selectedMoodGenre == null &&
+                                selectedTab == TAB_LIBRARY
+                            ) {
+                                IconButton(onClick = { navigator.push(AppRoute.Mixes) }) {
+                                    Icon(
+                                        SfIcons.Radio,
+                                        contentDescription = radioLabel,
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                            }
                             if (route != AppRoute.Downloads) {
                                 TopBarDownloadButton(onClick = { navigator.push(AppRoute.Downloads) })
                             }
                             // Not on a release page, whose pill already carries
                             // three of its own controls — Apple Music leaves the
-                            // profile off its album pages too.
-                            if (!isReleaseDetail) TopBarAccountButton(
+                            // profile off its album pages too. And not on Home,
+                            // whose masthead already owns the one profile
+                            // picture: drawing both is what put two avatars in
+                            // the same corner.
+                            if (!isReleaseDetail && !homeHeadingVisible) TopBarAccountButton(
                                 account = account,
                                 onClick = {
                                     if (signedIn) {
@@ -4430,55 +4499,14 @@ private fun BitChordApp(
                 }
 
                 val miniArtwork = rememberMiniAutoMixArtwork(player.song, player.queue, player.queueIndex)
-                if (glassActive) Column(
+                // One bar, full width, flush with the bottom of the window. The
+                // liquid-glass variant used to draw a second, floating pill nav
+                // with the now-playing controls docked into it; v2.1's refined
+                // navigation is the attached surface below, and the same
+                // [MiniPlayer] carries the transport above it in every mode.
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .widthIn(max = FLOATING_BAR_MAX_WIDTH)
-                        .fillMaxWidth()
-                        .onSizeChanged { floatingBarsHeight.intValue = it.height },
-                ) {
-                    QueueActionNoticeHost(queueNotice)
-                    // Liquid glass replaces the two stacked bars with the single
-                    // component they are stacked to imitate: the now playing
-                    // controls dock into the tab bar rather than riding above it,
-                    // and the pair folds together on scroll. See [GlassNavBar].
-                    GlassNavBar(
-                        tabs = tabs,
-                        selectedIndex = selectedTab,
-                        onTabSelected = onTabSelected,
-                        scrollConnection = navBarScroll,
-                        song = player.song,
-                        isPlaying = player.isPlaying,
-                        isLoading = playPauseBusy,
-                        animationsActive = !showNowPlaying,
-                        onPlayPause = {
-                            togglePlayPause()
-                        },
-                        onNext = { controller?.seekToNextMediaItem() },
-                        onPrevious = { controller?.seekToPrevious() },
-                        onExpand = if (reducePlayerMotion) {
-                            { showNowPlaying = true }
-                        } else {
-                            playerSheetMotion::open
-                        },
-                        controlsLocked = controlsLocked,
-                        onBlockedControl = showHostOnlyNotice,
-                        dock = activeDock,
-                        pull = playerSheetMotion.takeIf { !reducePlayerMotion },
-                        modifier = Modifier.fillMaxWidth(),
-                        onActiveTabTap = onActiveTabTap,
-                        autoMixArtwork = miniArtwork,
-                    )
-                } else Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        // Capped and centred rather than run to the page's edges
-                        // — see [FLOATING_BAR_MAX_WIDTH]. It sits on the Column
-                        // rather than on each bar so the two are held to the same
-                        // width and keep the shared left and right edge they have
-                        // on a phone. Before fillMaxWidth, so the fill has
-                        // already been bounded by the time it is applied.
-                        .widthIn(max = FLOATING_BAR_MAX_WIDTH)
                         .fillMaxWidth()
                         .onSizeChanged { floatingBarsHeight.intValue = it.height },
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -4512,7 +4540,7 @@ private fun BitChordApp(
                     }
                     FloatingBottomBar(
                         tabs = tabs,
-                        selectedIndex = selectedTab,
+                        selectedIndex = safeTab,
                         hazeState = hazeState,
                         onTabSelected = onTabSelected,
                         onActiveTabTap = onActiveTabTap,
@@ -6661,9 +6689,8 @@ private object PlayerSheetShape : Shape {
 
 private const val TAB_HOME = 0
 private const val TAB_EXPLORE = 1
-private const val TAB_RADIO = 2
-private const val TAB_LIBRARY = 3
-private const val TAB_SEARCH = 4
+private const val TAB_LIBRARY = 2
+private const val TAB_SEARCH = 3
 
 /**
  * Smoothly scroll a LazyList back to the top with eased deceleration.

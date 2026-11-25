@@ -238,10 +238,9 @@ private fun StationTile(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    scaleX = TILE_BLUR_OVERSCAN
-                    scaleY = TILE_BLUR_OVERSCAN
-                }
-                .blur(TILE_BLUR_RADIUS),
+                    scaleX = 1f
+                    scaleY = 1f
+                },
         )
         // A light veil, so a pale wash still carries the white mark and name.
         Box(
