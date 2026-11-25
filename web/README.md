@@ -54,6 +54,18 @@ This builds both targets and writes to `app/public/downloads/` (git-ignored):
 
 `VITE_EXTENSION_CHROME_URL`, `VITE_EXTENSION_FIREFOX_URL` and `VITE_EXTENSION_MANIFEST_URL` override those links, for example to point at store listings.
 
+### Distributable zip
+
+`extension.zip` at the root of `web/` is the Chromium build packaged as one
+archive: the built MV3 files sit at the zip root, with `manifest.json` at the
+top level, so it can be uploaded to a store or extracted and loaded unpacked.
+`release/extension.zip` is the same file, kept with the release artifacts.
+Rebuild the extension before repacking so the archive matches the sources:
+
+```bash
+corepack pnpm --dir web/extension build
+```
+
 ## Brand and assets
 
 Everything the site shows as MusoPhone is one set, sourced from one mark:
@@ -66,6 +78,7 @@ Everything the site shows as MusoPhone is one set, sourced from one mark:
 | Extension toolbar icons | `extension/public/icon/{16,32,48,96,128}.png` | The same, for either browser |
 | Social card | `app/public/og-image.png` | `scripts/brand/og-image.html` |
 | Colours and type | `app/src/styles/tokens.css`, `global.css` | The MusoPhone palette: true black, neutral charcoal surfaces, crimson accent |
+| Full-resolution originals | `assets/` | The app icon, Windows icon, wordmark and both promotional banners |
 
 Regenerate the raster icons after changing `favicon.svg`:
 

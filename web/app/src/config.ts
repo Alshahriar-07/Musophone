@@ -1,5 +1,5 @@
-/** The site's own version, kept level with the Android release (v2.5). */
-export const WEB_VERSION = '2.5';
+/** The site's own version, kept level with the Android release (v2.6). */
+export const WEB_VERSION = '2.6';
 
 /** Build-time configuration, from Vite's `VITE_*` environment variables. */
 export const config = {

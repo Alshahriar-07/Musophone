@@ -50,6 +50,7 @@ import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.MusoPageTitle
+import com.music.bitchord.ui.components.MusoV26Header
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.PullToRefresh
 import com.music.bitchord.ui.components.ShimmerBox
@@ -149,9 +150,15 @@ private fun MoodGenreCard(
 }
 
 /**
- * A solid stripe down the left and the category's cover filling the rest,
- * redrawn as a duotone of the stripe's colour so every card reads as one
- * tinted sleeve rather than a photo pasted onto a swatch.
+ * A mood or genre as a v2.6 editorial tile.
+ *
+ * v2.5 split the card into a solid colour stripe and a duotoned cover, which
+ * made every category look like the same template filled with a different
+ * swatch. v2.6 lets the artwork be the card: the cover runs edge to edge, a
+ * short scrim keeps the words legible, and the name sits at the foot where a
+ * sleeve's title belongs. The category's own colour survives only as the
+ * placeholder behind artwork that has not loaded, so a missing image is still
+ * that category rather than a grey hole.
  *
  * Only the artwork: the caller sizes, clips and makes it clickable, which is
  * how the TV app wraps the same sleeve in its own focus treatment.
@@ -163,43 +170,40 @@ fun MoodGenreSleeve(
     titleStyle: TextStyle = MaterialTheme.typography.titleMedium,
 ) {
     val tone = remember(item.stripeColor, item.title) { moodTone(item) }
-    Box(modifier = modifier.background(tone.stripe)) {
-        Box(
-            Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .fillMaxWidth(1f - MOOD_STRIPE_FRACTION)
-                .background(tone.placeholder),
-        ) {
-            item.thumbnailUrl?.let { artwork ->
-                AsyncImage(
-                    model = artwork,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    colorFilter = tone.duotone,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
+    Box(modifier = modifier.background(tone.placeholder)) {
+        item.thumbnailUrl?.let { artwork ->
+            AsyncImage(
+                model = artwork,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
-        // Pale stripes (Energize's cream, Feel good's mint) would swallow
-        // white type; a soft shade under the title keeps it legible.
+        // Bottom-weighted only: the name has to survive a pale sleeve, and the
+        // top of the artwork should stay untouched.
         Box(
             Modifier
                 .matchParentSize()
-                .background(Brush.verticalGradient(0f to Color.Black.copy(alpha = .24f), .62f to Color.Transparent)),
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.45f to Color.Black.copy(alpha = 0.10f),
+                        1f to Color.Black.copy(alpha = 0.72f),
+                    ),
+                ),
         )
         Text(
             text = item.title,
             style = titleStyle.copy(
-                shadow = Shadow(Color.Black.copy(alpha = .35f), offset = Offset(0f, 1f), blurRadius = 6f),
+                shadow = Shadow(Color.Black.copy(alpha = .30f), offset = Offset(0f, 1f), blurRadius = 5f),
             ),
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = Color.White,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .align(Alignment.BottomStart)
+                .padding(horizontal = 12.dp, vertical = 12.dp),
         )
     }
 }
@@ -254,13 +258,10 @@ private fun fallbackMoodColor(title: String): Color = when ((title.hashCode() an
 /** Gap between mood cards, in both directions. */
 private val MOOD_SPACING = 12.dp
 
-private val MOOD_CARD_SHAPE = RoundedCornerShape(18.dp)
+private val MOOD_CARD_SHAPE = RoundedCornerShape(12.dp)
 
-/** Width over height; a two-column phone row lands at about 100dp tall. */
-const val MOOD_CARD_ASPECT = 1.72f
-
-/** How much of the card the solid stripe covers before the artwork starts. */
-private const val MOOD_STRIPE_FRACTION = .28f
+/** Width over height; a two-column phone row lands at about 120dp tall. */
+const val MOOD_CARD_ASPECT = 1.42f
 
 /**
  * The narrowest a mood card is let get before the row drops a column.
@@ -269,7 +270,7 @@ private const val MOOD_STRIPE_FRACTION = .28f
  * 1.8 of these), while a tablet or a window lays out as many as fit rather
  * than two cards each half a screen wide.
  */
-private val MOOD_MIN_CARD_WIDTH = 220.dp
+private val MOOD_MIN_CARD_WIDTH = 190.dp
 
 private const val MOOD_MAX_COLUMNS = 6
 
@@ -311,13 +312,9 @@ fun MoodGenrePlaylistsScreen(
         modifier = modifier.fillMaxSize(),
     ) {
         item {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.displayLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
+            MusoV26Header(
+                title = title,
+                modifier = Modifier.padding(top = 4.dp),
             )
         }
         when (state) {

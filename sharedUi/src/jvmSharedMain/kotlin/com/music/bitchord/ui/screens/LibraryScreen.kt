@@ -52,7 +52,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,6 +71,7 @@ import com.music.bitchord.data.settings.LibrarySort
 import com.music.bitchord.ui.AppUi
 import com.music.bitchord.ui.components.LIBRARY_GRID_SPACING
 import com.music.bitchord.ui.components.MessageState
+import com.music.bitchord.ui.components.MusoV26Header
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.PullToRefresh
 import com.music.bitchord.ui.components.contextClick
@@ -268,7 +271,12 @@ fun LibraryScreen(
     }
 }
 
-/** The page's own masthead: wordmark, oversized name, and the account's shape. */
+/**
+ * The page's opening line, v2.6: the name at heading size over an honest
+ * count of what is in the library, with no brand line and no display masthead.
+ * The rail directly under it is the page's spine; anything taller than this
+ * pushed the first cover off a short phone's first screen.
+ */
 @Composable
 private fun LibraryHeader(signedIn: Boolean, shelves: List<HomeShelf>, deviceCount: Int) {
     val counts = shelves.mapNotNull { shelf ->
@@ -283,40 +291,19 @@ private fun LibraryHeader(signedIn: Boolean, shelves: List<HomeShelf>, deviceCou
         deviceCount > 0 -> "$deviceCount $onDevice"
         else -> null
     }
-    Column(
-        modifier = Modifier.padding(
-            start = PAGE_GUTTER,
-            end = PAGE_GUTTER,
-            top = 12.dp,
-            bottom = 12.dp,
-        ),
-    ) {
-        Text(
-            text = "MUSOPHONE",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = stringResource(Res.string.library),
-            style = MaterialTheme.typography.displayLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (summary != null) {
-            Text(
-                text = summary,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
-            )
-        }
-    }
+    MusoV26Header(
+        title = stringResource(Res.string.library),
+        subtitle = summary,
+        modifier = Modifier.padding(top = 4.dp),
+    )
 }
 
-/** Sticky permission to look at one kind of collection at a time. */
+/**
+ * The rail that filters the page, v2.6: text and an underline rather than a row
+ * of filled capsules. It reads as a table of contents over the covers instead
+ * of as a second row of buttons, and it takes half the height the old chips
+ * did, which is what puts the first shelf back on screen.
+ */
 @Composable
 private fun LibraryCategoryRail(
     categories: List<LibraryCategory>,
@@ -329,8 +316,8 @@ private fun LibraryCategoryRail(
             .background(MaterialTheme.colorScheme.background),
     ) {
         LazyRow(
-            contentPadding = PaddingValues(horizontal = PAGE_GUTTER, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = PAGE_GUTTER - 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             items(categories.size, key = { categories[it].name }) { index ->
                 val category = categories[index]
@@ -356,44 +343,49 @@ private fun LibraryCategoryChip(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val container by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant
-        },
-        label = "libraryChip",
-    )
     val content by animateColorAsState(
         targetValue = if (selected) {
-            MaterialTheme.colorScheme.onPrimary
+            MaterialTheme.colorScheme.onBackground
         } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
         },
         label = "libraryChipInk",
     )
-    Row(
+    Column(
         modifier = Modifier
-            .clip(CircleShape)
-            .background(container)
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        category.icon?.let { icon ->
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = content,
-                modifier = Modifier.size(16.dp),
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            category.icon?.let { icon ->
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (selected) MaterialTheme.colorScheme.primary else content,
+                    modifier = Modifier.size(15.dp),
+                )
+            }
+            Text(
+                text = category.title(),
+                style = MaterialTheme.typography.titleSmall,
+                color = content,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                maxLines = 1,
             )
         }
-        Text(
-            text = category.title(),
-            style = MaterialTheme.typography.titleSmall,
-            color = content,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+        Spacer(Modifier.height(5.dp))
+        Box(
+            Modifier
+                .size(width = 18.dp, height = 2.dp)
+                .clip(CircleShape)
+                .background(
+                    if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                ),
         )
     }
 }
@@ -417,15 +409,15 @@ private fun LibrarySectionHeader(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             if (count > 0) {
                 Text(
                     text = "$count",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.9.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
                 )
             }
         }
@@ -612,7 +604,7 @@ internal fun LibraryTile(
     modifier: Modifier = Modifier,
     isPinned: Boolean = false,
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(12.dp)
     Column(
         modifier = modifier
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)

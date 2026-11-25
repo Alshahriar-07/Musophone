@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -59,9 +60,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cached
 import androidx.compose.material.icons.rounded.Folder
@@ -85,6 +88,7 @@ import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.RowMoreButton
+import com.music.bitchord.ui.components.MusoV26
 import com.music.bitchord.ui.components.PullToRefresh
 import com.music.bitchord.ui.components.SHELF_CARD_WIDTH
 import com.music.bitchord.ui.components.VideoThumbnails
@@ -365,7 +369,7 @@ private fun RecentShelf(
     currentSong: Song?,
     isPlaying: Boolean,
 ) {
-    Column(Modifier.padding(bottom = 26.dp)) {
+    Column(Modifier.padding(bottom = MusoV26.SectionGap)) {
         RecentSectionHeader(title = localizeShelfTitle(shelf.title), subtitle = localizeShelfSubtitle(shelf.subtitle))
         val isCurrentItem = shelf.items.playingItemMatcher(currentSong)
         BoxWithConstraints {
@@ -396,31 +400,22 @@ private fun RecentShelf(
 private fun RecentSectionHeader(title: String, subtitle: String) {
     Column(
         modifier = Modifier
-            .padding(horizontal = PAGE_GUTTER, vertical = 10.dp)
+            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 14.dp, bottom = 8.dp)
             .fillMaxWidth(),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height(15.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         if (subtitle.isNotBlank()) {
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -537,7 +532,7 @@ private fun HomeAmbientDepth(modifier: Modifier = Modifier) {
                 // Behind the mark, at the page's start.
                 drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(accent.copy(alpha = 0.20f), Color.Transparent),
+                        colors = listOf(accent.copy(alpha = 0.10f), Color.Transparent),
                         center = Offset(size.width * 0.16f, -size.height * 0.12f),
                         radius = size.width * 0.78f,
                     ),
@@ -546,7 +541,7 @@ private fun HomeAmbientDepth(modifier: Modifier = Modifier) {
                 // has a direction instead of being one symmetrical glow.
                 drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(accent.copy(alpha = 0.075f), Color.Transparent),
+                        colors = listOf(accent.copy(alpha = 0.04f), Color.Transparent),
                         center = Offset(size.width * 0.92f, size.height * 0.10f),
                         radius = size.width * 0.54f,
                     ),
@@ -573,69 +568,83 @@ private fun HomeTitle(
     onProfileClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val style = MaterialTheme.typography.displayLarge
-    val logoHeight = with(LocalDensity.current) { (style.fontSize * LOGO_TO_FONT).toDp() }
-    val coral = MaterialTheme.colorScheme.primary
+    // v2.6 masthead: one line of chrome — the lockup, the Replay door, the
+    // listener — then the page's name at heading size. v2.5 set the name as a
+    // 38 sp display line over a full-height wash, which pushed Recents below
+    // the fold on a short phone and made Home open with more air than content.
+    // v2.7: the lockup a touch larger and a touch further left than v2.6's
+    // 22 dp flush with the page gutter. Only the mark moves: the heading below
+    // keeps the gutter it shares with every other page.
+    val logoHeight = 26.dp
+    // Read outside the draw lambda: a draw scope is not a composable scope.
+    val accent = MaterialTheme.colorScheme.primary
     Column(
         modifier = modifier
             .fillMaxWidth()
             .drawBehind {
                 drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(coral.copy(alpha = 0.16f), Color.Transparent),
-                        center = Offset(size.width * 0.12f, 0f),
-                        radius = size.width * 0.9f,
+                        colors = listOf(
+                            accent.copy(alpha = 0.07f),
+                            Color.Transparent,
+                        ),
+                        center = Offset(size.width * 0.08f, 0f),
+                        radius = size.width * 0.85f,
                     ),
                 )
             }
             // No top padding of its own: [HOME_TITLE_LIFT] already leaves the
             // mark [HOME_MASTHEAD_TOP] under the status bar, and adding more
             // here only pushed the heading away from the top of the page.
-            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, bottom = 10.dp),
+            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, bottom = 6.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // The complete official lockup — icon and wordmark together — not a
-            // re-set wordmark or the mark on its own. Its own colours are kept,
-            // so no tint is applied; the transparent canvas preserves the
-            // supplied 3:1 proportions.
             Image(
                 painter = painterResource(Res.drawable.musophone_logo),
                 contentDescription = "MusoPhone",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
+                    .offset(x = (-6).dp)
                     .height(logoHeight)
                     .aspectRatio(LOGO_ASPECT)
-                    // A cap for large accessibility font scales: Fit keeps the
-                    // mark's proportions whatever room it is given, so the
-                    // masthead cannot push the avatar off a narrow screen.
-                    .widthIn(max = 190.dp),
+                    .widthIn(max = 156.dp),
             )
             Spacer(Modifier.weight(1f))
             if (replayYear != null) {
-                ReplayYearButton(replayYear, height = logoHeight * 0.62f)
-                Spacer(Modifier.width(10.dp))
+                ReplayYearButton(replayYear, height = 20.dp)
+                Spacer(Modifier.width(8.dp))
             }
             if (onProfileClick != null) HomeProfileControl(listenerName, profileImageUrl, onProfileClick)
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(14.dp))
         Text(
             text = title,
-            style = style,
+            style = HomeHeadingStyle(),
             color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
         if (!listenerName.isNullOrBlank()) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(2.dp))
             Text(
-                text = listenerName.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = coral,
+                text = listenerName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
     }
 }
+
+/** The heading's own size: a hero, but 26 sp rather than the 38 sp display cut. */
+@Composable
+private fun HomeHeadingStyle() = MaterialTheme.typography.displaySmall.copy(
+    fontWeight = FontWeight.W700,
+    fontSize = 26.sp,
+    letterSpacing = (-0.5).sp,
+)
 
 /**
  * The way into Profile at the top of Home: the app's profile glyph on one
@@ -648,25 +657,37 @@ private fun HomeProfileControl(
     imageUrl: String?,
     onClick: () -> Unit,
 ) {
+    // The listener's own portrait when there is one, on a hairline ring; the
+    // profile glyph when there is not. Smaller than v2.5's control so the
+    // masthead is one quiet line rather than a header block.
+    val ring = RoundedCornerShape(percent = 50)
     Box(
         modifier = Modifier
-            .size(38.dp)
-            .clip(CircleShape)
+            .size(34.dp)
+            .clip(ring)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(
-                width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = CircleShape,
-            )
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, ring)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = MusoIcons.Profile,
-            contentDescription = name?.let { "$it profile" },
-            tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.size(20.dp),
-        )
+        val portrait = imageUrl?.takeIf { it.isNotBlank() }
+        if (portrait != null) {
+            AsyncImage(
+                model = portrait,
+                contentDescription = name?.let { "$it profile" },
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(ring),
+            )
+        } else {
+            Icon(
+                imageVector = MusoIcons.Profile,
+                contentDescription = name?.let { "$it profile" },
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp),
+            )
+        }
     }
 }
 
@@ -697,33 +718,24 @@ internal fun SectionHeader(title: String, subtitle: String = "", onShowAll: (() 
     val displaySubtitle = localizeShelfSubtitle(subtitle)
     Row(
         modifier = Modifier
-            .padding(horizontal = PAGE_GUTTER, vertical = 10.dp)
+            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 14.dp, bottom = 8.dp)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .width(3.dp)
-                        .height(15.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = displayTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(
+                text = displayTitle,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
             if (displaySubtitle.isNotBlank()) {
                 Text(
                     text = displaySubtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -928,12 +940,12 @@ internal fun Shelf(
     currentSong: Song? = null,
     isPlaying: Boolean = false,
 ) {
-    Column(Modifier.padding(bottom = 26.dp)) {
+    Column(Modifier.padding(bottom = MusoV26.SectionGap)) {
         SectionHeader(shelf.title, shelf.subtitle)
         val isCurrentItem = shelf.items.playingItemMatcher(currentSong)
         ShelfRow(
             contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             leadingCard?.let { card -> item(key = "leading") { card() } }
             items(shelf.items) { item ->
@@ -986,8 +998,8 @@ fun VideoShelfCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(VIDEO_ASPECT)
-                .clip(RoundedCornerShape(12.dp))
-                .thumbnailBorder(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(MusoV26.CoverRadius))
+                .thumbnailBorder(RoundedCornerShape(MusoV26.CoverRadius))
                 .background(placeholderColor),
         ) {
             AsyncImage(
@@ -1046,7 +1058,7 @@ internal fun NewShelfCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(MusoV26.CoverRadius))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
         ) {
@@ -1098,7 +1110,7 @@ private fun ServiceCard(colors: List<Color>, trackKey: String, icon: ImageVector
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(12.dp)),
+            .clip(RoundedCornerShape(MusoV26.CoverRadius)),
         contentAlignment = Alignment.Center,
     ) {
         MeshGradientBackground(
@@ -1140,7 +1152,7 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .clip(RoundedCornerShape(MusoV26.CoverRadius)),
                     contentAlignment = Alignment.Center,
                 ) {
                     MeshGradientBackground(
@@ -1182,8 +1194,8 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .thumbnailBorder(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(MusoV26.CoverRadius))
+                        .thumbnailBorder(RoundedCornerShape(MusoV26.CoverRadius))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
                     AsyncImage(

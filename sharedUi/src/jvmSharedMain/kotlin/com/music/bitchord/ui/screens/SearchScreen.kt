@@ -65,9 +65,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -225,25 +227,27 @@ fun SearchScreen(
                     modifier = Modifier.padding(
                         start = PAGE_GUTTER,
                         end = PAGE_GUTTER,
-                        bottom = 8.dp,
+                        bottom = 10.dp,
                     ),
                 ) {
-                    Text(
-                        text = "MUSOPHONE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    // v2.6: the page name and its one line of context, nothing
+                    // above them. The field is the page's subject, so it sits as
+                    // close to the top as the frosted bar allows.
                     Text(
                         text = stringResource(Res.string.search),
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        style = MaterialTheme.typography.displaySmall.copy(
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.4).sp,
+                        ),
                         color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
                     )
+                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = stringResource(Res.string.search_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 10.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     )
                 }
                 SearchField(
@@ -470,27 +474,22 @@ private fun SearchSectionHeader(title: String, count: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 20.dp, bottom = 8.dp),
+            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 16.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(width = 3.dp, height = 16.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
-        )
-        Spacer(Modifier.width(9.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
         Text(
             text = count.toString(),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.9.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
         )
     }
 }
@@ -648,7 +647,7 @@ private fun TopResultCard(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val cardShape = RoundedCornerShape(24.dp)
+    val cardShape = RoundedCornerShape(16.dp)
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -675,7 +674,7 @@ private fun TopResultCard(
                 model = song.thumbnailUrl?.artworkAt(ROW_ART_PX),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.trackArtSize(96.dp, song.isVideo).clip(RoundedCornerShape(22.dp)),
+                modifier = Modifier.trackArtSize(96.dp, song.isVideo)                .clip(RoundedCornerShape(12.dp)),
             )
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
@@ -964,22 +963,17 @@ private fun LazyListScope.recentSearches(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 20.dp, bottom = 8.dp),
+                .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 16.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(width = 3.dp, height = 18.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-            )
-            Spacer(Modifier.width(9.dp))
             Text(
                 text = stringResource(Res.string.recent_searches),
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = stringResource(Res.string.clear),
@@ -1112,7 +1106,7 @@ private fun RecentSearchEntityRow(
     onSwipeToQueue: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(12.dp)
     SwipeToQueueBox(
         onSwipeToQueue = onSwipeToQueue,
         modifier = modifier,

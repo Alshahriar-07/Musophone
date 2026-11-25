@@ -134,7 +134,7 @@ internal val TAB_ICON_LABEL_GAP = 1.dp
  * larger share of it than these had at 25dp in 70; at 28 they come out at
  * Apple's sizes, and with the padding above the bar is 62dp.
  */
-internal val TAB_ICON_SIZE = 28.dp
+internal val TAB_ICON_SIZE = 24.dp
 
 /** A tab's label: Apple's 10pt, letter-spaced as SF Pro Text sets it. */
 @Composable
@@ -315,8 +315,10 @@ fun FloatingBottomBar(
                     .clip(pillShape)
                     // The theme's own accent, not a fixed coral: this is the
                     // surface that makes a Monochrome nav look monochrome and
-                    // an Ocean one look blue at a glance.
-                    .background(accentPalette.accent.copy(alpha = 0.13f)),
+                    // an Ocean one look blue at a glance. v2.6 keeps it quieter
+                    // than v2.5's: the indicator says "here", and the glyph and
+                    // its label are what say which destination that is.
+                    .background(accentPalette.accent.copy(alpha = 0.09f)),
             )
         }
 
@@ -450,22 +452,6 @@ private fun BottomBarItem(
             .padding(vertical = TAB_VERTICAL_PADDING),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            // A soft halo of the theme's accent under the chosen glyph. It is
-            // what the inset capsule reads as at the edges, and it fades with
-            // the tint rather than popping in, so the whole door of the bar
-            // moves on one curve.
-            if (selected) {
-                Box(
-                    modifier = Modifier
-                        .size(TAB_ICON_SIZE + 18.dp)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(tint.copy(alpha = 0.16f), Color.Transparent),
-                            ),
-                            CircleShape,
-                        ),
-                )
-            }
             Icon(
                 imageVector = tab.icon,
                 contentDescription = tab.label,

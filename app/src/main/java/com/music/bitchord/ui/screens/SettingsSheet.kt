@@ -2529,7 +2529,7 @@ private inline fun SearchableSettingsGroup(
     search: SettingsSearch,
     header: String? = null,
     footer: String? = null,
-    topSpacing: Dp = 26.dp,
+    topSpacing: Dp = 18.dp,
     content: @Composable SettingsGroupScope.() -> Unit,
 ) {
     val scope = SettingsGroupScope(search, header)
@@ -2565,18 +2565,21 @@ private inline fun SearchableSettingsGroup(
  */
 @Composable
 internal fun SettingsPageTitle(text: String) {
-    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 16.dp)) {
-        Text(
-            text = "MUSOPHONE",
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.displayLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-    }
+    // v2.6: the category's name at heading size, with no brand line above it
+    // and no display cut. Settings is a list of destinations; a masthead spent
+    // a screen's worth of height before the first one.
+    Text(
+        text = text,
+        style = MaterialTheme.typography.displaySmall.copy(
+            fontSize = 26.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = (-0.4).sp,
+        ),
+        color = MaterialTheme.colorScheme.onBackground,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 12.dp),
+    )
 }
 
 /**
@@ -2588,7 +2591,7 @@ internal fun SettingsGroup(
     header: String? = null,
     footer: String? = null,
     /** Room above the card, where there is no [header] to provide it. */
-    topSpacing: Dp = 26.dp,
+    topSpacing: Dp = 18.dp,
     content: @Composable () -> Unit,
 ) {
     if (header != null) {
@@ -2599,7 +2602,7 @@ internal fun SettingsGroup(
             modifier = Modifier.padding(
                 start = GROUP_INSET + 4.dp,
                 end = GROUP_INSET,
-                top = 26.dp,
+                top = 18.dp,
                 bottom = 8.dp,
             ),
         )

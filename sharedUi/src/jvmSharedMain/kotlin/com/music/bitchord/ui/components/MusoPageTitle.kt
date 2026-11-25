@@ -10,11 +10,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /**
- * The shared page masthead: a quiet brand line over an oversized page name.
+ * The shared page masthead, now the v2.6 compact header.
  *
- * Home has its own composition because it carries the wordmark and account
- * portrait; Library and Explore use this so their first screenfuls belong to
- * the same product instead of three separately-styled "large title" rows.
+ * v2.5 opened every page with a brand line over a 38 sp page name, which took
+ * a fifth of a phone screen before any content. v2.6 opens with one line at
+ * heading size; this wrapper keeps the old call sites (Explore, and any host
+ * that names a page through it) on the new proportions rather than leaving one
+ * screen on the old masthead.
  */
 @Composable
 fun MusoPageTitle(
@@ -22,34 +24,9 @@ fun MusoPageTitle(
     subtitle: String? = null,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.padding(
-            start = PAGE_GUTTER,
-            end = PAGE_GUTTER,
-            top = 10.dp,
-            bottom = 14.dp,
-        ),
-    ) {
-        Text(
-            text = "MUSOPHONE",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.displayLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (!subtitle.isNullOrBlank()) {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
+    MusoV26Header(
+        title = title,
+        subtitle = subtitle,
+        modifier = modifier,
+    )
 }

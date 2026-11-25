@@ -138,7 +138,7 @@ private val ROW_PADDING_HORIZONTAL = 12.dp
  * height happens to be — so that constraint is gone and the artwork can go
  * back to matching [SongRow].
  */
-private val ART_CORNER = 14.dp
+private val ART_CORNER = 10.dp
 
 /** Distance that makes a horizontal drag an intentional track change. */
 private val TRACK_SWIPE_THRESHOLD = 72.dp
@@ -380,10 +380,11 @@ fun MiniPlayer(
         active = animationsActive && !isLoading,
         reduceMotion = reduceAnimation,
     )
-    // A floating glass slab, not the old full pill: a fixed radius keeps it in
-    // the same rounded family as Home's cards and the Profile stat tiles, while
-    // still reading as a bar rather than a panel.
-    val shape = RoundedCornerShape(24.dp)
+    // v2.6: a shallower slab with a neutral hairline. The v2.5 bar carried a
+    // 24 dp radius and a coral ring, which made the mini player the loudest
+    // outlined object on every page; the accent now belongs to the play glyph
+    // alone.
+    val shape = RoundedCornerShape(16.dp)
     Box(
         modifier = modifier
             .padding(horizontal = BAR_GUTTER)
@@ -412,7 +413,7 @@ fun MiniPlayer(
                     )
                 },
             )
-            .border(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f), shape)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
             // Deliberately silent: the whole bar is the target, so it catches
             // stray taps meant for the page behind it, and the sheet rising is
             // its own confirmation. The glyphs on it still buzz.
@@ -469,7 +470,7 @@ fun MiniPlayer(
                 )
                 FadingLine(
                     text = song.artist,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -490,8 +491,8 @@ fun MiniPlayer(
                     },
                     modifier = Modifier
                         .size(GLYPH_SLOT)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primary),
                 ) {
                     PlayerPlayPauseGlyph(
                         motion = playPauseMotion,
@@ -500,7 +501,7 @@ fun MiniPlayer(
                         playPainter = rememberVectorPainter(Icons.Rounded.PlayArrow),
                         pausePainter = rememberVectorPainter(Icons.Rounded.Pause),
                         contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(GLYPH_SIZE),
                     )
                 }

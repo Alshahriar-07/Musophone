@@ -69,6 +69,7 @@ import com.music.bitchord.ui.components.MusoPill
 import com.music.bitchord.ui.components.MusoSectionHeading
 import com.music.bitchord.ui.components.MusoStatTile
 import com.music.bitchord.ui.components.MusoTokens
+import com.music.bitchord.ui.components.MusoV26Stat
 import com.music.bitchord.ui.icons.MusoIcons
 import java.util.Locale
 
@@ -141,7 +142,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                    .padding(horizontal = MusoTokens.Gutter, vertical = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 ReplayPeriod.entries.forEach { option ->
@@ -195,37 +196,52 @@ fun ProfileScreen(
                 val stats = summary ?: return@LazyColumn
 
                 item(key = "profile:stats") {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    // v2.6: one panel of four figures instead of four cards of
+                    // their own. Four raised boxes made the numbers look like
+                    // four unrelated things; one panel reads as this listener's
+                    // listening, and takes a third less height.
+                    MusoGlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = MusoTokens.Gutter, vertical = 6.dp),
+                        corner = MusoTokens.CardRadius,
+                        contentPadding = 16.dp,
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            MusoStatTile(
-                                value = formatListeningTime(stats.totalMs),
-                                label = stringResource(R.string.profile_listened),
-                                caption = stringResource(R.string.profile_plays, stats.totalPlays),
-                                modifier = Modifier.weight(1f),
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Row {
+                                MusoV26Stat(
+                                    value = formatListeningTime(stats.totalMs),
+                                    label = stringResource(R.string.profile_listened),
+                                    modifier = Modifier.weight(1f),
+                                )
+                                MusoV26Stat(
+                                    value = stats.distinctSongs.toString(),
+                                    label = stringResource(R.string.profile_songs),
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(0.5.dp)
+                                    .background(MaterialTheme.colorScheme.outlineVariant),
                             )
-                            MusoStatTile(
-                                value = stats.distinctSongs.toString(),
-                                label = stringResource(R.string.profile_songs),
-                                caption = stringResource(R.string.profile_distinct),
-                                modifier = Modifier.weight(1f),
-                                accent = MaterialTheme.colorScheme.tertiary,
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            MusoStatTile(
-                                value = stats.distinctArtists.toString(),
-                                label = stringResource(R.string.profile_artists),
-                                modifier = Modifier.weight(1f),
-                                accent = MaterialTheme.colorScheme.secondary,
-                            )
-                            MusoStatTile(
-                                value = stats.distinctAlbums.toString(),
-                                label = stringResource(R.string.profile_albums),
-                                modifier = Modifier.weight(1f),
-                                accent = MaterialTheme.colorScheme.tertiary,
+                            Row {
+                                MusoV26Stat(
+                                    value = stats.distinctArtists.toString(),
+                                    label = stringResource(R.string.profile_artists),
+                                    modifier = Modifier.weight(1f),
+                                )
+                                MusoV26Stat(
+                                    value = stats.distinctAlbums.toString(),
+                                    label = stringResource(R.string.profile_albums),
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            Text(
+                                text = stringResource(R.string.profile_plays, stats.totalPlays),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             )
                         }
                     }
@@ -428,20 +444,16 @@ private fun ProfileHeader(
                     ),
                 )
             }
-            .padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = 10.dp, bottom = 6.dp),
+            .padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = 6.dp, bottom = 6.dp),
     ) {
-        Row(verticalAlignment = Alignment.Top) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             MusoAvatar(
                 name = account?.name,
                 imageUrl = account?.thumbnailUrl?.takeIf { signedIn },
-                size = 82.dp,
+                size = 64.dp,
             )
-            Spacer(Modifier.width(16.dp))
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(top = 4.dp),
-            ) {
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
                 Text(
                     text = account?.name?.takeIf { signedIn } ?: stringResource(R.string.profile_guest),
                     style = MaterialTheme.typography.headlineSmall,
@@ -453,12 +465,12 @@ private fun ProfileHeader(
                 Text(
                     text = account?.email?.takeIf { signedIn && it.isNotBlank() }
                         ?: stringResource(if (signedIn) R.string.signed_in else R.string.not_signed_in),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(9.dp))
+                Spacer(Modifier.height(6.dp))
                 MusoFactRow(
                     facts = listOf(
                         stringResource(R.string.profile_local_stats),
@@ -475,23 +487,20 @@ private fun ProfileHeader(
             )
         }
 
-        Spacer(Modifier.height(26.dp))
-        Text(
-            text = stringResource(R.string.profile_your_listening).uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
-            color = accent,
-        )
-        Spacer(Modifier.height(4.dp))
+        // One heading, not two: v2.5 printed the section name twice, as an
+        // eyebrow and again as a display heading, which spent a third of the
+        // first screen saying the same words.
+        Spacer(Modifier.height(20.dp))
         Text(
             text = stringResource(R.string.profile_your_listening),
-            style = MaterialTheme.typography.headlineLarge,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(2.dp))
         Text(
             text = stringResource(R.string.profile_your_listening_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
         )
     }
 }

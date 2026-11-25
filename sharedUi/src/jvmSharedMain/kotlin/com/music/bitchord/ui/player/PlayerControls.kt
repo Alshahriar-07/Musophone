@@ -651,8 +651,12 @@ internal fun TransportRow(
     compact: Boolean = false,
     animationsActive: Boolean = true,
 ) {
-    val playSize = if (compact) 58.dp else 74.dp
-    val playTouch = if (compact) 76.dp else 92.dp
+    // v2.6: the primary transport is a control, not the page's subject. It was
+    // 74dp drawn in a 92dp target, which at the bottom of a phone read as large
+    // as the artwork title above it; 64 in an 84dp target keeps the touch area
+    // generous while letting the sleeve stay the loudest object on screen.
+    val playSize = if (compact) 54.dp else 64.dp
+    val playTouch = if (compact) 72.dp else 84.dp
     val skipSize = if (compact) 44.dp else PLAYER_SKIP_ICON_SIZE
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
     val previousMotion = rememberPlayerSkipMotion(active = animationsActive, reduceMotion = reduceAnimation)

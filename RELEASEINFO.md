@@ -1,132 +1,138 @@
-# MusoPhone 2.5 — Release Information
+# MusoPhone 2.6 — Release Information
 
 **Release date:** November 25, 2026  
-**Version:** 2.5 (version code 49)  
+**Version:** 2.6 (version code 50)  
 **Package:** `com.musophone.player`  
 **Minimum Android:** 8.0 (API 26)  
 **Developed by:** EAGOX STUDIO TEAM — [eagoxstudio@gmail.com](mailto:eagoxstudio@gmail.com)
 
+## What 2.6 is
+
+v2.5 gave the app one icon family, one panel and one motion system, but every
+page still opened the same way: a brand line over a 38 sp display title, with
+26 dp between every section and a 22 dp corner on every surrounding box. Read as
+a whole app, that is a lot of vertical air before any music, and a lot of round
+panels around content that should be the loudest thing on screen.
+
+v2.6 is a proportional redesign on the same foundation. The black base, the
+typeface, the accent palettes and every feature are unchanged. What changed is
+how much room the chrome takes, where artwork sits, and what a section heading
+looks like.
+
 ## Highlights
 
-- **A new icon family, everywhere.** `MusoIcons` replaces the mixed set the app
-  had accumulated: one 24 dp grid, one 1.9 stroke, round caps and joins, open
-  counters, and filled shapes only where a state has to survive without colour.
-  The bottom bar's four destinations, the profile control on every tab, Settings'
-  chevrons and Profile's account actions are all drawn from it. The old
-  Cupertino-derived tab glyphs (a solid Home next to three font outlines) are no
-  longer used for navigation.
-- **Profile is a glyph, not a photograph.** The account avatar that sat at the
-  right end of the top bar — a menu in one version, a settings shortcut in the
-  next — is now the app's own profile icon on the same quiet surface as every
-  other control, and it opens the Profile **page**. The Home masthead uses the
-  same control. Account switching and account settings are rows on that page, so
-  nothing was lost; the account's actual picture stays on the Profile page, at
-  full size, where it belongs.
-- **Profile page recomposed.** A larger portrait under one soft wash of the
-  theme's own light, the name and address set as a headline pair, the local/private
-  facts beneath them, and the gear as a round icon button. Every destination off
-  the page — Replay, History, Switch account, Account settings — is now one
-  grouped card of action rows with a glyph, a title and a chevron, replacing the
-  scrolling row of chips that used to close the page.
-- **One panel across the app.** The raised surface is a single neutral charcoal
-  step with a hairline rim and one whisper of light along its top edge — no
-  captured glass, no long gradient, no translucency stacking. `MusoGlassCard`,
-  Settings groups and About's cards now use exactly that surface, at the same
-  radius ladder (14 / 22 / 26 dp). The type scale gained one eyebrow style, so
-  section labels on Profile, Settings and About agree.
-- **Shared states.** `MusoEmptyState` and `MusoLoadingState` give every page the
-  same deliberate blank and the same breathing three-dot load: a glyph in a
-  quiet circle, a title, a sentence and at most one action. Profile uses both;
-  the components are available to every screen. The loading breath stops under
-  *Reduce animation*.
-- **Motion, tuned and honest.** A pushed page now settles in from a twelfth of
-  the edge, 1.5 % under full size, on the app's easing curve, with a shorter
-  fade out beneath it; the tab swap stays instantaneous, because the bar already
-  carries that movement and a cross-fade between two unpainted pages dips
-  through a dim frame. With *Reduce animation* on, the same change becomes a
-  120 ms cross-fade with no slide and no scale. The selected bottom-bar glyph
-  gained a soft accent halo and sits on clean light inactive glyphs at rest.
-- **Playback untouched.** No engine, session, queue, lyrics, scrobble, cast,
-  download or equalizer code was modified. Every feature listed for 2.4 remains,
-  including romanized and translated lyrics, accent colour customization and the
-  AMOLED true-black foundation.
-- Version is **2.5 (49)**.
+- **Compact editorial headers.** Home, Library, Explore, Profile, Settings
+  categories and the mood/genre page now open with one line: an optional quiet
+  overline and the page name at 22 sp. The repeated `MUSOPHONE` brand line above
+  every page is gone. On a short phone the first shelf is now visible without
+  scrolling.
+- **Sections announced by type, not by a bar.** The 3 dp accent bar in front of
+  every section title (Home shelves, Recents, Search results, Search recents,
+  Library groups) has been removed. Its job — "this is a heading" — is done by
+  an overline and a 20 sp semibold title.
+- **Artwork-first cards.** Shelf covers, video cards, Library tiles, search
+  covers and fallback tiles are cut to a 10–12 dp corner instead of 12–16, and
+  shelves sit 12 dp apart instead of 14, so a row of covers reads as one strip
+  of music rather than a row of rounded panels.
+- **Explore recomposed.** The mood and genre grid no longer splits each card
+  into a solid colour stripe and a duotoned photograph. The cover fills the tile
+  edge to edge, a bottom-weighted scrim carries the name, and the category's own
+  colour survives only as the placeholder behind artwork that has not loaded.
+  Cards are taller (1.42:1) and two abreast on every phone.
+- **Library rail is a table of contents.** Category chips were filled accent
+  capsules; they are now label rows with a 2 dp underline and an accent glyph on
+  the selected category. The rail takes roughly half its old height and the
+  first shelf moves up with it.
+- **Profile: one heading, one stats panel.** The page printed "Your listening"
+  twice (as an eyebrow and again as a display heading); it now prints it once.
+  The four stat cards became one panel of four figures with a hairline between
+  the rows, and the portrait is 64 dp inside a 64 dp row rather than 82 dp above
+  an 26 dp gap.
+- **Search opens on its field.** The page title is 26 sp with a single line of
+  context, no brand line, and the field follows immediately. Result group
+  headings and the recents heading lost their accent bars, and the best-match
+  card is a 16 dp panel with a 12 dp sleeve.
+- **Player rebalanced.** The content column is 24 dp from the edge (was 30) and
+  caps at 520 dp (was 560); the sleeve corner is 12 dp (was 16) and the control
+  deck's top corners are 22 dp (was 32). The primary transport is 64 dp drawn in
+  an 84 dp target (was 74 in 92), so the buttons no longer outweigh the artwork
+  and title above them. Playback, seeking, queue, lyrics, output routing and
+  every gesture are untouched.
+- **Mini player and navigation, quieter.** The mini player is a 16 dp slab
+  (was 24) with a neutral hairline instead of a coral ring; its play control is
+  a filled accent button, and its artist line is body size. Bottom navigation
+  glyphs are 24 dp (was 28) and the accent halo behind the selected destination
+  is gone — the inset capsule and the accent tint already say where you are.
+- **Softer ambient light.** Home's masthead wash dropped from 0.20/0.075 alpha
+  to 0.10/0.04, so the AMOLED background stays black under the heading instead
+  of turning into a smoky gradient.
+
+## Preserved functionality
+
+Nothing was removed to achieve the new presentation. The following were checked
+by reading the call sites and are wired to the same state and handlers as before:
+
+- Play/pause, previous/next, seek and drag, live progress and timestamps.
+- Lyrics: load, unavailable, expand/collapse, synchronized highlighting,
+  romanization modes and restore-original.
+- Favorite/unfavorite, track overflow, queue display and edits, shuffle, repeat
+  modes, AutoPlay, audio output/device selection, artwork fallback.
+- Home content sources, Top Picks, Find Your Mood, Recents, pull-to-refresh,
+  profile navigation, song menus.
+- Library categories, playlists, albums, artists, folders, sources, downloads,
+  listening statistics (ListeningStats), and create/import playlist actions.
+- Explore mood/genre navigation with real artwork and metadata.
+- Search query editing, source tabs (YouTube / Library / Addons), filters,
+  recent searches, typeahead, results navigation and empty states.
+- Profile identity, Replay and History, account switching, account settings,
+  listening stats and period filters.
+- Settings: every preference and destination, including accent colour
+  customization, playback, downloads, audio pipeline, sources, Listen Together,
+  Wear OS and About.
 
 ## What changed, by page
 
 | Page | Change |
 | --- | --- |
-| Home | Profile control is the profile glyph; existing v2.4 masthead and light washes kept |
-| Explore | New bar glyphs; unchanged content design from v2.4 |
-| Library | New bar glyphs; panel/row treatment inherited from the shared tokens |
-| Search | New bar glyphs; existing v2.4 cover cards, blank and no-results states kept |
-| Player | Untouched transport, controls and lyrics; transitions now respect reduced motion |
-| Playlist / Album / Artist | Header, sleeve and track list kept from v2.4; shared chrome above them updated |
-| Profile | Recomposed header, account action card, shared loading and empty states |
-| Settings | Standard panel group, new chevron, letter-spaced eyebrow; all rows and switches unchanged |
-| Account & Scrobbling, Equalizer, Sources, History, Drive, Discord, Listen Together | Inherit the Settings group, row and chevron language |
-| About | About's cards are the standard panel at the standard radius |
-| Mini player | Untouched transport and dock; shares the bar's new icon language |
-| Dialogs, sheets, menus | Unchanged behaviour; all sit on the shared panel and type scale |
-| Loading / empty states | One shared pair, used on Profile and available app-wide |
-
-## Web (MusoPhone Web v2.5)
-
-The site at `web/` got the same identity pass:
-
-- **New brand artwork.** A single waveform-M mark now draws the sidebar and
-  mobile header; the favicon, the 192/512 PWA icons, the 180 px Apple touch
-  icon, the five extension toolbar icons and the 1200 × 630 social card are all
-  rendered from it. The inherited BitChord crescent mark, its red-gradient
-  favicon and the toolbar PNGs made from it are gone.
-- **The app's palette.** AMOLED-black dark theme, neutral charcoal panels,
-  porcelain light theme, one crimson accent; the lyric font is now MusoPhone SF
-  Pro Display. Settings groups are the same panel with a hairline rim.
-- **One icon language.** Sidebar, library and settings navigation use open
-  1.9-stroke glyphs; the extension entry is a stroked puzzle.
-- **Metadata and sharing.** Title, description, canonical URL, Open Graph and
-  Twitter cards with the new image, JSON-LD, `theme-color`, web manifest,
-  `robots.txt`, `sitemap.xml`, and a document title per route.
-- **Motion.** Pages settle in with a 320 ms fade-and-rise (removed under
-  `prefers-reduced-motion`), and keyboard focus has a quiet accent ring.
-- **Version 2.5** is shown in the sidebar and in Settings › About; workspace
-  packages are `@musophone/*` and extension archives are
-  `musophone-extension-*`. Legacy protocol and storage identifiers (the
-  `bitchord://party/` invite scheme, extension origin trust, `bitchord:*`
-  localStorage keys) are kept so existing installs and parties keep working.
-
-Verification: `pnpm -r typecheck` passed; `pnpm -r test` 169 tests passed;
-`pnpm --filter @musophone/app build` passed (Vite production build). The built
-site was served with `vite preview` and inspected at desktop and phone widths.
+| Home | Compact masthead, 26 sp page name, barless section headings, 10 dp covers, quieter wash |
+| Explore | Editorial artwork tiles (no stripe/duotone), 1.42:1 cards, compact header |
+| Library | Compact header, underline category rail, barless group headings, 12 dp tiles |
+| Search | Compact title, field directly under it, barless group headings, 16 dp best-match card |
+| Profile | 64 dp portrait row, single "Your listening" heading, one stats panel |
+| Settings / About | 26 sp category title, 18 dp group spacing, no brand line |
+| Player | Narrower column, smaller sleeve corner, lighter deck corners, 64 dp play control |
+| Mini player | 16 dp neutral slab, filled accent play, smaller artist line |
+| Bottom navigation | 24 dp glyphs, no halo, quieter indicator |
+| Shared | `MusoV26Header`, `MusoV26SectionHeader`, `MusoV26Stat`, `MusoV26` tokens |
 
 ## Build and verification
 
-- `:app:compileProdDebugKotlin` — passed.
+- Version: **2.6 (50)**, minSdk 26, targetSdk 36, compileSdk 37.
+- Toolchain: Gradle 8.11.1, AGP 8.10.1, Kotlin 2.3.20, R8 8.13.23, JDK 21.0.13.
+- `:app:assembleProdRelease` — **BUILD SUCCESSFUL** (7m 54s), R8 minified,
+  resource-shrunk and signed.
 - Unit tests: `:app:testProdDebugUnitTest` 1,347 tests, 1 skipped, 0 failed;
-  `:shared:jvmTest` 159 tests, 0 failed.
-- `:app:assembleProdRelease` — passed (R8 minified, resource-shrunk, signed).
-- Metadata: `com.musophone.player`, versionCode **49**, versionName **2.5**,
-  minSdk 26, targetSdk 36, compileSdk 37.
-- Signature: APK Signature Scheme v2 and v3, one signer, RSA 4096,
-  `CN=MusoPhone, OU=Mobile, O=Al Shahriar Sowan, L=Dhaka, ST=Dhaka, C=BD`
-  (SHA-256 `9edcb3cbbad2b7f8c72677daf5d8f6e6a75a19bf7e9e96080746495130a4a847`).
-- `apksigner verify` — **Verifies**. `unzip -t` — no errors.
-- **No device or emulator was attached**, so installation and launch on hardware
-  remain unverified, and the visual result was not inspected on a screen.
+  `:shared:jvmTest` 159 tests, 0 failed; `:sharedUi:jvmTest` 114 tests, 0 failed.
+- `apksigner verify` — Verifies (v2 and v3, same certificate SHA-256
+  `9edcb3cb…a4a847` as v2.5). `unzip -t` — no errors. `aapt2 badging` — versionCode
+  50, versionName 2.6, minSdk 26, targetSdk 36.
+- **No device or emulator was attached to the build machine**, so installation,
+  launch and on-screen visual inspection were **not** performed. The layout
+  changes were reviewed in source only; treat the visual result as unverified
+  until it has been seen on a screen.
 
 ## Artifacts
 
-`release/v2.5/`, alongside the untouched `v1.11`, `v2.1`, `v2.2` and `v2.3`
-entries. (v2.4 was a source-only update and never produced an APK, so there is
-no v2.4 artifact to preserve.)
+`release/v2.6/`, alongside the untouched `v1.11`, `v2.1`, `v2.2`, `v2.3` and
+`v2.5` folders. Historical APKs and their checksums were not modified.
 
 | File | Size |
 | --- | --- |
-| `MusoPhone-v2.5.apk` (universal) | 84,330,757 bytes |
-| `MusoPhone-v2.5-arm64-v8a.apk` | 46,900,718 bytes |
-| `MusoPhone-v2.5-armeabi-v7a.apk` | 40,200,384 bytes |
-| `MusoPhone-v2.5-x86_64.apk` | 49,381,599 bytes |
+| `MusoPhone-v2.6.apk` (universal) | 84,330,761 bytes |
+| `MusoPhone-v2.6-arm64-v8a.apk` | 46,900,722 bytes |
+| `MusoPhone-v2.6-armeabi-v7a.apk` | 40,200,388 bytes |
+| `MusoPhone-v2.6-x86_64.apk` | 49,381,603 bytes |
 
 SHA-256 of the universal APK:
-`f99cf72d2f8e459fea61b5509e25e56a154144f839378b0ddd863d15242d409b`
-(see `SHA256SUMS.txt` for the per-ABI sums).
+`d07d73462f9f3f9326c806fef7c2b905708eec60b696e0e5f3d988e3fef174c0`
+(see `release/v2.6/SHA256SUMS.txt` for the per-ABI sums).

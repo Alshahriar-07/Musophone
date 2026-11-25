@@ -448,14 +448,14 @@ internal object CanvasStills {
 }
 
 /** The player's side margin. Scrollable panels reach back across it. */
-internal val PLAYER_GUTTER = 30.dp
+internal val PLAYER_GUTTER = 24.dp
 /**
  * How wide the player's content is ever allowed to get. A sleeve and a volume
  * slider stretched right across a tablet aren't a bigger player, just a coarser
  * one; past this the column stops growing and centres itself instead. Phones
  * are narrower than this, so for them it does nothing.
  */
-internal val PLAYER_MAX_WIDTH = 560.dp
+internal val PLAYER_MAX_WIDTH = 520.dp
 /**
  * The width from which the player counts as tablet-sized: its backdrop is
  * the full-cover blur in every state, legacy mesh or not, and Settings keeps
@@ -3655,7 +3655,7 @@ fun NowPlayingScreen(
                         // the way into the header and the mini player, where it
                         // takes their own smaller corner instead.
                         fun sleeveCorner(): Dp {
-                            val corner = 16.dp * (1f - sleeveShown())
+                            val corner = 12.dp * (1f - sleeveShown())
                             val t = dockT()
                             return if (dock == null || t >= 1f) corner else lerp(dock.miniArtCorner(), corner, t)
                         }
@@ -4547,40 +4547,17 @@ fun NowPlayingScreen(
                         // read in this scope recomposes the whole player with it.
                         fadeIn = { !lyricsOpen && !queueOpen && p() > 0f },
                     ) {
-                    // The control deck is a surface of its own: a rounded,
-                    // translucent panel that the sleeve meets rather than the
-                    // controls simply hanging in the artwork's lower third.
-                    // Everything inside it is the same block as before — the
-                    // panel changes the composition, not what any control does.
-                    val deckShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+                    // v2.7: no enclosing panel. The deck used to be a rounded
+                    // black sheet with a border and an accent seam around every
+                    // control; the controls now sit directly on the player's own
+                    // backdrop, so the artwork above them and the timeline below
+                    // it share one surface. This column only carries the slide
+                    // and the height the Spotify canvas presentation measures —
+                    // its contents are exactly what they were.
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(deckShape)
-                            // A dark scrim rather than the theme's surface: the
-                            // player's type is white in every theme, so the
-                            // panel has to stay dark in light mode too. The
-                            // accent still reaches it through the play button,
-                            // the scrubber and the nav.
-                            // A solid AMOLED panel, not a stack of translucent
-                            // scrims: the controls read as one raised object over
-                            // the artwork, and the surface stays black instead of
-                            // turning grey wherever the cover is bright.
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        Color(0xFF101013),
-                                        Color(0xFF070708),
-                                    ),
-                                ),
-                            )
-                            .border(
-                                width = 0.5.dp,
-                                color = Color.White.copy(alpha = 0.09f),
-                                shape = deckShape,
-                            )
-                            .padding(top = 10.dp)
                             .onSizeChanged { size ->
                                 if (spotifyCanvasPresentation) {
                                     val measuredHeight = with(density) { size.height.toDp() }
@@ -4590,26 +4567,6 @@ fun NowPlayingScreen(
                                 }
                             },
                     ) {
-                        // The accent enters the panel once, as a light seam
-                        // along its top edge, rather than tinting the controls.
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            Color.Transparent,
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.40f),
-                                            Color.Transparent,
-                                        ),
-                                    ),
-                                ),
-                        )
-                        // No grab handle: the player closes by dragging the
-                        // sleeve, and the deck no longer needs the extra row.
-                        // The seam alone separates it from the artwork.
-                        Spacer(Modifier.height(10.dp))
                     Column(
                         modifier = Modifier
                             .widthIn(max = PLAYER_MAX_WIDTH)

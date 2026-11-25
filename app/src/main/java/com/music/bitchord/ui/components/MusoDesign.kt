@@ -59,26 +59,32 @@ import com.music.bitchord.ui.icons.MusoIcons
  * made the app read as several apps before.
  */
 object MusoTokens {
-    /** The page's side gutter. All full-width content aligns to it. */
-    val Gutter: Dp = 20.dp
+    /**
+     * The v2.6 rhythm. v2.5 used a 20 dp gutter, a 22 dp panel and a 26 dp
+     * section gap; read across Profile, Settings and About that is a page made
+     * of wide margins and large round boxes. v2.6 tightens all three so text
+     * lines up with the tab pages' 16 dp gutter and panels read as grouping
+     * rather than as cards.
+     */
+    val Gutter: Dp = 16.dp
 
     /** Artwork inside rows and tiles. */
-    val ThumbRadius: Dp = 14.dp
+    val ThumbRadius: Dp = 10.dp
 
     /** The standard raised panel. */
-    val CardRadius: Dp = 22.dp
+    val CardRadius: Dp = 16.dp
 
     /** A group of rows, and the compact control surfaces. */
-    val GroupRadius: Dp = 26.dp
+    val GroupRadius: Dp = 20.dp
 
     /** Room between two sections of a page. */
-    val SectionGap: Dp = 26.dp
+    val SectionGap: Dp = 22.dp
 
     /** A full tap row's minimum height. */
-    val RowHeight: Dp = 56.dp
+    val RowHeight: Dp = 54.dp
 
     /** The glyph box in rows and icon buttons. */
-    val GlyphBox: Dp = 38.dp
+    val GlyphBox: Dp = 36.dp
 }
 
 /**
@@ -318,8 +324,10 @@ fun MusoPageHeader(
                 }
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
             if (trailing != null) {
