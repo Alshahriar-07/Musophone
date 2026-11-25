@@ -91,6 +91,34 @@ class MusoAccentThemeTest {
     }
 
     @Test
+    fun `dark appearance is true black with neutral charcoal surfaces`() {
+        val black = Color(0xFF000000)
+        for (theme in MusoAccentTheme.entries) {
+            val scheme = theme.colorScheme(dark = true)
+            assertEquals("$theme dark background", black, scheme.background)
+            assertTrue("$theme surface must sit above black", luminance(scheme.surface) > 0.0)
+            assertTrue(
+                "$theme surface must not be a tinted wash",
+                luminance(scheme.surface) < 0.02,
+            )
+            assertTrue("$theme elevated surface", luminance(scheme.surfaceVariant) > luminance(scheme.surface))
+            assertTrue("$theme outline", contrast(scheme.outline, scheme.background) >= 1.4)
+        }
+    }
+
+    @Test
+    fun `the selected accent is the only colour that changes`() {
+        val backgrounds = MusoAccentTheme.entries.map { it.colorScheme(dark = true).background }.toSet()
+        val surfaces = MusoAccentTheme.entries.map { it.colorScheme(dark = true).surface }.toSet()
+        assertEquals("all dark themes share one AMOLED background", 1, backgrounds.size)
+        assertEquals("all dark themes share one surface foundation", 1, surfaces.size)
+        assertEquals(
+            MusoAccentTheme.entries.size,
+            MusoAccentTheme.entries.map { it.colorScheme(dark = true).primary }.toSet().size,
+        )
+    }
+
+    @Test
     fun `every theme has its own identity`() {
         assertEquals(
             MusoAccentTheme.entries.size,

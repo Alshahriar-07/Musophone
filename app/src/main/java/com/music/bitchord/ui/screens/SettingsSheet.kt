@@ -1,5 +1,6 @@
 package com.music.bitchord.ui.screens
 
+import com.music.bitchord.ui.icons.MusoIcons
 import com.music.bitchord.ui.icons.SfIcons
 import com.music.bitchord.wear.WatchInstaller
 import android.content.Context
@@ -14,9 +15,8 @@ import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -119,7 +119,6 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.positionChanged
 import kotlin.math.abs
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -130,8 +129,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.viewinterop.AndroidView
-import com.music.bitchord.AppIcon
 import com.music.bitchord.ui.components.AccentThemePicker
 import com.music.bitchord.ui.theme.MusoAccentTheme
 import androidx.compose.ui.res.stringResource
@@ -145,6 +142,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
@@ -1416,67 +1414,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            val appIconTitle = stringResource(R.string.app_icon)
-            row(appIconTitle, "icon", "launcher", "logo") {
-                var selectedIcon by remember { mutableStateOf(AppIcon.current(context)) }
-                SettingsRow(icon = SfIcons.Apps, title = appIconTitle)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    AppIcon.entries.forEach { option ->
-                        val selected = option == selectedIcon
-                        Column(
-                            modifier = Modifier
-                                .width(84.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable {
-                                    selectedIcon = option
-                                    AppIcon.apply(context, option)
-                                }
-                                .padding(vertical = 6.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            // A glass foreground holds the finished icon in its own shape on the
-                            // central 72 of 108 dp: scaled 1.5× it fills the tile as designed.
-                            // Only the default goes through an adaptive mask.
-                            val preview = option.previewRes
-                            if (preview == null) {
-                                AndroidView(
-                                    factory = { ctx ->
-                                        android.widget.ImageView(ctx).apply { setImageResource(option.iconRes) }
-                                    },
-                                    modifier = Modifier
-                                        .size(68.dp)
-                                        .clip(RoundedCornerShape(22.dp)),
-                                )
-                            } else {
-                                Image(
-                                    painter = painterResource(preview),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier
-                                        .size(68.dp)
-                                        .scale(1.5f),
-                                )
-                            }
-                            Text(
-                                text = stringResource(option.labelRes),
-                                textAlign = TextAlign.Center,
-                                maxLines = 2,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (selected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.padding(top = 6.dp),
-                            )
-                        }
-                    }
-                }
-            }        }
+        }
         if (shows(SettingsCategory.APPEARANCE)) SearchableSettingsGroup(search, header = stringResource(R.string.language)) {
             val appLanguageTitle = stringResource(R.string.app_language)
             row(appLanguageTitle, "locale", "translate") {
@@ -2630,7 +2568,7 @@ internal fun SettingsPageTitle(text: String) {
     Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 16.dp)) {
         Text(
             text = "MUSOPHONE",
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
@@ -2668,15 +2606,17 @@ internal fun SettingsGroup(
     } else {
         Spacer(Modifier.height(topSpacing))
     }
+    // A v2.5 group is the app's standard panel: one neutral charcoal step and
+    // one hairline rim. It used to be a captured glass sheet here while every
+    // other card in the app was flat, which made Settings look like a screen
+    // from a different build.
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = GROUP_INSET)
             .clip(GroupShape)
-            .lightweightLiquidGlass(
-                shape = GroupShape,
-                fallbackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
-            ),
+            .background(MaterialTheme.colorScheme.surfaceVariant, GroupShape)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, GroupShape),
     ) {
         content()
     }
@@ -2913,10 +2853,10 @@ internal fun Badge(text: String) {
 @Composable
 internal fun Chevron() {
     Icon(
-        SfIcons.ChevronRight,
+        MusoIcons.ChevronRight,
         contentDescription = null,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-        modifier = Modifier.size(20.dp),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+        modifier = Modifier.size(18.dp),
     )
 }
 

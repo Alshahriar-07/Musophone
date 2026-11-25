@@ -4,7 +4,7 @@ import { startPartySync } from '@/party/partySync';
 import { useDiscordPresence } from '@/playback/discordPresence';
 import { startHistoryReporting } from '@/playback/historyReporting';
 import { startLivePresence } from '@/playback/livePresence';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import { PrefetchLink } from '@/components/PrefetchLink';
 import { config } from '@/config';
 import { useExtension } from '@/extension/useExtension';
@@ -22,11 +22,41 @@ const mobile = isMobileBrowser();
 // It carries am-lyrics; loaded the first time it opens, as the side panel's lyrics are.
 const FullScreenPlayer = lazy(() => import('./FullScreenPlayer').then((m) => ({ default: m.FullScreenPlayer })));
 
+const TITLES: [RegExp, string][] = [
+  [/^\/$|^\/home/, 'Home'],
+  [/^\/search/, 'Search'],
+  [/^\/new/, 'New'],
+  [/^\/library/, 'Library'],
+  [/^\/album/, 'Album'],
+  [/^\/artist/, 'Artist'],
+  [/^\/playlist/, 'Playlist'],
+  [/^\/browse/, 'Browse'],
+  [/^\/spotify/, 'Spotify'],
+  [/^\/settings\/listen-together|^\/invite/, 'Listen Together'],
+  [/^\/settings\/discord/, 'Discord'],
+  [/^\/settings/, 'Settings'],
+  [/^\/extension/, 'Extension'],
+];
+
+/**
+ * The document title follows the page, so tabs, history and shared links read
+ * as MusoPhone pages rather than as one undifferentiated app.
+ */
+function useDocumentTitle() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const page = TITLES.find(([pattern]) => pattern.test(pathname))?.[1];
+    document.title = page ? `${page} · MusoPhone` : 'MusoPhone — Premium music, uninterrupted';
+  }, [pathname]);
+}
+
 /**
  * The app frame (report §1): glass sidebar, the scrolling page, the floating
  * player pill, the side panel, and the bottom band when there is one.
  */
 export function AppShell() {
+  useDocumentTitle();
+  const { pathname } = useLocation();
   useKeyboardShortcuts();
   useDiscordPresence();
   // Listen Together: pick a party back up after a reload, and keep the player in step with it.
@@ -84,7 +114,11 @@ export function AppShell() {
         >
           {/* Clears the floating pill: its height, its offset, and some air. */}
           <div className="min-h-full pb-[calc(var(--player-pill-height)+var(--player-bottom-offset)+40px)]">
-            <Outlet />
+            {/* Keyed by route, so each page settles in once; reduced motion
+                collapses the animation in the stylesheet. */}
+            <div key={pathname} className="animate-page">
+              <Outlet />
+            </div>
           </div>
         </main>
         <PlayerBar />

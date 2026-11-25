@@ -11,6 +11,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.music.bitchord.ui.components.longPressMenuClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +50,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -66,6 +69,7 @@ import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Storage
 import com.music.bitchord.ui.icons.BitChordIcons
+import com.music.bitchord.ui.icons.MusoIcons
 import coil3.compose.AsyncImage
 import com.music.bitchord.data.model.CARD_ART_PX
 import com.music.bitchord.data.model.HomeShelf
@@ -93,9 +97,31 @@ import com.music.bitchord.ui.components.thumbnailBorder
 import com.music.bitchord.ui.components.trackColumnWidth
 import com.music.bitchord.ui.player.MeshGradientBackground
 import com.music.bitchord.ui.player.MeshPalette
+import com.music.bitchord.ui.player.PlayerSettings
+
+/**
+ * How much of the page's top inset the masthead takes back.
+ *
+ * The page is handed padding that clears the whole floating bar — its 52dp of
+ * content and the 12dp gap under it. Home draws the top of the page itself (the
+ * lockup, the heading and the listener), so it does not need to clear a bar it
+ * starts underneath: it pulls the feed up by the bar's content height, then adds
+ * back [HOME_MASTHEAD_TOP] so the mark still rests a comfortable distance under
+ * the status bar rather than against it.
+ */
+private val HOME_BAR_CONTENT_HEIGHT = 52.dp
+
+/** The breathing room between the status bar and the top of the masthead's mark. */
+private val HOME_MASTHEAD_TOP = 8.dp
 
 /** How far the Listen now heading and feed sit above the shared top inset. */
-private val HOME_TITLE_LIFT = 52.dp
+private val HOME_TITLE_LIFT = HOME_BAR_CONTENT_HEIGHT + 12.dp - HOME_MASTHEAD_TOP
+
+/**
+ * How far the masthead's ambient wash reaches down the page. Past this the feed
+ * is on the plain backdrop; the wash only exists to give the heading depth.
+ */
+private val HOME_AMBIENT_HEIGHT = 420.dp
 
 private const val RECENTS_TITLE = "Recents"
 private const val RECENT_TRACKS_PER_COLUMN = 4
@@ -174,11 +200,17 @@ fun HomeScreen(
     // LocalArtworkScrolling for why that is asked rather than provided.
     PausedWhileScrolling(listState) {
 
+    Box(modifier.fillMaxSize()) {
+    // Soft light behind the masthead, so the heading sits in front of the page
+    // rather than flat on it. Drawn under the list, which paints nothing of its
+    // own, and confined to the top of the page.
+    HomeAmbientDepth(Modifier.fillMaxWidth().height(HOME_AMBIENT_HEIGHT))
+
     PullToRefresh(
         refreshing = refreshing,
         onRefresh = onRefresh,
         state = pullState,
-        modifier = modifier,
+        modifier = Modifier.fillMaxSize(),
     ) {
         LazyColumn(
             state = listState,
@@ -258,6 +290,7 @@ fun HomeScreen(
         }
     }
 
+    }
     }
     }
 
@@ -477,13 +510,59 @@ fun CompactTrackRow(
 }
 
 /**
+ * The soft light the masthead stands in: two wide, low-opacity washes of the
+ * accent, blurred so they read as depth rather than as shapes.
+ *
+ * Drawn behind the feed — which paints nothing of its own, so the page's AMOLED
+ * background comes through everywhere the washes don't reach — and only across
+ * the top of the page, where the heading needs to sit in front of something.
+ * Flat and still where the listener has asked for less blur, and on platforms
+ * without a real blur: the same washes, simply unblurred, which is still a
+ * gradient wash and not a hard-edged shape.
+ */
+@Composable
+private fun HomeAmbientDepth(modifier: Modifier = Modifier) {
+    val accent = MaterialTheme.colorScheme.primary
+    val reduceBlur by PlayerSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    Box(
+        modifier = modifier
+            .then(
+                if (reduceBlur) {
+                    Modifier
+                } else {
+                    Modifier.blur(64.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
+                },
+            )
+            .drawBehind {
+                // Behind the mark, at the page's start.
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(accent.copy(alpha = 0.20f), Color.Transparent),
+                        center = Offset(size.width * 0.16f, -size.height * 0.12f),
+                        radius = size.width * 0.78f,
+                    ),
+                )
+                // A second, much fainter wash off the trailing edge, so the light
+                // has a direction instead of being one symmetrical glow.
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(accent.copy(alpha = 0.075f), Color.Transparent),
+                        center = Offset(size.width * 0.92f, size.height * 0.10f),
+                        radius = size.width * 0.54f,
+                    ),
+                )
+            },
+    )
+}
+
+/**
  * Home's editorial masthead: mark at the left, the listener at the right, then
  * a deliberately oversized "Listen now" over a wash of coral light.
  *
  * This replaces the old centred wordmark-and-nothing-else header. The mark
- * stays a mark rather than a banner, and the account portrait is the one
- * persistent way into Profile — a sixth bottom tab would have crowded five
- * already-useful destinations.
+ * stays a mark rather than a banner. The profile control is the app's own
+ * profile glyph rather than the account's photograph, so the way into Profile
+ * looks the same here as it does in the top bar on every other tab.
  */
 @Composable
 private fun HomeTitle(
@@ -509,7 +588,10 @@ private fun HomeTitle(
                     ),
                 )
             }
-            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 4.dp, bottom = 10.dp),
+            // No top padding of its own: [HOME_TITLE_LIFT] already leaves the
+            // mark [HOME_MASTHEAD_TOP] under the status bar, and adding more
+            // here only pushed the heading away from the top of the page.
+            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, bottom = 10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // The complete official lockup — icon and wordmark together — not a
@@ -536,14 +618,14 @@ private fun HomeTitle(
             if (onProfileClick != null) HomeProfileControl(listenerName, profileImageUrl, onProfileClick)
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(10.dp))
         Text(
             text = title,
             style = style,
             color = MaterialTheme.colorScheme.onBackground,
         )
         if (!listenerName.isNullOrBlank()) {
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = listenerName.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
@@ -555,7 +637,11 @@ private fun HomeTitle(
     }
 }
 
-/** Small portrait control at the top of Home; falls back to the initial. */
+/**
+ * The way into Profile at the top of Home: the app's profile glyph on one
+ * quiet circular surface. Same shape, same tint and same size as the top
+ * bar's control on every other tab.
+ */
 @Composable
 private fun HomeProfileControl(
     name: String?,
@@ -564,28 +650,23 @@ private fun HomeProfileControl(
 ) {
     Box(
         modifier = Modifier
-            .size(42.dp)
+            .size(38.dp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(
+                width = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = CircleShape,
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        if (imageUrl.isNullOrBlank()) {
-            Text(
-                text = name?.trim()?.firstOrNull()?.uppercaseChar()?.toString() ?: "M",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        } else {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape),
-            )
-        }
+        Icon(
+            imageVector = MusoIcons.Profile,
+            contentDescription = name?.let { "$it profile" },
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 

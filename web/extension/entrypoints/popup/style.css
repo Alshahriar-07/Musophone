@@ -4,7 +4,7 @@
   --secondary: #0000008f;
   --group: #0000000d;
   --divider: #00000026;
-  --key: #d60017;
+  --key: #e0324b;
   --bg: #ffffff;
 }
 
@@ -14,8 +14,8 @@
     --secondary: #ffffffa3;
     --group: #ffffff0d;
     --divider: #ffffff1a;
-    --key: #fa586a;
-    --bg: #1f1f1f;
+    --key: #ff4d67;
+    --bg: #0d0d0d;
   }
 }
 
@@ -23,7 +23,8 @@ body {
   width: 300px;
   margin: 0;
   padding: 16px;
-  font: 400 13px / 16px 'DM Sans', system-ui, sans-serif;
+  font: 400 13px / 16px -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI',
+    system-ui, sans-serif;
   color: var(--primary);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;

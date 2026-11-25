@@ -1,4 +1,4 @@
-import { BridgeCallError } from '@bitchord/shared/bridge';
+import { BridgeCallError } from '@musophone/shared/bridge';
 import { getBridge } from '@/extension/bridge';
 
 /**

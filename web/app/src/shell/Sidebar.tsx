@@ -1,5 +1,4 @@
-import { ArrowUpRight, ListMusic, Settings } from 'lucide-react';
-import { MdOutlineExtension } from 'react-icons/md';
+import { ArrowUpRight, ListMusic, Puzzle, Settings } from 'lucide-react';
 import { PrefetchLink, PrefetchNavLink } from '@/components/PrefetchLink';
 import { LogoMark } from '@/components/icons/LogoMark';
 import {
@@ -164,9 +163,9 @@ export function Sidebar() {
         </div>
         <div className="flex flex-col gap-2 pt-3 pr-3 pb-5 pl-5">
           <PrefetchNavLink to="/extension" className={item} onClick={close}>
-            {/* Chrome's own toolbar glyph for extensions (Material "extension"). */}
+            {/* The same stroked family as the rest of the bar. */}
             <span className={icon}>
-              <MdOutlineExtension size={18} />
+              <Puzzle size={18} strokeWidth={1.9} />
             </span>
             <span className={navLabel}>MusoPhone Extension</span>
             {update.state === 'available' && (
@@ -177,10 +176,15 @@ export function Sidebar() {
           </PrefetchNavLink>
           <AccountButton />
           <div className="flex items-center justify-between">
-            <a className="inline-flex items-center gap-1 ps-1 type-callout text-primary hover:underline" href={config.androidAppUrl} target="_blank" rel="noreferrer">
-              <span>Get the Android app</span>
-              <ArrowUpRight size={14} strokeWidth={2} />
-            </a>
+            <div className="flex items-center gap-2 ps-1">
+              <a className="inline-flex items-center gap-1 type-callout text-primary hover:underline" href={config.androidAppUrl} target="_blank" rel="noreferrer">
+                <span>Get the Android app</span>
+                <ArrowUpRight size={14} strokeWidth={2} />
+              </a>
+              <span className="type-caption-2 text-tertiary" title={`MusoPhone Web ${config.version}`}>
+                v{config.version}
+              </span>
+            </div>
             <PrefetchNavLink to="/settings" className="grid size-7 place-items-center rounded-nav text-secondary hover:bg-quinary hover:text-primary aria-[current=page]:bg-quinary aria-[current=page]:text-primary" aria-label="Settings" title="Settings" onClick={close}>
               <Settings size={17} strokeWidth={1.9} />
             </PrefetchNavLink>

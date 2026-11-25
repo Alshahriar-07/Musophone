@@ -5,8 +5,15 @@
  * the report by name. Light first, then dark under prefers-color-scheme.
  *
  * Apple serves higher-contrast text alphas and a deeper key colour to browsers
- * without the system SF font. BitChord renders DM Sans everywhere, so those
+ * without the system SF font. MusoPhone renders DM Sans everywhere, so those
  * variants are the ones used here (report §9).
+ *
+ * v2.5 gives the palette MusoPhone's own foundation: an AMOLED-black dark
+ * appearance, neutral charcoal surfaces, and one accent family (the crimson
+ * of the Android app's default theme). Light mode keeps a warm porcelain base
+ * and uses a deeper cut of the accent where the dark one would fail contrast.
+ * Every surface below is a neutral step; the accent is confined to controls,
+ * selection and focus.
  */
 
 :root {
@@ -53,7 +60,10 @@
 
   /* ---- Motion ------------------------------------------------------------ */
   --ease-out-panel: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --duration-panel: 0.3s;
+  --duration-fast: 140ms;
+  --duration-page: 320ms;
   --global-transition: opacity 0.1s ease-in;
   --duration-arrow: 0.25s;
 
@@ -68,26 +78,29 @@
   /* ---- Colour: light ----------------------------------------------------- */
   color-scheme: light;
 
-  --pageBG: #ffffff;
-  --pageBG-rgb: 255, 255, 255;
+  /* Warm porcelain rather than white: the app's light mode is a surface, not
+   * a blank document. */
+  --pageBG: #f7f5f8;
+  --pageBG-rgb: 247, 245, 248;
 
-  --systemPrimary: #000000e0;
-  --systemSecondary: #0000008f;
-  --systemTertiary: #0000007a;
-  --systemQuaternary: #0000001a;
-  --systemQuinary: #0000000d;
+  --systemPrimary: #16121ae0;
+  --systemSecondary: #16121a8f;
+  --systemTertiary: #16121a75;
+  --systemQuaternary: #16121a1a;
+  --systemQuinary: #16121a0d;
 
-  --systemPrimary-onDark: #ffffffeb;
-  --systemSecondary-onDark: #ffffffa3;
-  --systemTertiary-onDark: #ffffff66;
+  --systemPrimary-onDark: #f7f7f9eb;
+  --systemSecondary-onDark: #f7f7f9a3;
+  --systemTertiary-onDark: #f7f7f966;
 
-  --keyColor: #d60017;
-  --keyColor-rgb: 214, 0, 23;
-  --keyColor-rollover: #a20000;
-  --keyColor-pressed: #bb0000;
-  --keyColorBG: #d60017;
-  --selectionColor: #d60017;
-  --keyColor-focus-color: rgba(var(--keyColor-rgb), 0.6);
+  /* The accent's light-mode cut: the dark coral fails contrast on porcelain. */
+  --keyColor: #c2173a;
+  --keyColor-rgb: 194, 23, 58;
+  --keyColor-rollover: #a01230;
+  --keyColor-pressed: #b01632;
+  --keyColorBG: #c2173a;
+  --selectionColor: #c2173a;
+  --keyColor-focus-color: rgba(var(--keyColor-rgb), 0.45);
 
   --systemRed: #ff3b30;
   --systemGreen: #28cd41;
@@ -102,8 +115,8 @@
   --labelDivider: #00000026;
   --vibrantDivider: #3c3c434a;
 
-  --glassMaterialBackground: #f5f5f78c;
-  --glassMaterialShadowColor: #0000001a;
+  --glassMaterialBackground: #faf8fbcc;
+  --glassMaterialShadowColor: #1a141a12;
   --glassMaterialInnerStroke: #000000;
   --glassMaterialInnerStrokeAlpha: 0.05;
   --glassMaterialBackdropFilter: saturate(220%) blur(16px);
@@ -112,11 +125,11 @@
   --systemStandardThickMaterialSover: #f6f6f6b8;
   --systemHeaderMaterialSover: #ffffffcc;
 
-  --navSidebarSelectedState: #3c3c431a;
-  --tracklistHoverColor: #0000000f;
-  --shelfBG: #0000000d;
-  --opaqueShelfBG: #f2f2f2;
-  --footerBg: #fbfbfb;
+  --navSidebarSelectedState: #16121a12;
+  --tracklistHoverColor: #0000000d;
+  --shelfBG: #16121a0a;
+  --opaqueShelfBG: #f1edf1;
+  --footerBg: #f7f5f8;
   --lockupHoverBGColor: #3333334d;
   --genericJoeColor: #ebebeb;
   --modalScrimColor: #00000073;
@@ -155,53 +168,56 @@
   :root {
     color-scheme: dark;
 
-    --pageBG: #1f1f1f;
-    --pageBG-rgb: 31, 31, 31;
+    /* True black, not dark grey: the AMOLED foundation the Android app moved
+     * to in v2.2, kept in v2.5. Every surface above it is a neutral charcoal
+     * step, and the accent never tints the backdrop. */
+    --pageBG: #000000;
+    --pageBG-rgb: 0, 0, 0;
 
-    --systemPrimary: #ffffffeb;
-    --systemSecondary: #ffffffa3;
-    --systemTertiary: #ffffff66;
+    --systemPrimary: #f7f7f9eb;
+    --systemSecondary: #a4a4ac;
+    --systemTertiary: #71717a;
     --systemQuaternary: #ffffff1a;
-    --systemQuinary: #ffffff0d;
+    --systemQuinary: #ffffff0a;
 
-    --keyColor: #fa586a;
-    --keyColor-rgb: 250, 88, 106;
-    --keyColor-rollover: #ff5f7a;
-    --keyColor-pressed: #ff4661;
-    --keyColorBG: #fa233b;
-    --selectionColor: #c11b2e;
+    --keyColor: #ff4d67;
+    --keyColor-rgb: 255, 77, 103;
+    --keyColor-rollover: #ff6b82;
+    --keyColor-pressed: #e63a54;
+    --keyColorBG: #ff4d67;
+    --selectionColor: #ff4d67;
 
-    --systemRed: #ff453a;
-    --systemGreen: #32d74b;
-    --systemBlue: #0a84ff;
-    --systemGray: #98989d;
-    --systemGray2: #636366;
-    --systemGray3: #48484a;
-    --systemGray4: #3a3a3c;
-    --systemGray5: #2c2c2e;
-    --systemGray6: #1c1c1e;
+    --systemRed: #ff6b6b;
+    --systemGreen: #3ddc97;
+    --systemBlue: #4fb3ff;
+    --systemGray: #8f8f98;
+    --systemGray2: #63636b;
+    --systemGray3: #48484d;
+    --systemGray4: #323237;
+    --systemGray5: #232327;
+    --systemGray6: #141417;
 
-    --labelDivider: #ffffff1a;
-    --vibrantDivider: #ebebf530;
+    --labelDivider: #ffffff14;
+    --vibrantDivider: #ffffff26;
 
-    --glassMaterialBackground: #26262899;
-    --glassMaterialShadowColor: #00000033;
+    --glassMaterialBackground: #0a0a0ccc;
+    --glassMaterialShadowColor: #00000066;
     --glassMaterialInnerStroke: #ffffff;
-    --glassMaterialInnerStrokeAlpha: 0.25;
+    --glassMaterialInnerStrokeAlpha: 0.12;
 
-    --systemStandardThinMaterialSover: #28282880;
-    --systemStandardThickMaterialSover: #282828b3;
-    --systemHeaderMaterialSover: #1e1e1ecc;
+    --systemStandardThinMaterialSover: #101012cc;
+    --systemStandardThickMaterialSover: #141417e6;
+    --systemHeaderMaterialSover: #000000cc;
 
-    --navSidebarSelectedState: #ffffff0d;
-    --tracklistHoverColor: #ffffff0f;
-    --shelfBG: #ffffff0d;
-    --opaqueShelfBG: #2b2b2b;
-    --footerBg: #323232;
-    --genericJoeColor: #323232;
-    --searchBarBorderColor: #ffffff26;
-    --segmentedControlBG: #7676803d;
-    --segmentedControlSelectedBG: #636366;
+    --navSidebarSelectedState: #ffffff0f;
+    --tracklistHoverColor: #ffffff0a;
+    --shelfBG: #ffffff08;
+    --opaqueShelfBG: #121215;
+    --footerBg: #0a0a0c;
+    --genericJoeColor: #141417;
+    --searchBarBorderColor: #ffffff1f;
+    --segmentedControlBG: #ffffff12;
+    --segmentedControlSelectedBG: #2a2a2f;
     --button-pill-color: #000000;
     --button-pill-background-color: #ffffff;
     --radiosityShadowColor: #0000004d;
@@ -227,8 +243,8 @@
 
 @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
   :root {
-    --glassMaterialBackground: #0e0e0e;
-    --systemSecondary: #ffffffb3;
+    --glassMaterialBackground: #000000;
+    --systemSecondary: #ffffffcc;
     --labelDivider: #ffffff4d;
   }
 }

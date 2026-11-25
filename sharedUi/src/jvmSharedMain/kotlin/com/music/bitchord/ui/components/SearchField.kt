@@ -26,9 +26,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
@@ -73,6 +78,7 @@ fun SearchField(
         focusManager.clearFocus()
     }
     val fieldShape = RoundedCornerShape(16.dp)
+    var focused by remember { mutableStateOf(false) }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -85,8 +91,16 @@ fun SearchField(
                     // warm hairline, with a little more room for the eye to rest.
                     Modifier
                         .height(50.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f), fieldShape)
-                        .border(0.5.dp, MaterialTheme.colorScheme.outline, fieldShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, fieldShape)
+                        .border(
+                            width = if (focused) 1.dp else 0.5.dp,
+                            color = if (focused) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant
+                            },
+                            shape = fieldShape,
+                        )
                 },
             )
             // Asymmetric: the magnifier is a button now and wants a real touch
@@ -134,7 +148,8 @@ fun SearchField(
                 keyboardActions = KeyboardActions(onSearch = { submit() }),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focused = it.isFocused },
             )
         }
         // Emptying the field is also how the recent searches are got back to,

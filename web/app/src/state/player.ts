@@ -1,4 +1,4 @@
-import type { DetectedExtension } from '@bitchord/shared/bridge';
+import type { DetectedExtension } from '@musophone/shared/bridge';
 import { create } from 'zustand';
 import type { Track } from '@/data/music/types';
 import { extensionQueryKey } from '@/extension/useExtension';
@@ -679,7 +679,7 @@ async function startAt(at: number, { startSec = 0, auto = false, autoplay = true
       index: at,
       nowPlaying: { ...hintOf(entry.track), title: entry.track.title || 'Can’t play this here yet' },
       status: 'error',
-      error: 'YouTube playback needs the BitChord extension.',
+      error: 'YouTube playback needs the MusoPhone extension.',
     });
     return;
   }

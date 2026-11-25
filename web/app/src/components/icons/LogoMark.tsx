@@ -1,7 +1,8 @@
 import markSvg from '@/assets/logo-mark.svg?raw';
 
-// BitChord's mark, the same file the desktop app ships, recoloured to
-// currentColor so it follows the text colour it sits in.
+// MusoPhone's mark: the waveform-M from assets/logo-mark.svg, recoloured to
+// currentColor so it follows the text colour it sits in. One weight, one
+// shape, shared with the favicon, the PWA icons and the Android app's icons.
 const markup = markSvg.replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"');
 
 export function LogoMark({ size = 20, className }: { size?: number; className?: string }) {

@@ -3,82 +3,96 @@ package com.music.bitchord.ui.screens
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import com.music.bitchord.ui.components.ShelfRow
-import com.music.bitchord.ui.components.MusoPageTitle
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.music.bitchord.data.YtMusicRepository
 import com.music.bitchord.data.model.HomeShelf
 import com.music.bitchord.data.model.LibraryPage
 import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.UiState
+import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.settings.LibrarySort
 import com.music.bitchord.ui.AppUi
-import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.ui.components.LIBRARY_GRID_SPACING
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.PullToRefresh
-import com.music.bitchord.ui.components.SHELF_CARD_WIDTH
+import com.music.bitchord.ui.components.contextClick
 import com.music.bitchord.ui.components.libraryGrid
 import com.music.bitchord.ui.components.librarySkeleton
+import com.music.bitchord.ui.components.longPressMenuClickable
+import com.music.bitchord.ui.icons.BitChordIcons
+import com.music.bitchord.ui.components.thumbnailBorder
 
 /**
- * The signed-in library: the saved collections, as shelves of cards.
+ * The signed-in library, arranged as a browsable collection rather than a feed.
  *
- * Deliberately only the collections. This page used to end with two runs of
- * track rows — "Liked Music" and "Songs" — which are two overlapping answers
- * to the same question and read as one list that couldn't make up its mind: a
- * track that stopped being liked didn't leave the page, it moved down it, into
- * a section most people had taken for more of the same. Liked Music is a
- * playlist, and it is reached the way every other playlist here is, by opening
- * its card.
+ * A sticky category rail is the page's spine: All keeps the Replay entry,
+ * sources and every shelf; the other categories narrow the page to one kind of
+ * collection without throwing away its position or its data. Shelves preview
+ * four covers in a two-column grid, because Library is where artwork is the
+ * content — a horizontal strip of five small covers made albums and playlists
+ * look interchangeable.
  *
- * The liked list is still fetched — it is what the rest of the app reads a
- * track's rating off (see MainViewModel's `likeStatuses`); it just isn't a
- * second place to browse it.
+ * Nothing is fabricated: categories that the account has no shelf for are not
+ * offered, and every card, folder and "See all" opens the same destination it
+ * did before.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun LibraryScreen(
     signedIn: Boolean,
@@ -88,16 +102,7 @@ fun LibraryScreen(
     onShelfItemLongPress: (ShelfItem) -> Unit,
     onNewPlaylist: () -> Unit,
     onImportSpotifyPlaylist: (() -> Unit)? = null,
-    /**
-     * A shelf's "Show all" — every shelf's row here stops at five cards (see
-     * [LibraryGridShelf]), so this is the only way to reach whatever didn't
-     * fit.
-     */
     onShowAll: (HomeShelf) -> Unit,
-    /**
-     * The way in to Replay at the head of the page — the row of Replay cards,
-     * their placeholders while the history is read, or nothing at all.
-     */
     replay: @Composable () -> Unit,
     onSignIn: () -> Unit,
     onRetry: () -> Unit,
@@ -106,22 +111,29 @@ fun LibraryScreen(
     pullState: PullToRefreshState,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
-    /**
-     * The device's folders — downloads, local files, the remote libraries this
-     * build supports — drawn as a list under the Replay cards. Built by the
-     * app, since which of those exist is the platform's business.
-     */
     links: List<LibraryLink>,
-    /**
-     * The "On device" shelf under that list: the releases kept on this device
-     * whole. Left off the page entirely while there are none.
-     */
     deviceItems: List<ShelfItem>,
-    /** The big "Library" heading; the desktop's pages carry none. */
     showTitle: Boolean = true,
 ) {
     val pinnedPlaylists by AppUi.host.pinnedPlaylists.collectAsStateWithLifecycle()
     val onDevice = stringResource(Res.string.on_device)
+    val shelves = (state as? UiState.Success)?.data?.shelves.orEmpty()
+    val categories = remember(shelves, links, deviceItems) {
+        buildList {
+            add(LibraryCategory.ALL)
+            add(LibraryCategory.PLAYLISTS)
+            if (shelves.any { it.category == LibraryCategory.ALBUMS }) add(LibraryCategory.ALBUMS)
+            if (shelves.any { it.category == LibraryCategory.ARTISTS }) add(LibraryCategory.ARTISTS)
+            if (links.isNotEmpty() || deviceItems.isNotEmpty()) add(LibraryCategory.FOLDERS)
+        }
+    }
+    var category by remember { mutableStateOf(LibraryCategory.ALL) }
+    // A category can disappear when an account's shelves change. Falling back
+    // to All is better than leaving the page filtered to nothing.
+    LaunchedEffect(categories) {
+        if (category !in categories) category = LibraryCategory.ALL
+    }
+
     PullToRefresh(
         refreshing = refreshing,
         onRefresh = onRefresh,
@@ -134,18 +146,46 @@ fun LibraryScreen(
             contentPadding = contentPadding,
         ) {
             if (showTitle) {
-                item {
-                    MusoPageTitle(title = stringResource(Res.string.library))
+                item(key = "library:header") {
+                    LibraryHeader(
+                        signedIn = signedIn,
+                        shelves = shelves,
+                        deviceCount = deviceItems.size,
+                    )
                 }
             }
-            if (links.isNotEmpty()) {
-                item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
+            item(key = "library:categories") {
+                LibraryCategoryRail(
+                    categories = categories,
+                    selected = category,
+                    onSelect = { category = it },
+                )
             }
-            item(key = "replay") { replay() }
-            if (deviceItems.isNotEmpty()) {
+            if (!signedIn) {
+                item(key = "library:signed-out") {
+                    MessageState(
+                        message = stringResource(Res.string.library_sign_in_description),
+                        actionLabel = stringResource(Res.string.sign_in),
+                        onAction = onSignIn,
+                    )
+                }
+            }
+            if (category == LibraryCategory.ALL) {
+                item(key = "library:replay") { replay() }
+            }
+            if ((category == LibraryCategory.ALL || category == LibraryCategory.FOLDERS) &&
+                links.isNotEmpty()
+            ) {
+                item(key = "library:sources") {
+                    LibrarySources(links = links, onClick = onShelfItemClick)
+                }
+            }
+            if ((category == LibraryCategory.ALL || category == LibraryCategory.FOLDERS) &&
+                deviceItems.isNotEmpty()
+            ) {
                 item(key = "shelf:$onDevice") {
                     val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)
-                    LibraryGridShelf(
+                    LibraryShelfBlock(
                         shelf = onDeviceShelf,
                         onItemClick = onShelfItemClick,
                         onItemLongPress = onShelfItemLongPress,
@@ -153,56 +193,56 @@ fun LibraryScreen(
                     )
                 }
             }
-            if (!signedIn) {
-                item(key = "shelf:$PLAYLISTS") {
-                    val emptyPlaylists = HomeShelf(PLAYLISTS, emptyList())
-                    PlaylistShelf(
-                        shelf = emptyPlaylists,
-                        onItemClick = onShelfItemClick,
-                        onItemLongPress = onShelfItemLongPress,
-                        onNewPlaylist = onNewPlaylist,
-                        onImportSpotifyPlaylist = onImportSpotifyPlaylist,
-                        onShowAll = { onShowAll(emptyPlaylists) },
-                    )
-                }
-                item {
-                    MessageState(
-                        message = stringResource(Res.string.library_sign_in_description),
-                        actionLabel = stringResource(Res.string.sign_in),
-                        onAction = onSignIn,
-                    )
-                }
-                return@LazyColumn
-            }
+            if (category == LibraryCategory.FOLDERS) return@LazyColumn
+
             when (state) {
                 is UiState.Loading -> librarySkeleton()
-                is UiState.Error -> item {
-                    MessageState(state.message, actionLabel = stringResource(Res.string.retry), onAction = onRetry)
+                is UiState.Error -> item(key = "library:error") {
+                    MessageState(
+                        state.message,
+                        actionLabel = stringResource(Res.string.retry),
+                        onAction = onRetry,
+                    )
                 }
                 is UiState.Success -> {
-                    // A fresh account has no Playlists shelf at all, and that
-                    // is exactly the account most in need of the button that
-                    // makes one — so the row is drawn either way, empty but
-                    // for the tile that creates the first playlist.
-                    val shelves = state.data.shelves
-                    if (shelves.none { it.title == PLAYLISTS }) {
+                    if (!signedIn) {
+                        if (category == LibraryCategory.ALL || category == LibraryCategory.PLAYLISTS) {
+                            item(key = "shelf:$PLAYLISTS") {
+                                LibraryPlaylistBlock(
+                                    shelf = HomeShelf(PLAYLISTS, emptyList()),
+                                    onItemClick = onShelfItemClick,
+                                    onItemLongPress = onShelfItemLongPress,
+                                    onNewPlaylist = onNewPlaylist,
+                                    onImportSpotifyPlaylist = onImportSpotifyPlaylist,
+                                    onShowAll = { onShowAll(HomeShelf(PLAYLISTS, emptyList())) },
+                                )
+                            }
+                        }
+                        return@LazyColumn
+                    }
+                    val visible = state.data.shelves
+                        .filter { category == LibraryCategory.ALL || it.category == category }
+                        .sortedBy { it.category?.order ?: Int.MAX_VALUE }
+                    val playlistShelf = visible.firstOrNull { it.category == LibraryCategory.PLAYLISTS }
+                    if (category in listOf(LibraryCategory.ALL, LibraryCategory.PLAYLISTS) &&
+                        playlistShelf == null
+                    ) {
                         item(key = "shelf:$PLAYLISTS") {
-                            val emptyPlaylists = HomeShelf(PLAYLISTS, emptyList())
-                            PlaylistShelf(
-                                shelf = emptyPlaylists,
+                            LibraryPlaylistBlock(
+                                shelf = HomeShelf(PLAYLISTS, emptyList()),
                                 onItemClick = onShelfItemClick,
                                 onItemLongPress = onShelfItemLongPress,
                                 onNewPlaylist = onNewPlaylist,
                                 onImportSpotifyPlaylist = onImportSpotifyPlaylist,
-                                onShowAll = { onShowAll(emptyPlaylists) },
+                                onShowAll = { onShowAll(HomeShelf(PLAYLISTS, emptyList())) },
                             )
                         }
                     }
-                    shelves.forEach { shelf ->
+                    visible.forEach { shelf ->
                         item(key = "shelf:${shelf.title}") {
-                            if (shelf.title == PLAYLISTS) {
+                            if (shelf.category == LibraryCategory.PLAYLISTS) {
                                 val pinnedFirst = shelf.pinnedFirst(pinnedPlaylists)
-                                PlaylistShelf(
+                                LibraryPlaylistBlock(
                                     shelf = pinnedFirst,
                                     onItemClick = onShelfItemClick,
                                     onItemLongPress = onShelfItemLongPress,
@@ -212,11 +252,12 @@ fun LibraryScreen(
                                     pinnedPlaylists = pinnedPlaylists,
                                 )
                             } else {
-                                LibraryGridShelf(
+                                LibraryShelfBlock(
                                     shelf = shelf,
                                     onItemClick = onShelfItemClick,
                                     onItemLongPress = onShelfItemLongPress,
                                     onShowAll = { onShowAll(shelf) },
+                                    pinnedPlaylists = pinnedPlaylists,
                                 )
                             }
                         }
@@ -227,170 +268,602 @@ fun LibraryScreen(
     }
 }
 
-/** One of the Library's folder rows: the page [item] opens, behind [icon]. */
-/** [logo], when set, is drawn in place of [icon] — a service's own mark. */
-data class LibraryLink(val item: ShelfItem, val icon: ImageVector, val logo: DrawableResource? = null)
-
-/**
- * The folders as a plain list — icon, name, chevron, hairlines between — the
- * way a music app's library has always opened, rather than as cards that all
- * look alike because none of them has artwork.
- */
+/** The page's own masthead: wordmark, oversized name, and the account's shape. */
 @Composable
-private fun LibraryLinkList(links: List<LibraryLink>, onClick: (ShelfItem) -> Unit) {
-    Column(Modifier.padding(top = 4.dp, bottom = 22.dp)) {
-        links.forEachIndexed { index, link ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 54.dp)
-                    .clickable { onClick(link.item) }
-                    .padding(horizontal = PAGE_GUTTER),
-            ) {
-                if (link.logo != null) {
-                    // A mark, not a glyph: white on dark, black on light, with
-                    // its cut-outs left clear.
-                    Icon(
-                        painter = painterResource(link.logo),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(LINK_ICON_SIZE),
-                    )
-                } else {
-                    Icon(
-                        imageVector = link.icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(LINK_ICON_SIZE),
-                    )
-                }
-                Spacer(Modifier.width(LINK_ICON_GAP))
-                Text(
-                    text = link.item.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-                Icon(
-                    imageVector = BitChordIcons.ChevronRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .6f),
-                    modifier = Modifier.size(20.dp),
+private fun LibraryHeader(signedIn: Boolean, shelves: List<HomeShelf>, deviceCount: Int) {
+    val counts = shelves.mapNotNull { shelf ->
+        val category = shelf.category
+        if (category == null || shelf.items.isEmpty()) null
+        else "${shelf.items.size} ${category.title()}"
+    }
+    val onDevice = stringResource(Res.string.on_device)
+    val summary = when {
+        !signedIn -> null
+        counts.isNotEmpty() -> counts.joinToString("   ·   ")
+        deviceCount > 0 -> "$deviceCount $onDevice"
+        else -> null
+    }
+    Column(
+        modifier = Modifier.padding(
+            start = PAGE_GUTTER,
+            end = PAGE_GUTTER,
+            top = 12.dp,
+            bottom = 12.dp,
+        ),
+    ) {
+        Text(
+            text = "MUSOPHONE",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(Res.string.library),
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (summary != null) {
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+    }
+}
+
+/** Sticky permission to look at one kind of collection at a time. */
+@Composable
+private fun LibraryCategoryRail(
+    categories: List<LibraryCategory>,
+    selected: LibraryCategory,
+    onSelect: (LibraryCategory) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = PAGE_GUTTER, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(categories.size, key = { categories[it].name }) { index ->
+                val category = categories[index]
+                LibraryCategoryChip(
+                    category = category,
+                    selected = category == selected,
+                    onClick = { onSelect(category) },
                 )
             }
-            if (index < links.lastIndex) {
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = PAGE_GUTTER + LINK_ICON_SIZE + LINK_ICON_GAP),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outline,
+        }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(0.5.dp)
+                .background(MaterialTheme.colorScheme.outlineVariant),
+        )
+    }
+}
+
+@Composable
+private fun LibraryCategoryChip(
+    category: LibraryCategory,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val container by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        },
+        label = "libraryChip",
+    )
+    val content by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        label = "libraryChipInk",
+    )
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(container)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        category.icon?.let { icon ->
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = content,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+        Text(
+            text = category.title(),
+            style = MaterialTheme.typography.titleSmall,
+            color = content,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+        )
+    }
+}
+
+/** The page's section heading: title, honest count and one way to see the rest. */
+@Composable
+private fun LibrarySectionHeader(
+    title: String,
+    count: Int,
+    onShowAll: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = PAGE_GUTTER, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (count > 0) {
+                Text(
+                    text = "$count",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+        }
+        if (onShowAll != null) {
+            Text(
+                text = stringResource(Res.string.show_all),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(onClick = onShowAll)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            )
+        }
+    }
+}
+
+/** One shelf previewed as a 2 × 2 cover grid. */
+@Composable
+private fun LibraryShelfBlock(
+    shelf: HomeShelf,
+    onItemClick: (ShelfItem) -> Unit,
+    onItemLongPress: (ShelfItem) -> Unit,
+    onShowAll: () -> Unit,
+    pinnedPlaylists: List<String> = emptyList(),
+) {
+    val visible = shelf.items.take(LIBRARY_PREVIEW_LIMIT)
+    Column(Modifier.padding(bottom = 20.dp)) {
+        LibrarySectionHeader(
+            title = localizeShelfTitle(shelf.title),
+            count = shelf.items.size,
+            onShowAll = onShowAll.takeIf { shelf.items.size > LIBRARY_PREVIEW_LIMIT },
+        )
+        Column(
+            modifier = Modifier.padding(horizontal = PAGE_GUTTER),
+            verticalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING),
+        ) {
+            visible.chunked(2).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING)) {
+                    row.forEach { item ->
+                        LibraryTile(
+                            item = item,
+                            onClick = { onItemClick(item) },
+                            onLongPress = { onItemLongPress(item) },
+                            isPinned = item.browseId != null && item.browseId in pinnedPlaylists,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (row.size == 1) Spacer(Modifier.weight(1f))
+                }
             }
         }
     }
 }
 
-private val LINK_ICON_SIZE = 24.dp
-private val LINK_ICON_GAP = 16.dp
-
-/**
- * The one shelf on this page that can be written to: it leads with the tile
- * that creates a playlist, and holding a card gets rename and delete on top of
- * the queue actions every other shelf's menu offers.
- */
+/** Playlists lead with creation, then show the same cover grid as every shelf. */
 @Composable
-private fun PlaylistShelf(
+private fun LibraryPlaylistBlock(
     shelf: HomeShelf,
     onItemClick: (ShelfItem) -> Unit,
     onItemLongPress: (ShelfItem) -> Unit,
     onNewPlaylist: () -> Unit,
-    onImportSpotifyPlaylist: (() -> Unit)? = null,
+    onImportSpotifyPlaylist: (() -> Unit)?,
     onShowAll: () -> Unit,
     pinnedPlaylists: List<String> = emptyList(),
 ) {
-    val creationCards: @Composable () -> Unit = {
-        Row(horizontalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING)) {
-            NewShelfCard(
+    val visible = shelf.items.take(LIBRARY_PREVIEW_LIMIT)
+    Column(Modifier.padding(bottom = 20.dp)) {
+        LibrarySectionHeader(
+            title = stringResource(Res.string.playlists),
+            count = shelf.items.size,
+            onShowAll = onShowAll.takeIf { shelf.items.size > LIBRARY_PREVIEW_LIMIT },
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = PAGE_GUTTER),
+            horizontalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING),
+        ) {
+            LibraryQuickAction(
                 icon = BitChordIcons.Plus,
                 label = stringResource(Res.string.new_playlist),
-                subtitle = stringResource(Res.string.saved_to_youtube_music),
                 onClick = onNewPlaylist,
+                modifier = Modifier.weight(1f),
             )
             if (onImportSpotifyPlaylist != null) {
-                NewShelfCard(
+                LibraryQuickAction(
                     icon = BitChordIcons.Download,
                     label = stringResource(Res.string.import_spotify),
-                    subtitle = stringResource(Res.string.import_spotify_subtitle),
                     onClick = onImportSpotifyPlaylist,
+                    modifier = Modifier.weight(1f),
                     logo = Res.drawable.spotify_logo,
                 )
+            } else {
+                Spacer(Modifier.weight(1f))
+            }
+        }
+        if (visible.isNotEmpty()) {
+            Spacer(Modifier.height(14.dp))
+            Column(
+                modifier = Modifier.padding(horizontal = PAGE_GUTTER),
+                verticalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING),
+            ) {
+                visible.chunked(2).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING)) {
+                        row.forEach { item ->
+                            LibraryTile(
+                                item = item,
+                                onClick = { onItemClick(item) },
+                                onLongPress = { onItemLongPress(item) },
+                                isPinned = item.browseId != null && item.browseId in pinnedPlaylists,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
+}
 
-    val hasPlaylists = shelf.items.isNotEmpty()
+/** A compact creation row, deliberately smaller than a playlist cover. */
+@Composable
+private fun LibraryQuickAction(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    logo: DrawableResource? = null,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        modifier = modifier
+            .heightIn(min = 62.dp)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(11.dp))
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (logo != null) {
+                Icon(
+                    painter = painterResource(logo),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
 
-    LibraryGridShelf(
-        shelf = shelf,
-        onItemClick = onItemClick,
-        onItemLongPress = onItemLongPress,
-        onShowAll = onShowAll,
-        pinnedPlaylists = pinnedPlaylists,
-        leadingCard = if (!hasPlaylists) creationCards else null,
-        trailingCard = if (hasPlaylists) creationCards else null,
+/** One collection cover: the artwork carries the card, text stays quiet under it. */
+@Composable
+internal fun LibraryTile(
+    item: ShelfItem,
+    onClick: () -> Unit,
+    onLongPress: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    isPinned: Boolean = false,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Column(
+        modifier = modifier
+            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .contextClick(onLongPress),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .thumbnailBorder(shape),
+        ) {
+            if (item.thumbnailUrl != null) {
+                AsyncImage(
+                    model = item.thumbnailUrl.artworkAt(LIBRARY_ART_PX),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Rounded.Album,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .align(Alignment.Center),
+                )
+            }
+            if (isPinned) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.82f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = BitChordIcons.Pin,
+                        contentDescription = stringResource(Res.string.pinned),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(12.dp),
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(9.dp))
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        val subtitle = localizeCardSubtitle(item.subtitle)
+        if (subtitle.isNotBlank()) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Device folders and connected services as two-column entry tiles. */
+@Composable
+private fun LibrarySources(links: List<LibraryLink>, onClick: (ShelfItem) -> Unit) {
+    Column(Modifier.padding(bottom = 20.dp)) {
+        LibrarySectionHeader(
+            title = stringResource(Res.string.sources),
+            count = links.size,
+            onShowAll = null,
+        )
+        Column(
+            modifier = Modifier.padding(horizontal = PAGE_GUTTER),
+            verticalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING),
+        ) {
+            links.chunked(2).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING)) {
+                    row.forEach { link ->
+                        LibrarySourceTile(
+                            link = link,
+                            onClick = { onClick(link.item) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (row.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibrarySourceTile(
+    link: LibraryLink,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        modifier = modifier
+            .heightIn(min = 78.dp)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (link.logo != null) {
+                Icon(
+                    painter = painterResource(link.logo),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+            } else {
+                Icon(
+                    imageVector = link.icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+        }
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = link.item.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = link.item.subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            imageVector = BitChordIcons.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+            modifier = Modifier.size(16.dp),
+        )
+    }
+}
+
+private const val LIBRARY_PREVIEW_LIMIT = 4
+private const val LIBRARY_ART_PX = 640
+
+/** One of the Library's folder rows: the page [item] opens, behind [icon]. */
+data class LibraryLink(val item: ShelfItem, val icon: ImageVector, val logo: DrawableResource? = null)
+
+private enum class LibraryCategory(
+    val order: Int,
+    val icon: ImageVector?,
+) {
+    ALL(0, null),
+    PLAYLISTS(1, Icons.Rounded.QueueMusic),
+    ALBUMS(2, Icons.Rounded.Album),
+    ARTISTS(3, Icons.Rounded.Person),
+    FOLDERS(4, Icons.Rounded.Folder),
+    ;
+
+    @Composable
+    fun title(): String = stringResource(
+        when (this) {
+            ALL -> Res.string.all
+            PLAYLISTS -> Res.string.playlists
+            ALBUMS -> Res.string.albums
+            ARTISTS -> Res.string.artists
+            FOLDERS -> Res.string.folders
+        },
     )
 }
 
-/** A Library shelf's preview row never swipes past this many cards. */
-private const val LIBRARY_ROW_MAX_ITEMS = 5
+private val HomeShelf.category: LibraryCategory?
+    get() = when {
+        title.equals(YtMusicRepository.PLAYLISTS_SHELF, ignoreCase = true) -> LibraryCategory.PLAYLISTS
+        title.equals("Albums", ignoreCase = true) -> LibraryCategory.ALBUMS
+        title.equals("Artists", ignoreCase = true) -> LibraryCategory.ARTISTS
+        else -> null
+    }
 
 /**
- * A Library shelf: a sideways-scrolling row of [SHELF_CARD_WIDTH] cards, the
- * same as every other shelf, but stopped at [LIBRARY_ROW_MAX_ITEMS] rather
- * than left to run the shelf's whole length — with a "Show all" beside the
- * title whenever there's more than that, opening the rest as a
- * vertically-scrolling grid instead. See [LibraryGridPage].
- *
- * [leadingCard], if given, occupies the first slot and counts against that
- * cap — see [PlaylistShelf].
+ * Everything a Library shelf's "Show all" opens onto — the same covers, at the
+ * same [libraryGrid] width, run down the screen instead of stopping at one row.
  */
 @Composable
-internal fun LibraryGridShelf(
+fun LibraryGridPage(
     shelf: HomeShelf,
+    gridState: LazyGridState,
     onItemClick: (ShelfItem) -> Unit,
     onItemLongPress: (ShelfItem) -> Unit,
-    onShowAll: () -> Unit,
-    leadingCard: (@Composable () -> Unit)? = null,
-    trailingCard: (@Composable () -> Unit)? = null,
-    pinnedPlaylists: List<String> = emptyList(),
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+    onNewPlaylist: (() -> Unit)? = null,
 ) {
-    val extraCount = (if (leadingCard != null) 1 else 0) + (if (trailingCard != null) 1 else 0)
-    val visibleItems = shelf.items.take((LIBRARY_ROW_MAX_ITEMS - extraCount).coerceAtLeast(0))
-    val cardKeys = remember(visibleItems) { shelfCardKeys(visibleItems) }
-    Column(Modifier.padding(bottom = 26.dp)) {
-        SectionHeader(
-            title = shelf.title,
-            subtitle = shelf.subtitle,
-            onShowAll = onShowAll.takeIf { shelf.items.size + extraCount > LIBRARY_ROW_MAX_ITEMS },
-        )
-        ShelfRow(
-            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+    val pinnedPlaylists by AppUi.host.pinnedPlaylists.collectAsStateWithLifecycle()
+    val librarySort by AppUi.host.librarySort.collectAsStateWithLifecycle()
+    val sortedShelf = shelf.pinnedFirst(pinnedPlaylists).sortedForLibrary(librarySort)
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val grid = libraryGrid(maxWidth - PAGE_GUTTER * 2)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(grid.columns),
+            state = gridState,
+            contentPadding = contentPadding,
             horizontalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING),
-            flingBehavior = ScrollableDefaults.flingBehavior(),
+            verticalArrangement = Arrangement.spacedBy(22.dp),
+            modifier = Modifier.padding(horizontal = PAGE_GUTTER),
         ) {
-            leadingCard?.let { card -> item(key = "leading") { card() } }
-            items(visibleItems.size, key = { cardKeys[it] }) { index ->
-                val item = visibleItems[index]
-                ShelfCard(
+            if (onNewPlaylist != null) {
+                item(key = "leading") {
+                    LibraryQuickAction(
+                        icon = BitChordIcons.Plus,
+                        label = stringResource(Res.string.new_playlist),
+                        onClick = onNewPlaylist,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            items(sortedShelf.items, key = { it.browseId ?: it.title }) { item ->
+                LibraryTile(
                     item = item,
                     onClick = { onItemClick(item) },
                     onLongPress = { onItemLongPress(item) },
+                    modifier = Modifier.fillMaxWidth(),
                     isPinned = item.browseId != null && item.browseId in pinnedPlaylists,
                 )
             }
-            trailingCard?.let { card -> item(key = "trailing") { card() } }
         }
     }
 }
@@ -412,70 +885,9 @@ internal fun shelfCardKeys(items: List<ShelfItem>): List<String> {
 }
 
 /**
- * Everything a Library shelf's "Show all" opens onto — the same cards, at the
- * same [libraryGrid] width, run down the screen instead of stopping at one row.
- */
-@Composable
-fun LibraryGridPage(
-    shelf: HomeShelf,
-    gridState: LazyGridState,
-    onItemClick: (ShelfItem) -> Unit,
-    onItemLongPress: (ShelfItem) -> Unit,
-    contentPadding: PaddingValues,
-    modifier: Modifier = Modifier,
-    onNewPlaylist: (() -> Unit)? = null,
-) {
-    // Re-read live rather than trusting [shelf] to already be sorted: this page
-    // is opened from a snapshot (see `AppRoute.LibraryShowAll`), and a
-    // pin toggled from this page's own long-press menu must move the card
-    // immediately rather than waiting for the row underneath to be revisited.
-    val pinnedPlaylists by AppUi.host.pinnedPlaylists.collectAsStateWithLifecycle()
-    val librarySort by AppUi.host.librarySort.collectAsStateWithLifecycle()
-    // Pinning wins over the default order, but an explicit sort is a stronger,
-    // more deliberate signal than a pin and is left to reorder the whole grid,
-    // pinned cards included.
-    val sortedShelf = shelf.pinnedFirst(pinnedPlaylists).sortedForLibrary(librarySort)
-    BoxWithConstraints(modifier.fillMaxSize()) {
-        val grid = libraryGrid(maxWidth - PAGE_GUTTER * 2)
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(grid.columns),
-            state = gridState,
-            contentPadding = contentPadding,
-            horizontalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            modifier = Modifier.padding(horizontal = PAGE_GUTTER),
-        ) {
-            if (onNewPlaylist != null) {
-                item(key = "leading") {
-                    NewShelfCard(
-                        icon = BitChordIcons.Plus,
-                        label = stringResource(Res.string.new_playlist),
-                        subtitle = stringResource(Res.string.saved_to_youtube_music),
-                        onClick = onNewPlaylist,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-            items(sortedShelf.items, key = { it.browseId ?: it.title }) { item ->
-                ShelfCard(
-                    item = item,
-                    onClick = { onItemClick(item) },
-                    onLongPress = { onItemLongPress(item) },
-                    modifier = Modifier.fillMaxWidth(),
-                    isPinned = item.browseId != null && item.browseId in pinnedPlaylists,
-                )
-            }
-        }
-    }
-}
-
-/**
  * Moves whichever of this shelf's cards are in [pinned] to the front, in the
  * order they were pinned, leaving everything else in its existing order behind
  * them.
- *
- * A no-op on any shelf that isn't Playlists: [pinned] only ever holds playlist
- * browse ids, so an album or artist shelf never has a card that matches.
  */
 private fun HomeShelf.pinnedFirst(pinned: List<String>): HomeShelf {
     if (pinned.isEmpty()) return this
@@ -486,10 +898,7 @@ private fun HomeShelf.pinnedFirst(pinned: List<String>): HomeShelf {
     return copy(items = pinnedItems + items.filter { it !in pinnedSet })
 }
 
-/**
- * A card's title is all a Library shelf carries, so [LibrarySort.DEFAULT] is
- * the only option that isn't alphabetical — everything else sorts on it.
- */
+/** A card's title is all a Library shelf carries, so [LibrarySort.DEFAULT] is the only option that isn't alphabetical. */
 private fun HomeShelf.sortedForLibrary(sort: LibrarySort): HomeShelf = when (sort) {
     LibrarySort.DEFAULT -> this
     LibrarySort.TITLE_ASC -> copy(items = items.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title }))
@@ -498,5 +907,5 @@ private fun HomeShelf.sortedForLibrary(sort: LibrarySort): HomeShelf = when (sor
     )
 }
 
-/** The library feed whose cards are the account's own — see [PlaylistShelf]. */
+/** The library feed whose cards are the account's own — see [LibraryPlaylistBlock]. */
 private const val PLAYLISTS = YtMusicRepository.PLAYLISTS_SHELF

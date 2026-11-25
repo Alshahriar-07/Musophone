@@ -23,11 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,12 +40,15 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.music.bitchord.R
 import com.music.bitchord.data.model.Account
@@ -59,13 +58,18 @@ import com.music.bitchord.data.stats.ListeningStats
 import com.music.bitchord.data.stats.RankedEntry
 import com.music.bitchord.data.stats.ReplayPeriod
 import com.music.bitchord.data.stats.ReplaySummary
+import com.music.bitchord.ui.components.MusoActionRow
 import com.music.bitchord.ui.components.MusoAvatar
-import com.music.bitchord.ui.icons.SfIcons
+import com.music.bitchord.ui.components.MusoEmptyState
 import com.music.bitchord.ui.components.MusoFactRow
 import com.music.bitchord.ui.components.MusoGlassCard
+import com.music.bitchord.ui.components.MusoIconButton
+import com.music.bitchord.ui.components.MusoLoadingState
 import com.music.bitchord.ui.components.MusoPill
 import com.music.bitchord.ui.components.MusoSectionHeading
 import com.music.bitchord.ui.components.MusoStatTile
+import com.music.bitchord.ui.components.MusoTokens
+import com.music.bitchord.ui.icons.MusoIcons
 import java.util.Locale
 
 /**
@@ -91,6 +95,8 @@ fun ProfileScreen(
     onAppSettings: () -> Unit,
     /** The "Account settings" chip: account, channel and scrobbling. */
     onAccountSettings: () -> Unit,
+    /** Opens the account/profile switcher — the avatar's old job in the top bar. */
+    onSwitchAccount: () -> Unit,
     onSongClick: (Song) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -117,6 +123,16 @@ fun ProfileScreen(
                 account = account,
                 signedIn = signedIn,
                 onAppSettings = onAppSettings,
+            )
+        }
+
+        item(key = "profile:actions") {
+            ProfileActions(
+                signedIn = signedIn,
+                onOpenReplay = onOpenReplay,
+                onOpenHistory = onOpenHistory,
+                onSwitchAccount = onSwitchAccount,
+                onAccountSettings = onAccountSettings,
             )
         }
 
@@ -164,41 +180,15 @@ fun ProfileScreen(
 
         when {
             loading -> item(key = "profile:loading") {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 48.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(28.dp),
-                    )
-                }
+                MusoLoadingState()
             }
 
             summary == null || summary?.isEmpty == true -> item(key = "profile:empty") {
-                MusoGlassCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = stringResource(R.string.profile_empty_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = stringResource(R.string.profile_empty_body),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
+                MusoEmptyState(
+                    icon = MusoIcons.Equalizer,
+                    title = stringResource(R.string.profile_empty_title),
+                    body = stringResource(R.string.profile_empty_body),
+                )
             }
 
             else -> {
@@ -350,29 +340,70 @@ fun ProfileScreen(
                 }
 
                 item(key = "profile:footer") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 28.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        MusoPill(
-                            text = stringResource(R.string.profile_open_replay),
-                            onClick = onOpenReplay,
-                        )
-                        MusoPill(
-                            text = stringResource(R.string.profile_open_history),
-                            onClick = onOpenHistory,
-                        )
-                        MusoPill(
-                            text = stringResource(R.string.profile_account_settings),
-                            onClick = onAccountSettings,
-                        )
-                    }
+                    Spacer(Modifier.height(24.dp))
                 }
             }
         }
     }
+}
+
+/**
+ * The account destinations, as one grouped card of rows rather than a row of
+ * chips: every way off this page is the same shape, with the same glyph box
+ * and the same chevron, and the card is the app's one raised panel.
+ */
+@Composable
+private fun ProfileActions(
+    signedIn: Boolean,
+    onOpenReplay: () -> Unit,
+    onOpenHistory: () -> Unit,
+    onSwitchAccount: () -> Unit,
+    onAccountSettings: () -> Unit,
+) {
+    MusoGlassCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MusoTokens.Gutter, vertical = 6.dp),
+        corner = MusoTokens.GroupRadius,
+        contentPadding = 6.dp,
+    ) {
+        Column {
+            MusoActionRow(
+                icon = MusoIcons.Rewind,
+                title = stringResource(R.string.profile_open_replay),
+                onClick = onOpenReplay,
+            )
+            ProfileActionDivider()
+            MusoActionRow(
+                icon = MusoIcons.Clock,
+                title = stringResource(R.string.profile_open_history),
+                onClick = onOpenHistory,
+            )
+            if (signedIn) {
+                ProfileActionDivider()
+                MusoActionRow(
+                    icon = MusoIcons.SwitchAccount,
+                    title = stringResource(R.string.switch_account),
+                    onClick = onSwitchAccount,
+                )
+            }
+            ProfileActionDivider()
+            MusoActionRow(
+                icon = MusoIcons.Profile,
+                title = stringResource(R.string.profile_account_settings),
+                onClick = onAccountSettings,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileActionDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 61.dp, end = 14.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant,
+    )
 }
 
 @Composable
@@ -381,26 +412,44 @@ private fun ProfileHeader(
     signedIn: Boolean,
     onAppSettings: () -> Unit,
 ) {
+    val accent = MaterialTheme.colorScheme.primary
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
+            // One soft wash of the theme's own light behind the portrait, so
+            // the page opens on a lit surface rather than on flat black. It is
+            // the same gesture Home's masthead makes, at the same opacity.
+            .drawBehind {
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(accent.copy(alpha = 0.11f), Color.Transparent),
+                        center = Offset(size.width * 0.12f, 0f),
+                        radius = size.width * 0.95f,
+                    ),
+                )
+            }
+            .padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = 10.dp, bottom = 6.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.Top) {
             MusoAvatar(
                 name = account?.name,
                 imageUrl = account?.thumbnailUrl?.takeIf { signedIn },
-                size = 68.dp,
+                size = 82.dp,
             )
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
+            Spacer(Modifier.width(16.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 4.dp),
+            ) {
                 Text(
                     text = account?.name?.takeIf { signedIn } ?: stringResource(R.string.profile_guest),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = account?.email?.takeIf { signedIn && it.isNotBlank() }
                         ?: stringResource(if (signedIn) R.string.signed_in else R.string.not_signed_in),
@@ -409,7 +458,7 @@ private fun ProfileHeader(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(9.dp))
                 MusoFactRow(
                     facts = listOf(
                         stringResource(R.string.profile_local_stats),
@@ -417,16 +466,22 @@ private fun ProfileHeader(
                     ),
                 )
             }
-            IconButton(onClick = onAppSettings) {
-                Icon(
-                    imageVector = SfIcons.Settings,
-                    contentDescription = stringResource(R.string.settings),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Spacer(Modifier.width(8.dp))
+            MusoIconButton(
+                icon = MusoIcons.Settings,
+                contentDescription = stringResource(R.string.settings),
+                onClick = onAppSettings,
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
         }
 
         Spacer(Modifier.height(26.dp))
+        Text(
+            text = stringResource(R.string.profile_your_listening).uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
+            color = accent,
+        )
+        Spacer(Modifier.height(4.dp))
         Text(
             text = stringResource(R.string.profile_your_listening),
             style = MaterialTheme.typography.headlineLarge,

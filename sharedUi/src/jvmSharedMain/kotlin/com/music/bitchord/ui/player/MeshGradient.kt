@@ -144,13 +144,17 @@ internal fun MeshGradientBackground(
     // artwork, without the orbit or the blur. The signature is unchanged so
     // every call site keeps working; the branch below is retained for the
     // reference of what the still replaces.
+    // v2.2 AMOLED: the still is an *ambient* wash, not a coloured background.
+    // The palette is darkened to a glow and faded back into true black at both
+    // ends, so the artwork still lights the room without turning the screen
+    // into a saturated gradient.
     val still = remember(palette) { palette.tunedSlots() }
+    val ambient = remember(still) {
+        val glow = if (still.size >= 2) still[1].dimmed() else still.first().dimmed()
+        listOf(Color(0xFF000000), glow, Color(0xFF000000))
+    }
     Box(
-        modifier = modifier.background(
-            Brush.verticalGradient(
-                colors = if (still.size >= 2) still else listOf(still.first(), still.first()),
-            ),
-        ),
+        modifier = modifier.background(Brush.verticalGradient(ambient)),
     )
     return
 

@@ -13,7 +13,7 @@ Create the Vercel project from the repository root and set:
 | Root Directory | `web` |
 | Framework Preset | Vite |
 | Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @bitchord/app build` |
+| Build Command | `pnpm --filter @musophone/app build` |
 | Output Directory | `app/dist` |
 | Node.js Version | 22 |
 
@@ -22,13 +22,13 @@ directory and the SPA rewrite to `index.html`. The Root Directory must still be
 set in the Vercel project because Vercel does not read that setting from a
 `vercel.json` outside the selected root.
 
-The package is named `@bitchord/app`, so the build filter is
-`pnpm --filter @bitchord/app build`. A filter of `app` selects by package name
+The package is named `@musophone/app`, so the build filter is
+`pnpm --filter @musophone/app build`. A filter of `app` selects by package name
 and would not match this workspace.
 
 ### Why only the app is built
 
-`pnpm --filter @bitchord/app build` runs TypeScript and Vite for the Web Player
+`pnpm --filter @musophone/app build` runs TypeScript and Vite for the Web Player
 only. It does not build Chrome or Firefox extension targets, and Vercel has no
 browser-extension runtime.
 
@@ -102,8 +102,8 @@ All are optional and have working defaults:
 | --- | --- | --- |
 | `VITE_EXTENSION_ID_CHROMIUM` | Chromium extension id for store builds | Pinned development id |
 | `VITE_ANDROID_APP_URL` | Mobile Android download banner target | GitHub latest release |
-| `VITE_EXTENSION_CHROME_URL` | Chrome extension download link | `/downloads/bitchord-extension-chrome.zip` |
-| `VITE_EXTENSION_FIREFOX_URL` | Firefox extension download link | `/downloads/bitchord-extension-firefox.zip` |
+| `VITE_EXTENSION_CHROME_URL` | Chrome extension download link | `/downloads/musophone-extension-chrome.zip` |
+| `VITE_EXTENSION_FIREFOX_URL` | Firefox extension download link | `/downloads/musophone-extension-firefox.zip` |
 | `VITE_EXTENSION_MANIFEST_URL` | Extension version manifest | `/downloads/extension.json` |
 
 Do not put secrets in any `VITE_*` variable: Vite embeds them in the client
@@ -115,11 +115,26 @@ From `web/`:
 
 ```bash
 corepack pnpm install --frozen-lockfile
-corepack pnpm --filter @bitchord/app typecheck
-corepack pnpm --filter @bitchord/app test
-corepack pnpm --filter @bitchord/app build
+corepack pnpm --filter @musophone/app typecheck
+corepack pnpm --filter @musophone/app test
+corepack pnpm --filter @musophone/app build
 ```
 
 The output is `web/app/dist`. The build does not need
 `VITE_PARTY_SERVER_URL` on the command line because `.env.production` supplies
 the canonical value.
+
+## Domain, canonical URL and social sharing
+
+`web/app/index.html` sets the canonical URL and the Open Graph/Twitter URLs to
+`https://musophone.vercel.app/`. On that domain nothing needs changing. On a
+different domain, update the canonical link, the three Open Graph URLs, the
+Twitter image and the `<loc>` entries in `app/public/sitemap.xml`; the social
+card itself is `app/public/og-image.png` and is regenerated from
+`web/scripts/brand/og-image.html` (see `web/README.md`, "Brand and assets").
+
+The extension's default origins start with `https://musophone.vercel.app` and
+keep the site's earlier addresses (`bitchord.in` and its pages.dev deploy) so
+extensions already installed keep answering the player there too.
+`MUSOPHONE_SITE_ORIGINS` replaces the list for another domain, and the legacy
+`BITCHORD_SITE_ORIGINS` is still read.

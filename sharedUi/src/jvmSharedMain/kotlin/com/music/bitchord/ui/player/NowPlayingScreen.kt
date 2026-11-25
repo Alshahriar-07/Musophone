@@ -2659,7 +2659,10 @@ fun NowPlayingScreen(
                                 // a tap to reveal, and leaving the reveal gesture
                                 // armed would only eat taps meant for the lines.
                                 LyricsPanel(
-                                    lines = lyrics.orEmpty(),
+                                    // Romanized when that is the mode, so the panel
+                                    // never shows a regional script the reader asked
+                                    // to have spelled out.
+                                    lines = lyricsTranslation.panelLyrics,
                                     subLines = lyricsTranslation.subLines,
                                     trackKey = song.videoId,
                                     playhead = lyricsPlayhead,
@@ -3646,8 +3649,13 @@ fun NowPlayingScreen(
                         // The banner's dissolve, firmed up into the cover's hard edge as
                         // it docks.
                         fun sleeveShown(): Float = bannerShown() * dockT()
+                        // A cinematic sleeve rather than a tile: 16dp of corner is
+                        // enough to read as a card held against the page without
+                        // rounding the cover's own composition away. Given up on
+                        // the way into the header and the mini player, where it
+                        // takes their own smaller corner instead.
                         fun sleeveCorner(): Dp {
-                            val corner = 8.dp * (1f - sleeveShown())
+                            val corner = 16.dp * (1f - sleeveShown())
                             val t = dockT()
                             return if (dock == null || t >= 1f) corner else lerp(dock.miniArtCorner(), corner, t)
                         }
@@ -3753,7 +3761,10 @@ fun NowPlayingScreen(
                                     // go of on the way to the mini player, whose cover
                                     // sits flat in its bar.
                                     shadowElevation = if (coverLoaded()) {
-                                        10.dp.toPx() * (1f - 2f * shown).coerceAtLeast(0f) * dockT()
+                                        // Deeper than a list card's: the sleeve is the
+                                        // one object on an otherwise flat black page,
+                                        // and the shadow is what lifts it off it.
+                                        18.dp.toPx() * (1f - 2f * shown).coerceAtLeast(0f) * dockT()
                                     } else {
                                         0f
                                     }
@@ -4213,7 +4224,8 @@ fun NowPlayingScreen(
                                         MarqueeText(
                                             text = song.title,
                                             style = MaterialTheme.typography.titleLarge.copy(
-                                                fontSize = 20.sp,
+                                                fontSize = 22.sp,
+                                                fontWeight = FontWeight.W700,
                                             ),
                                             color = Color.White,
                                             enabled = scrolling,
@@ -4234,9 +4246,9 @@ fun NowPlayingScreen(
                                             credits = remember(song.artist, song.artists, song.artistId) {
                                                 artistCredits(song.artist, song.artists, song.artistId)
                                             },
-                                            style = MaterialTheme.typography.titleLarge.copy(
+                                            style = MaterialTheme.typography.titleMedium.copy(
                                                 fontWeight = FontWeight.W500,
-                                                fontSize = 20.sp,
+                                                fontSize = 14.sp,
                                             ),
                                             color = artistColor,
                                             enabled = scrolling,
@@ -4346,7 +4358,7 @@ fun NowPlayingScreen(
                                         .then(if (!frostOff) Modifier.hazeSource(queueHaze, zIndex = 1f) else Modifier),
                                 ) { particleProgress ->
                                     LyricsPanel(
-                                        lines = lyrics.orEmpty(),
+                                        lines = lyricsTranslation.panelLyrics,
                                         subLines = lyricsTranslation.subLines,
                                         trackKey = song.videoId,
                                         playhead = lyricsPlayhead,
@@ -4540,7 +4552,7 @@ fun NowPlayingScreen(
                     // controls simply hanging in the artwork's lower third.
                     // Everything inside it is the same block as before — the
                     // panel changes the composition, not what any control does.
-                    val deckShape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
+                    val deckShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -4551,21 +4563,24 @@ fun NowPlayingScreen(
                             // panel has to stay dark in light mode too. The
                             // accent still reaches it through the play button,
                             // the scrubber and the nav.
+                            // A solid AMOLED panel, not a stack of translucent
+                            // scrims: the controls read as one raised object over
+                            // the artwork, and the surface stays black instead of
+                            // turning grey wherever the cover is bright.
                             .background(
                                 Brush.verticalGradient(
                                     listOf(
-                                        Color.Black.copy(alpha = 0.42f),
-                                        Color.Black.copy(alpha = 0.74f),
-                                        Color.Black.copy(alpha = 0.88f),
+                                        Color(0xFF101013),
+                                        Color(0xFF070708),
                                     ),
                                 ),
                             )
                             .border(
                                 width = 0.5.dp,
-                                color = Color.White.copy(alpha = 0.12f),
+                                color = Color.White.copy(alpha = 0.09f),
                                 shape = deckShape,
                             )
-                            .padding(top = 8.dp)
+                            .padding(top = 10.dp)
                             .onSizeChanged { size ->
                                 if (spotifyCanvasPresentation) {
                                     val measuredHeight = with(density) { size.height.toDp() }
@@ -4585,7 +4600,7 @@ fun NowPlayingScreen(
                                     Brush.horizontalGradient(
                                         listOf(
                                             Color.Transparent,
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.40f),
                                             Color.Transparent,
                                         ),
                                     ),

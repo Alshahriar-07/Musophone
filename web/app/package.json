@@ -1,5 +1,6 @@
 {
-  "name": "@bitchord/app",
+  "name": "@musophone/app",
+  "version": "2.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +11,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@bitchord/shared": "workspace:*",
+    "@musophone/shared": "workspace:*",
     "@tanstack/react-query": "^5.104.3",
     "@tanstack/react-virtual": "^3.14.19",
     "@uimaxbai/am-lyrics": "^1.8.2",

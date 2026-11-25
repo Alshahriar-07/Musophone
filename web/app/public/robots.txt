@@ -1,0 +1,6 @@
+# MusoPhone Web
+User-agent: *
+Allow: /
+Disallow: /debug
+
+Sitemap: https://musophone.vercel.app/sitemap.xml

@@ -42,6 +42,7 @@
   --animate-zoom: zoom 0.2s ease-out;
   --animate-fade-in: fade-in 0.4s ease;
   --animate-enter: enter 0.3s var(--ease-out-panel);
+  --animate-page: page-in var(--duration-page) var(--ease-standard);
   --animate-morph: morph 0.32s var(--ease-out-panel);
   --animate-spin: spin 1s linear infinite;
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
@@ -77,6 +78,14 @@
     from {
       opacity: 0;
       transform: scale(1.02);
+    }
+  }
+  /* A pushed page arrives a few pixels low and settles: orientation, not a
+   * carousel. The phone uses the same idea for a pushed route. */
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
     }
   }
   /* One label melting into the next, as the quality switcher's text changes. */
@@ -286,7 +295,7 @@
  * system fonts. Its own family name, so a copy installed on a Mac can't stand in.
  */
 @font-face {
-  font-family: 'BitChord SF Pro Display';
+  font-family: 'MusoPhone SF Pro Display';
   src: url('../assets/fonts/sf-pro-display-regular.woff2') format('woff2');
   font-weight: 400;
   font-display: block;
@@ -295,7 +304,7 @@
 }
 
 @font-face {
-  font-family: 'BitChord SF Pro Display';
+  font-family: 'MusoPhone SF Pro Display';
   src: url('../assets/fonts/sf-pro-display-bold.woff2') format('woff2');
   font-weight: 700;
   font-display: block;
@@ -385,10 +394,37 @@
     background-color: rgba(var(--keyColor-rgb), 0.3);
   }
 
-  /* No focus ring, for the mouse or the keyboard: the user asked for the key-colour box to go. */
-  :focus,
-  :focus-visible {
+  /* No ring for a mouse press; a quiet accent ring for the keyboard, so the
+   * site can be driven without a pointer. */
+  :focus {
     outline: none;
+  }
+
+  :focus-visible {
+    outline: 1.5px solid var(--keyColor-focus-color);
+    outline-offset: 2px;
+  }
+
+  /* A thin neutral scrollbar: the page is the content, not the chrome. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--systemQuaternary) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--systemQuaternary);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   @media (prefers-reduced-motion: reduce) {

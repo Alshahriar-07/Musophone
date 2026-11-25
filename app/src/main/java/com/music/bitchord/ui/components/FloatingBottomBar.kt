@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,6 +52,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -290,12 +293,17 @@ fun FloatingBottomBar(
             .padding(horizontal = 4.dp, vertical = TAB_VERTICAL_PADDING),
     ) {
         if (tabWidthPx > 0f) {
+            // The selection is a compact capsule inside the tab's cell rather
+            // than the whole cell: it reads as something resting under the
+            // chosen destination, not as a second tab bar behind the first.
+            val indicatorInset = 7.dp
             Box(
                 modifier = Modifier
-                    .width(with(density) { tabWidthPx.toDp() })
-                    .height(with(density) { rowSize.height.toDp() })
+                    .width(with(density) { (tabWidthPx.toDp() - indicatorInset * 2) })
+                    .height(with(density) { rowSize.height.toDp() } - 6.dp)
                     .graphicsLayer {
-                        translationX = animatedPillOffset
+                        translationX = animatedPillOffset + with(density) { indicatorInset.toPx() }
+                        translationY = with(density) { 3.dp.toPx() }
                         // Around its own centre, so the indicator draws out
                         // both ways rather than growing a tail off one edge —
                         // a leading edge that ran ahead of the glyph it is
@@ -308,7 +316,7 @@ fun FloatingBottomBar(
                     // The theme's own accent, not a fixed coral: this is the
                     // surface that makes a Monochrome nav look monochrome and
                     // an Ocean one look blue at a glance.
-                    .background(accentPalette.accent.copy(alpha = 0.17f)),
+                    .background(accentPalette.accent.copy(alpha = 0.13f)),
             )
         }
 
@@ -396,10 +404,18 @@ private fun BottomBarItem(
     unselectedTint: Color? = null,
 ) {
     // The same spring the indicator rides, so the glyph arriving and the glass
-    // arriving are one movement rather than two that nearly agree.
+    // arriving are one movement rather than two that nearly agree. A press
+    // takes it below rest first, which is the whole of the touch feedback: the
+    // destination gives under the finger and springs back as it takes over.
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (selected) 1.08f else 1f,
-        animationSpec = glassSpec,
+        targetValue = when {
+            pressed -> 0.92f
+            selected -> 1.06f
+            else -> 1f
+        },
+        animationSpec = if (pressed) tween(90) else glassSpec,
         label = "tabScale",
     )
     val haptics = rememberHaptics()
@@ -407,7 +423,10 @@ private fun BottomBarItem(
         targetValue = if (selected) {
             selectedTint ?: MaterialTheme.colorScheme.primary
         } else {
-            unselectedTint ?: MaterialTheme.colorScheme.onSurfaceVariant
+            // Clean light glyphs at rest. The accent is the only colour in the
+            // bar, so a selected destination is found by light and shape first
+            // and by hue second.
+            unselectedTint ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
         },
         animationSpec = tween(200),
         label = "tabTint",
@@ -418,7 +437,7 @@ private fun BottomBarItem(
         modifier = modifier
             .clip(RoundedCornerShape(percent = 50))
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interaction,
                 indication = null,
             ) {
                 if (selected) {
@@ -430,39 +449,51 @@ private fun BottomBarItem(
             }
             .padding(vertical = TAB_VERTICAL_PADDING),
     ) {
-        Icon(
-            imageVector = tab.icon,
-            contentDescription = tab.label,
-            tint = tint,
-            modifier = Modifier
-                .size(TAB_ICON_SIZE)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                },
-        )
+        Box(contentAlignment = Alignment.Center) {
+            // A soft halo of the theme's accent under the chosen glyph. It is
+            // what the inset capsule reads as at the edges, and it fades with
+            // the tint rather than popping in, so the whole door of the bar
+            // moves on one curve.
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(TAB_ICON_SIZE + 18.dp)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(tint.copy(alpha = 0.16f), Color.Transparent),
+                            ),
+                            CircleShape,
+                        ),
+                )
+            }
+            Icon(
+                imageVector = tab.icon,
+                contentDescription = tab.label,
+                tint = tint,
+                modifier = Modifier
+                    .size(TAB_ICON_SIZE)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    },
+            )
+        }
         Spacer(Modifier.height(TAB_ICON_LABEL_GAP))
         Text(
             text = tab.label,
-            style = tabLabelStyle(),
+            // The chosen destination's name is set a touch heavier as well as
+            // in the accent: the capsule says where, the weight says which.
+            style = if (selected) {
+                tabLabelStyle().copy(fontWeight = FontWeight.Medium)
+            } else {
+                tabLabelStyle()
+            },
             color = tint,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        // A short accent rule under the active destination. The glyph alone
-        // carries selection on a busy backdrop poorly; this is the theme's
-        // colour said once, in the place the eye already is.
-        Spacer(Modifier.height(3.dp))
-        val ruleWidth by animateDpAsState(
-            targetValue = if (selected) 14.dp else 3.dp,
-            animationSpec = tween(220),
-            label = "tabRuleWidth",
-        )
-        Box(
-            modifier = Modifier
-                .size(ruleWidth, 2.dp)
-                .clip(CircleShape)
-                .background(if (selected) accentPalette.accent else Color.Transparent),
-        )
+        // Keeps the bar's height where the old accent rule held it, so the
+        // mini player above still lands on the same line.
+        Spacer(Modifier.height(5.dp))
     }
 }

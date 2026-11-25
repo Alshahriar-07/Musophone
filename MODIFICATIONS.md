@@ -11,7 +11,7 @@ source tree.
 - **Official repository and corresponding source:** <https://github.com/Alshahriar-07/Musophone>
 - **Official website:** <https://musophone.vercel.app>
 - **Upstream revision:** `21356206` (BitChord 1.10, version code 42)
-- **Current MusoPhone version:** 1.11 (version code 43)
+- **Current MusoPhone version:** 2.5 (version code 49)
 - **Complete attribution:** [`Credit.md`](Credit.md)
 
 MusoPhone does not claim authorship of the upstream BitChord architecture,

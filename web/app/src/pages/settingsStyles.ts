@@ -11,7 +11,9 @@ export const settingsUi = {
   /** The page title and its rows as one column, centred in the page. */
   centered: 'mx-auto max-w-[calc(640px+2*var(--body-gutter))]',
   body: 'mx-(--body-gutter) mt-5 mb-[120px] max-w-[640px]',
-  group: 'overflow-hidden rounded-[10px] bg-quinary',
+  // One neutral panel with a hairline rim: the MusoPhone surface, at the
+  // web's own radius step (12, between the 10px artwork and the 14px card).
+  group: 'overflow-hidden rounded-[12px] bg-(--systemStandardThinMaterialSover) ring-1 ring-inset ring-[color:var(--labelDivider)]',
   sectionHeader: 'mx-4 mt-7 mb-2 type-subhead-emphasized uppercase text-secondary',
   footer: 'mx-4 mt-2 type-callout text-secondary',
 

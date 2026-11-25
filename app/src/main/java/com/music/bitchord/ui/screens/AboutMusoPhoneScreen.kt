@@ -148,8 +148,8 @@ fun AboutMusoPhoneScreen(
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "MusoPhone is a modern music player designed to deliver a beautiful, " +
-                "customizable, and seamless music listening experience.",
+            text = "An independently developed music player: MusoPhone's interface, " +
+                "branding, design system and product direction are its own.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -206,32 +206,44 @@ fun AboutMusoPhoneScreen(
             AiCreditRow("Claude", "Anthropic", "C", CLAUDE_URL, open)
         }
 
-        // ---- YouTube pipeline ----------------------------------------------
-        SectionTitle("YouTube Music Pipeline")
+        // ---- Independence & attribution ------------------------------------
+        SectionTitle("Independent by Design")
         GlassCard {
             Text(
-                text = "BitChord",
+                text = "Built by the MusoPhone team",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
+            Spacer(Modifier.height(6.dp))
             Text(
-                text = "Original open-source project · GPL-3.0",
+                text = "MusoPhone is an independently developed music player. Its " +
+                    "screens, iconography, colour and motion design system, visual " +
+                    "identity and product development are its own work, made by the " +
+                    "MusoPhone development team. It is not a reskin of another player " +
+                    "and carries no other project's branding.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             Text(
-                text = "MusoPhone derives from the BitChord codebase, including its YouTube " +
-                    "music streaming pipeline, playback and media-session implementation, " +
-                    "local library, downloads, lyrics, equalizer, party protocol and addon " +
-                    "system. Original copyright notices and license headers remain in the " +
-                    "source. BitChord does not officially endorse MusoPhone.",
+                text = "Technology it utilises",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "Streaming and playback are built on established third-party " +
+                    "open-source technology — the YouTube audio pipeline and extractor, " +
+                    "AndroidX Media3, Compose and the libraries below — together with " +
+                    "the backend services they talk to. Those components are the work of " +
+                    "their own authors and are used under their licenses; MusoPhone does " +
+                    "not claim to have written them, and no project or service named here " +
+                    "endorses MusoPhone.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(10.dp))
-            LinkRow("BitChord on GitHub", BITCHORD_URL, open)
         }
 
         // ---- Licenses ------------------------------------------------------
@@ -247,6 +259,10 @@ fun AboutMusoPhoneScreen(
             Spacer(Modifier.height(8.dp))
             LinkRow("GNU GPL-3.0 license text", GPL_URL, open)
             Spacer(Modifier.height(4.dp))
+            // Legal attribution for the GPL-3.0 codebase this project derives
+            // from belongs here, with the other notices, rather than as the
+            // headline of a user-facing section.
+            LicenseRow("BitChord (original codebase)", "GPL-3.0", open, BITCHORD_URL)
             LicenseRow("NewPipeExtractor", "GPL-3.0", open, GPL_URL)
             LicenseRow("AndroidX Media3", "Apache-2.0", open, APACHE_URL)
             LicenseRow("Coil", "Apache-2.0", open, APACHE_URL)
@@ -257,7 +273,8 @@ fun AboutMusoPhoneScreen(
 
         Spacer(Modifier.height(22.dp))
         Text(
-            text = "© $year MusoPhone · Eagox Studio. Original BitChord work © its contributors.",
+            text = "© $year MusoPhone · Eagox Studio. Open-source components © their " +
+                "respective authors.",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -288,18 +305,17 @@ private fun SectionTitle(text: String) {
 
 @Composable
 private fun GlassCard(content: @Composable ColumnScope.() -> Unit) {
-    val palette = accentPalette
-    // The same radius as every Settings group, so About reads as part of the
-    // same surface family rather than a page with its own card language.
+    // The same radius and the same surface as every Settings group and every
+    // MusoGlassCard, so About reads as part of the same family rather than a
+    // page with its own card language.
     val shape = GroupShape
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            // A solid surface rather than the old layered glass: one fill,
-            // one hairline, no translucency stacking.
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
-            .border(0.75.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), shape)
+            // One neutral fill and one hairline: the v2.5 panel everywhere.
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
             .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
         content()

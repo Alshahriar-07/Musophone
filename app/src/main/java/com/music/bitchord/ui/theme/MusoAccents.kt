@@ -105,23 +105,19 @@ fun MusoAccentTheme.palette(dark: Boolean): MusoAccentPalette {
         accent = accent,
         accentSecondary = secondary,
         onAccent = accent.onColorFor(),
-        backdropTop = if (dark) {
-            lerp(Color(0xFF08070A), accent, 0.10f)
-        } else {
-            lerp(Color(0xFFF7F5F8), accent, 0.05f)
-        },
-        backdropBottom = if (dark) {
-            lerp(Color(0xFF050406), accent, 0.035f)
-        } else {
-            lerp(Color(0xFFF2EFF3), accent, 0.09f)
-        },
-        glassTint = if (dark) Color.White.copy(alpha = 0.055f) else Color.White.copy(alpha = 0.42f),
+        // v2.2 AMOLED foundation: black is black. The accent no longer tints
+        // the backdrop, which is what made every theme look like a different
+        // colour of smoke; it now lives in the controls, glows and active
+        // states over one shared, genuinely dark base.
+        backdropTop = if (dark) Color(0xFF000000) else Color(0xFFF7F5F8),
+        backdropBottom = if (dark) Color(0xFF000000) else Color(0xFFF2EFF3),
+        glassTint = if (dark) Color.White.copy(alpha = 0.035f) else Color.White.copy(alpha = 0.42f),
         glassBorder = if (dark) {
-            lerp(Color.White.copy(alpha = 0.16f), accent, 0.30f)
+            lerp(Color.White.copy(alpha = 0.09f), accent, 0.20f)
         } else {
             lerp(Color.Black.copy(alpha = 0.08f), accent, 0.22f)
         },
-        navGlow = accent.copy(alpha = if (dark) 0.34f else 0.20f),
+        navGlow = accent.copy(alpha = if (dark) 0.24f else 0.20f),
     )
 }
 
@@ -135,14 +131,16 @@ fun MusoAccentTheme.palette(dark: Boolean): MusoAccentPalette {
 fun MusoAccentTheme.colorScheme(dark: Boolean): ColorScheme {
     val p = palette(dark)
     val base = p.backdropTop
-    val surface = lerp(base, p.accent, if (dark) 0.055f else 0.012f)
-    val surfaceHigh = lerp(base, p.accent, if (dark) 0.115f else 0.075f)
-    val onBase = lerp(if (dark) Color(0xFFFFF7F8) else Color(0xFF1A1418), p.accent, 0.045f)
-    val onSurfaceVariant = lerp(if (dark) Color(0xFFC3B8BE) else Color(0xFF6C5F66), p.accent, 0.10f)
-    val outline = lerp(base, p.accent, if (dark) 0.38f else 0.30f)
-    val outlineVariant = lerp(base, p.accent, if (dark) 0.22f else 0.17f)
-    val container = lerp(base, p.accent, if (dark) 0.24f else 0.14f)
-    val onContainer = if (dark) lerp(Color.White, p.accent, 0.35f) else lerp(Color(0xFF140F12), p.accent, 0.20f)
+    // AMOLED surfaces are neutral: charcoal steps on black. Surfaces, type and
+    // spacing are the same in every theme; only the accent roles move.
+    val surface = if (dark) Color(0xFF0A0A0C) else lerp(Color(0xFFFFFCFD), p.accent, 0.012f)
+    val surfaceHigh = if (dark) Color(0xFF161619) else lerp(Color(0xFFF1EDF0), p.accent, 0.075f)
+    val onBase = lerp(if (dark) Color(0xFFF7F7F9) else Color(0xFF1A1418), p.accent, 0.02f)
+    val onSurfaceVariant = lerp(if (dark) Color(0xFFA4A4AC) else Color(0xFF6C5F66), p.accent, 0.06f)
+    val outline = if (dark) Color(0xFF2A2A30) else lerp(base, p.accent, 0.30f)
+    val outlineVariant = if (dark) Color(0xFF1B1B20) else lerp(base, p.accent, 0.17f)
+    val container = lerp(Color(0xFF101014), p.accent, if (dark) 0.22f else 0.14f)
+    val onContainer = if (dark) lerp(Color.White, p.accent, 0.28f) else lerp(Color(0xFF140F12), p.accent, 0.20f)
     return if (dark) {
         darkColorScheme(
             primary = p.accent,
@@ -156,7 +154,7 @@ fun MusoAccentTheme.colorScheme(dark: Boolean): ColorScheme {
             onSecondaryContainer = onContainer,
             tertiary = p.accentSecondary,
             onTertiary = p.accentSecondary.onColorFor(),
-            background = base,
+            background = Color(0xFF000000),
             onBackground = onBase,
             surface = surface,
             onSurface = onBase,
@@ -220,12 +218,18 @@ fun MusoAccentTheme.backdropBrush(dark: Boolean): Brush {
     )
 }
 
+/** A raised panel over the AMOLED base: one charcoal step, not a glass sheet. */
+fun MusoAccentTheme.elevatedSurface(dark: Boolean): Color {
+    val p = palette(dark)
+    return if (dark) lerp(Color(0xFF121215), p.accent, 0.025f) else Color(0xFFFFFCFD)
+}
+
 /** The soft accent halo drawn behind the content, at the top of the app. */
 fun MusoAccentTheme.glowBrush(dark: Boolean): Brush {
     val p = palette(dark)
     return Brush.radialGradient(
         colors = listOf(
-            p.accent.copy(alpha = if (dark) 0.16f else 0.10f),
+            p.accent.copy(alpha = if (dark) 0.09f else 0.10f),
             Color.Transparent,
         ),
     )

@@ -33,6 +33,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -318,6 +320,7 @@ import com.music.bitchord.ui.components.UpdateAvailableDialog
 import com.music.bitchord.ui.components.WebDavConflictAlert
 import com.music.bitchord.ui.components.FieldConfig
 import com.music.bitchord.ui.icons.BitChordIcons
+import com.music.bitchord.ui.icons.MusoIcons
 import androidx.media3.common.Player
 import com.music.bitchord.data.YtMusicRepository
 import com.music.bitchord.data.TopPicks
@@ -489,8 +492,8 @@ class MainActivity : AppCompatActivity() {
                     val accent = accentTheme.palette(darkTheme).accent
                     Brush.radialGradient(
                         colors = listOf(
-                            accent.copy(alpha = if (darkTheme) 0.17f else 0.11f),
-                            accent.copy(alpha = 0.04f),
+                            accent.copy(alpha = if (darkTheme) 0.10f else 0.11f),
+                            accent.copy(alpha = if (darkTheme) 0.02f else 0.04f),
                             Color.Transparent,
                         ),
                         center = Offset(0f, 0f),
@@ -1440,10 +1443,10 @@ private fun BitChordApp(
     // untouched — see [beginRadioQueue] and SongActionsMenu.
     val tabs = remember(homeLabel, exploreLabel, libraryLabel, searchLabel) {
         listOf(
-            BottomTab(homeLabel, BitChordIcons.Home),
-            BottomTab(exploreLabel, BitChordIcons.TabExplore),
-            BottomTab(libraryLabel, BitChordIcons.TabLibrary),
-            BottomTab(searchLabel, BitChordIcons.TabSearch),
+            BottomTab(homeLabel, MusoIcons.Home),
+            BottomTab(exploreLabel, MusoIcons.Explore),
+            BottomTab(libraryLabel, MusoIcons.Library),
+            BottomTab(searchLabel, MusoIcons.Search),
         )
     }
     // A selected index restored from before v2.1 can name the old Radio slot,
@@ -3104,17 +3107,31 @@ private fun BitChordApp(
                             (target.isShowAll() && initial == libraryTab)
                         if (tabSwap || libraryShowAllSwap) {
                             EnterTransition.None togetherWith ExitTransition.None
+                        } else if (reducePlayerMotion) {
+                            // "Reduce animation" leaves the change of context
+                            // legible but takes the travel out of it: a short
+                            // cross-fade, no slide and no scale.
+                            fadeIn(tween(120)) togetherWith fadeOut(tween(90))
                         } else {
-                            // A page push now arrives from a fraction of the edge
-                            // with a short cross-fade, rather than appearing from
-                            // nowhere. The travel is deliberately small: it is
-                            // orientation, not a carousel.
+                            // A pushed page settles in from a fraction of the
+                            // edge, a hair under full size, easing out with the
+                            // same curve the rest of the app moves on. The
+                            // travel is deliberately small: it is orientation,
+                            // not a carousel.
                             (
-                                fadeIn(tween(220)) +
-                                    slideInHorizontally(tween(300)) { width -> width / 14 }
+                                fadeIn(tween(240, easing = FastOutSlowInEasing)) +
+                                    slideInHorizontally(tween(340, easing = FastOutSlowInEasing)) { width -> width / 12 } +
+                                    scaleIn(
+                                        initialScale = 0.985f,
+                                        animationSpec = tween(340, easing = FastOutSlowInEasing),
+                                    )
                                 ) togetherWith (
-                                fadeOut(tween(160)) +
-                                    slideOutHorizontally(tween(220)) { width -> -width / 20 }
+                                fadeOut(tween(170)) +
+                                    slideOutHorizontally(tween(240)) { width -> -width / 26 } +
+                                    scaleOut(
+                                        targetScale = 1.006f,
+                                        animationSpec = tween(240),
+                                    )
                                 )
                         }
                     },
@@ -3185,6 +3202,13 @@ private fun BitChordApp(
                                 // also reachable from Settings → Account.
                                 onAppSettings = { navigator.push(AppRoute.Settings) },
                                 onAccountSettings = { navigator.push(AppRoute.AccountScrobbling) },
+                                // The account switcher the top bar's avatar used
+                                // to open: still here, on the page that avatar
+                                // now leads to.
+                                onSwitchAccount = {
+                                    viewModel.loadChannels()
+                                    showAccountSelector = true
+                                },
                                 onSongClick = { song ->
                                     playRadio(song, QueueSource(profileLabel, PlaybackSourceType.HOME))
                                 },
@@ -4435,14 +4459,15 @@ private fun BitChordApp(
                             // whose masthead already owns the one profile
                             // picture: drawing both is what put two avatars in
                             // the same corner.
+                            // The avatar is the way to the listener's own page on
+                            // every tab, not a second settings button: tapping it
+                            // anywhere opens Profile, exactly as the Home masthead
+                            // does. Switching accounts and account settings live
+                            // *on* that page, one tap further in, so nothing is
+                            // lost by pointing this one place.
                             if (!isReleaseDetail && !homeHeadingVisible) TopBarAccountButton(
                                 account = account,
-                                onClick = {
-                                    if (signedIn) {
-                                        viewModel.loadChannels()
-                                        showAccountSelector = true
-                                    } else navigator.push(AppRoute.Settings)
-                                },
+                                onClick = { navigator.push(AppRoute.Profile) },
                                 onSwipeProfile = { forward -> viewModel.stepProfile(forward) },
                             )
                         }

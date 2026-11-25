@@ -279,9 +279,9 @@
         </activity>
 
         <!--
-          The launcher entries live on aliases, not on MainActivity, so the user can
-          swap the home-screen icon by enabling one alias and disabling the others
-          (see AppIcon). Exactly one is enabled at a time; Default is the shipped one.
+          The shipped launcher entry is LauncherDefault. The remaining aliases are
+          kept so an existing install whose launcher references one keeps a valid
+          entry; the in-app icon picker was removed in 2.3.
         -->
         <activity-alias
             android:name=".LauncherDefault"

@@ -188,13 +188,16 @@ internal fun PlaybackOriginCaption(
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall.copy(
+            fontWeight = FontWeight.W500,
+            letterSpacing = 0.4.sp,
             shadow = Shadow(
                 color = Color.Black.copy(alpha = 0.55f),
                 offset = Offset(0f, 1f),
                 blurRadius = 4f,
             ),
         ),
-        color = Color.White.copy(alpha = if (chrome) CHROME_FULL_ALPHA else 1f),
+        // Quiet by design: it names where playback came from, it is not a title.
+        color = Color.White.copy(alpha = if (chrome) CHROME_FULL_ALPHA else 0.72f),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         textAlign = textAlign,
@@ -2414,15 +2417,24 @@ private fun TrackAnalysisState.localizedLabel(): String = when (this) {
     TrackAnalysisState.FAILED -> stringResource(Res.string.failed)
 }
 
+/** The secondary playback strip's outer capsule, and the padding inside it. */
+private val MODE_CAPSULE_HEIGHT = 46.dp
+private val MODE_CAPSULE_INSET = 4.dp
+private val MODE_SEGMENT_SHAPE = RoundedCornerShape(18.dp)
+
 /**
  * The three queue modes, lifted out of the queue-open capsule and given a row
  * of their own on the phone player.
  *
  * They answer "how does this queue play", which is a different question from
- * the transport's "what plays now", so they read as a quiet strip of tiles
- * between the two rather than as controls nested behind the queue button.
- * Each tile lights in the active accent — the same accent in every one of the
- * eight themes — and dims back to plain white when its mode is off.
+ * the transport's "what plays now", so they read as one quiet strip between the
+ * two rather than as controls nested behind the queue button.
+ *
+ * One rounded container holding three segments, rather than three separate
+ * tiles: the modes belong to a single strip of settings, and a single surface
+ * says that. Each segment still lights on its own in the active accent — the
+ * same accent in every one of the eight themes — because the three switches
+ * hold their state independently and a shared highlight would imply a choice.
  */
 @Composable
 internal fun PlayerModesRow(
@@ -2437,11 +2449,22 @@ internal fun PlayerModesRow(
     // The theme accent as Material exposes it: sharedUi does not know the app's
     // accent enum, and every one of the eight themes sets this role.
     val accent = MaterialTheme.colorScheme.primary
+    val capsule = RoundedCornerShape(MODE_CAPSULE_HEIGHT / 2)
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(MODE_CAPSULE_HEIGHT)
+            .clip(capsule)
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(
+                width = 0.5.dp,
+                color = Color.White.copy(alpha = 0.09f),
+                shape = capsule,
+            )
+            .padding(horizontal = MODE_CAPSULE_INSET),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        PlayerModeTile(
+        PlayerModeSegment(
             icon = BitChordIcons.Shuffle,
             label = stringResource(Res.string.shuffle_on).substringBefore(' '),
             contentDescription = stringResource(
@@ -2453,7 +2476,8 @@ internal fun PlayerModesRow(
             haptic = if (shuffleEnabled) Haptic.ToggleOff else Haptic.ToggleOn,
             modifier = Modifier.weight(1f),
         )
-        PlayerModeTile(
+        PlayerModeDivider()
+        PlayerModeSegment(
             icon = BitChordIcons.Repeat,
             label = stringResource(Res.string.repeat_off).substringBefore(' '),
             badge = "1".takeIf { repeatMode == RepeatModes.ONE },
@@ -2472,7 +2496,8 @@ internal fun PlayerModesRow(
             },
             modifier = Modifier.weight(1f),
         )
-        PlayerModeTile(
+        PlayerModeDivider()
+        PlayerModeSegment(
             icon = BitChordIcons.Infinity,
             label = stringResource(Res.string.autoplay),
             contentDescription = stringResource(
@@ -2487,15 +2512,26 @@ internal fun PlayerModesRow(
     }
 }
 
+/** The hairline between two segments of [PlayerModesRow]. */
+@Composable
+private fun PlayerModeDivider() {
+    Box(
+        Modifier
+            .width(0.5.dp)
+            .height(16.dp)
+            .background(Color.White.copy(alpha = 0.10f)),
+    )
+}
+
 /**
- * One mode tile: a low glass lozenge that carries its own state.
+ * One segment of [PlayerModesRow]: a glyph and its name, on its owner's surface.
  *
- * Deliberately not a pill segment. A segment is a choice inside one control;
- * these are three switches that stay on independently, and they are always on
- * screen, so each needs its own resting shape and its own lit edge.
+ * No shape or edge of its own at rest — it has to disappear into the capsule it
+ * sits in. Its lit state is its own, though: a soft accent wash inside the
+ * capsule, so the strip still says which of the three modes are on.
  */
 @Composable
-private fun PlayerModeTile(
+private fun PlayerModeSegment(
     icon: ImageVector,
     label: String,
     contentDescription: String,
@@ -2508,24 +2544,12 @@ private fun PlayerModeTile(
 ) {
     val haptics = rememberHaptics()
     val interaction = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(13.dp)
     val ink = if (active) accent else Color.White.copy(alpha = 0.62f)
     Row(
         modifier = modifier
-            .height(34.dp)
-            .clip(shape)
-            .background(
-                if (active) {
-                    accent.copy(alpha = 0.16f)
-                } else {
-                    Color.White.copy(alpha = 0.07f)
-                },
-            )
-            .border(
-                width = 0.5.dp,
-                color = if (active) accent.copy(alpha = 0.50f) else Color.White.copy(alpha = 0.10f),
-                shape = shape,
-            )
+            .height(38.dp)
+            .clip(MODE_SEGMENT_SHAPE)
+            .background(if (active) accent.copy(alpha = 0.14f) else Color.Transparent)
             .clickable(
                 interactionSource = interaction,
                 indication = null,

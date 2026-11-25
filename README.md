@@ -66,7 +66,7 @@
 - **Word-synced lyrics** — word/syllable-level highlighting from multiple sources.
 - **Lyrics providers** — credit to [lrc.red](https://lrc.red), [BiniLyrics](https://github.com/binimum), [BetterLyrics](https://github.com/better-lyrics/better-lyrics), [PaxSenix](https://lyrics.paxsenix.org), [LyricsPlus](https://github.com/ibratabian17/YouLyPlus), [SimpMusic](https://github.com/maxrave-dev/SimpMusic), [Unison](https://unison.boidu.dev), [Megalobiz](https://www.megalobiz.com), [KuGou](https://www.kugou.com), [LRCLIB](https://lrclib.net), [Musixmatch](https://www.musixmatch.com) and [Genius](https://genius.com).
 - **Dynamic, artwork-driven theming** — Material palette extracted from album art.
-- **Frosted-glass UI** — Telegram-style translucent bars via Haze, Material 3 theming.
+- **Premium AMOLED UI** — true-black backdrop, refined charcoal surfaces, one coherent icon and motion language, Material 3 theming with eight accent palettes.
 
 #### Controls & Tweaks
 - **Per-network audio quality** — separate quality ceilings for Wi-Fi and mobile data.
@@ -91,6 +91,8 @@
 <a href="https://github.com/Alshahriar-07/Musophone/releases" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/supported/android/cozy.svg" alt="Download for Android" height="55"/></a>
 
 Grab the latest signed APK from the [Releases](https://github.com/Alshahriar-07/Musophone/releases) page. Sideloading requires enabling "Install unknown apps" for whichever app you download it with.
+
+The current build is **MusoPhone 2.5** (version code 49) — a full visual pass across every page, a new icon family, a dedicated Profile glyph in place of the old avatar menu, and smoother page and navigation motion, with playback and all existing features unchanged. See [RELEASEINFO.md](RELEASEINFO.md) for the release notes and [CHANGELOG.md](CHANGELOG.md) for the version history.
 
 Project website: <https://musophone.vercel.app>
 

@@ -32,7 +32,7 @@ import com.music.bitchord.ui.components.FrostedTopBar
 import com.music.bitchord.ui.components.MiniPlayer
 import com.music.bitchord.ui.components.TopFadeBlur
 import com.music.bitchord.ui.components.TopBarBlur
-import com.music.bitchord.ui.icons.BitChordIcons
+import com.music.bitchord.ui.icons.MusoIcons
 import com.music.bitchord.ui.theme.BitChordTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -110,10 +110,10 @@ private val PreviewSong = Song(
 
 // The v2.1 bar: four destinations, Radio no longer among them.
 private val PreviewTabs = listOf(
-    BottomTab("Home", BitChordIcons.Home),
-    BottomTab("Explore", BitChordIcons.TabExplore),
-    BottomTab("Library", BitChordIcons.TabLibrary),
-    BottomTab("Search", BitChordIcons.TabSearch),
+    BottomTab("Home", MusoIcons.Home),
+    BottomTab("Explore", MusoIcons.Explore),
+    BottomTab("Library", MusoIcons.Library),
+    BottomTab("Search", MusoIcons.Search),
 )
 
 /**

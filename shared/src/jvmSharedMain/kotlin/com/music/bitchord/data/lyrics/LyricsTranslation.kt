@@ -43,6 +43,24 @@ import java.io.IOException
  * it and the feature can never grow without limit.
  */
 object LyricsTranslation {
+    /**
+     * Whether [text] holds a letter outside the Latin script — Bangla, Devanagari,
+     * Tamil, Han, Hangul, Cyrillic and so on.
+     *
+     * Letters only: punctuation, digits and spacing are shared across scripts and
+     * say nothing about whether a line needs romanizing. This is the one test
+     * behind "already romanized", used both to skip the network for a Latin lyric
+     * and by the player, to decide whether a sheet is worth romanizing at all.
+     */
+    fun hasNonLatinLetter(text: String): Boolean = text.codePoints().anyMatch { codePoint ->
+        Character.isLetter(codePoint) &&
+            Character.UnicodeScript.of(codePoint) != Character.UnicodeScript.LATIN
+    }
+
+    /** [hasNonLatinLetter], for a whole sheet. */
+    fun hasNonLatinScript(lines: List<LyricLine>): Boolean =
+        lines.any { hasNonLatinLetter(it.text) }
+
     sealed interface Result {
         data class Translated(
             val lines: List<LyricLine>,
@@ -479,10 +497,7 @@ object LyricsTranslation {
     }
 
     private fun hasNonLatinLetters(slots: List<TextSlot>): Boolean = slots.any { slot ->
-        slot.text.codePoints().anyMatch { codePoint ->
-            Character.isLetter(codePoint) &&
-                Character.UnicodeScript.of(codePoint) != Character.UnicodeScript.LATIN
-        }
+        hasNonLatinLetter(slot.text)
     }
 
     private fun unchangedWeight(slots: List<TextSlot>, transformed: List<String>): Int =

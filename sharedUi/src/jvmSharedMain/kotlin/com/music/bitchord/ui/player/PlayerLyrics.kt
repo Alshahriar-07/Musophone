@@ -135,6 +135,7 @@ import com.music.bitchord.data.lyrics.GrowingWord
 import com.music.bitchord.data.lyrics.LyricAlignment
 import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.lyrics.LyricsSource
+import com.music.bitchord.data.lyrics.LyricsTranslation
 import com.music.bitchord.data.lyrics.translationLanguageName
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.Haptics
@@ -273,8 +274,8 @@ private fun Modifier.alphaLayerWithOutset(alpha: () -> Float, outset: Dp): Modif
  * Small enough to be read as a second voice at a glance and no smaller —
  * these are the words of the song, not a caption.
  */
-private val BACKING_FONT_SIZE = 23.sp
-private val BACKING_LINE_HEIGHT = 29.sp
+private val BACKING_FONT_SIZE = 27.sp
+private val BACKING_LINE_HEIGHT = 34.sp
 private const val BACKING_ALPHA = 0.72f
 
 /**
@@ -308,10 +309,10 @@ private const val BACKING_FADE_LEAD = 1.6f
  * way Apple Music prints pronunciation under the lyric, and tucked up into the
  * lead's glow inset so the two read as one line rather than two rows.
  */
-private val SUB_LYRIC_FONT_SIZE = 20.sp
-private val SUB_LYRIC_LINE_HEIGHT = 25.sp
-private val SUB_BACKING_FONT_SIZE = 16.sp
-private val SUB_BACKING_LINE_HEIGHT = 21.sp
+private val SUB_LYRIC_FONT_SIZE = 23.sp
+private val SUB_LYRIC_LINE_HEIGHT = 29.sp
+private val SUB_BACKING_FONT_SIZE = 19.sp
+private val SUB_BACKING_LINE_HEIGHT = 24.sp
 private const val SUB_LYRIC_ALPHA = 0.85f
 private val SUB_LYRIC_TUCK = 6.dp
 private const val SUB_LYRIC_OPEN_MS = 460
@@ -377,7 +378,7 @@ private val GAP_ROW_SPACING = 16.dp
  * only past that does the panel let go. The last entry stands for everything
  * further out, which is most of the list.
  */
-private val LINE_FALLOFF_ALPHA = floatArrayOf(1f, 0.8f, 0.7f, 0.58f, 0.46f)
+private val LINE_FALLOFF_ALPHA = floatArrayOf(1f, 0.84f, 0.74f, 0.64f, 0.54f)
 private val LINE_FALLOFF_BLUR = arrayOf(0.dp, 1.dp, 1.dp, 1.7.dp, 2.4.dp)
 
 /**
@@ -388,7 +389,7 @@ private val LINE_FALLOFF_BLUR = arrayOf(0.dp, 1.dp, 1.dp, 1.7.dp, 2.4.dp)
  * last entry is still a floor, not zero — the bottom of the screen stays
  * readable at a glance.
  */
-private val LINE_FALLOFF_ALPHA_PHONE = floatArrayOf(1f, 0.74f, 0.6f, 0.48f, 0.4f, 0.34f)
+private val LINE_FALLOFF_ALPHA_PHONE = floatArrayOf(1f, 0.8f, 0.68f, 0.58f, 0.5f, 0.44f)
 
 /**
  * The shape of the page the lyrics are going to fill.
@@ -412,9 +413,9 @@ private val SKELETON_BLOCKS = listOf(
  * lines are drawn in, rows of one line sit a line-height apart, and lines are a
  * row's own padding further apart again than that.
  */
-private val SKELETON_BAR = 26.dp
-private val SKELETON_LEADING = 15.dp
-private val SKELETON_BLOCK_GAP = 35.dp
+private val SKELETON_BAR = 30.dp
+private val SKELETON_LEADING = 18.dp
+private val SKELETON_BLOCK_GAP = 41.dp
 private const val SKELETON_PERIOD_MS = 1_400
 
 /** What a line reads at while the list is being scrolled by hand. */
@@ -2252,15 +2253,15 @@ internal fun LyricsPanel(
                 val alignEnd = duet && line.alignment == LyricAlignment.End
                 val style = if (isSynced) {
                     MaterialTheme.typography.headlineLarge.copy(
-                        fontSize = 34.sp,
-                        lineHeight = 41.sp,
+                        fontSize = 40.sp,
+                        lineHeight = 49.sp,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
                     )
                 } else {
                     MaterialTheme.typography.headlineMedium.copy(
-                        fontSize = 30.sp,
-                        lineHeight = 38.sp,
+                        fontSize = 36.sp,
+                        lineHeight = 45.sp,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
                     )
@@ -2606,6 +2607,7 @@ private fun PanelVoice(
         val vazirmatn = Font(Res.font.vazirmatn_regular)
         remember(style, vazirmatn) { style.copy(fontFamily = FontFamily(vazirmatn)) }
     } else style
+    val lyricColor = if (isActive && synced) MaterialTheme.colorScheme.primary else Color.White
     if (line.isWordSynced && !browsing) {
         // Every word-synced line goes through the sweep, not just the playing
         // one — a line that has already been sung is fully revealed and one
@@ -2633,7 +2635,7 @@ private fun PanelVoice(
             alignEnd = alignEnd,
             laneLocked = laneLocked,
             translationProgress = translationProgress,
-            color = Color.White,
+            color = lyricColor,
         )
     } else if (line.isWordSynced) {
         // Browsing: keep the sweep so sung lines stay fully lit and unsung
@@ -2657,7 +2659,7 @@ private fun PanelVoice(
             alignEnd = alignEnd,
             laneLocked = laneLocked,
             translationProgress = translationProgress,
-            color = Color.White,
+            color = lyricColor,
         )
     } else {
         // No word timings, so there is no sweep to light the words as they are
@@ -2677,7 +2679,7 @@ private fun PanelVoice(
         Text(
             text = line.text,
             style = lyricStyle,
-            color = Color.White.copy(alpha = lit),
+            color = lyricColor.copy(alpha = lit),
             onTextLayout = { layout = it },
             modifier = modifier.lyricParticles(layout, translationProgress, room).padding(room),
         )
@@ -2800,7 +2802,7 @@ private fun LyricLine.withoutBracketPunctuation(): LyricLine = copy(
 private fun String.stripParens(): String = replace("(", "").replace(")", "").trim()
 
 /** The strip's fixed line box — about what Latin type at 16sp makes of itself. */
-private val STRIP_LINE_HEIGHT = 20.sp
+private val STRIP_LINE_HEIGHT = 23.sp
 
 /** How much of a line's own length it spends fading out at the end, clamped to this range. */
 private const val LYRIC_FADE_FRACTION = 0.28f
@@ -2829,6 +2831,7 @@ private fun CurrentLyricLine(
     // Gurmukhi line is taller than a Latin one and the credits and artwork
     // above this strip shift up and down as lines change language.
     val stripStyle = MaterialTheme.typography.titleMedium.copy(
+        fontSize = 18.sp,
         lineHeight = STRIP_LINE_HEIGHT,
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -2994,6 +2997,11 @@ private fun CurrentLyricLine(
                     feather = itemIndex == index,
                     rise = false,
                     modifier = fading,
+                    color = if (itemIndex == index) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        Color.White
+                    },
                 )
             } else {
                 Text(
@@ -3001,7 +3009,11 @@ private fun CurrentLyricLine(
                     text = lineText,
                     style = voiceStyle(
                         stripStyle.copy(
-                            color = if (itemInstrumental) Color.White.copy(alpha = 0.5f) else Color.White
+                            color = when {
+                                itemInstrumental -> Color.White.copy(alpha = 0.5f)
+                                itemIndex == index -> MaterialTheme.colorScheme.primary
+                                else -> Color.White
+                            }
                         ),
                         lineText,
                         alignEnd = false,
@@ -3085,6 +3097,16 @@ private fun LyricsLoadingLine(text: String, modifier: Modifier = Modifier) {
 internal class LyricsTranslationUi(
     /** The lines the one-line strip reads: the originals, or their translation. */
     val displayedLyrics: List<LyricLine>,
+    /**
+     * The lines the full panel draws as its main text: the sheet's own words, or
+     * their romanization once that is what the player is showing.
+     *
+     * Separate from [displayedLyrics] because translation keeps the original in
+     * the panel with the translation beneath it — the Apple Music treatment —
+     * while romanization has nothing to put underneath: the point of the mode is
+     * that no regional script is on screen at all.
+     */
+    val panelLyrics: List<LyricLine>,
     /** Drawn small under each original line in the panel; null for none. */
     val subLines: List<LyricLine>?,
     val translationState: LyricsTranslationUiState,
@@ -3149,6 +3171,9 @@ internal fun rememberLyricsTranslation(
     var lyricsDisplayMode by remember(trackId, translationLanguage, lyrics) {
         mutableStateOf(LyricsDisplayMode.Original)
     }
+    // Whether the reader has asked for a version themselves. Until they have,
+    // the sheet is presented romanized — see the effect below.
+    var modeChosenByUser by remember(trackId, lyrics) { mutableStateOf(false) }
     val showingTranslation = lyricsDisplayMode == LyricsDisplayMode.Translated
     val showingRomanization = lyricsDisplayMode == LyricsDisplayMode.Romanized
     var translationTransition by remember(trackId) { mutableIntStateOf(0) }
@@ -3171,17 +3196,55 @@ internal fun rememberLyricsTranslation(
             (romanizationState as? LyricsTranslationUiState.Ready)?.lines ?: lyrics.orEmpty()
         LyricsDisplayMode.Original -> lyrics.orEmpty()
     }
-    // What the panel draws in small type under each original line, Apple
-    // Music style. The panel itself always keeps the original words; only the
-    // one-line strip over the scrubber swaps to [displayedLyrics]. One mode at
-    // a time by construction — [lyricsDisplayMode] holds a single value.
+    // The panel's own text. Romanized lyrics replace the originals outright,
+    // so no regional script is left on screen; a translation still hangs under
+    // the words it translates, Apple Music style. One mode at a time by
+    // construction — [lyricsDisplayMode] holds a single value.
+    val panelLyrics = when (lyricsDisplayMode) {
+        LyricsDisplayMode.Romanized ->
+            (romanizationState as? LyricsTranslationUiState.Ready)?.lines ?: lyrics.orEmpty()
+        else -> lyrics.orEmpty()
+    }
     val lyricsSubLines = when (lyricsDisplayMode) {
         LyricsDisplayMode.Translated -> (translationState as? LyricsTranslationUiState.Ready)?.lines
-        LyricsDisplayMode.Romanized -> (romanizationState as? LyricsTranslationUiState.Ready)?.lines
+        LyricsDisplayMode.Romanized -> null
         LyricsDisplayMode.Original -> null
     }
     val translationScope = rememberCoroutineScope()
+    // ---- Romanized by default ------------------------------------------------
+    // A sheet written in a regional script is presented in the Latin alphabet
+    // without being asked for: Bangla as Banglish, Hindi as Hinglish, Tamil as
+    // Tamilish and so on. The original words stay on screen until the answer
+    // lands, a Latin sheet is skipped before any request is made, and a sheet
+    // the service cannot romanize simply stays as it was — never silently
+    // invented. Once the reader switches the version themselves, this leaves
+    // them alone for the rest of the sheet.
+    LaunchedEffect(trackId, lyrics) {
+        if (modeChosenByUser) return@LaunchedEffect
+        val source = lyrics.orEmpty()
+        if (source.isEmpty() || !LyricsTranslation.hasNonLatinScript(source)) return@LaunchedEffect
+        romanizationState = LyricsTranslationUiState.Loading
+        val result = PlayerPlatform.host.romanizeLyrics(
+            trackId = trackId,
+            lines = source,
+            targetLanguageTag = translationLanguage,
+        )
+        // The reader may have picked a version while this was in flight.
+        if (modeChosenByUser) return@LaunchedEffect
+        romanizationState = when (result) {
+            is LyricsRomanizationResult.Romanized -> LyricsTranslationUiState.Ready(result.lines)
+            LyricsRomanizationResult.AlreadyRomanized -> LyricsTranslationUiState.SameLanguage
+            LyricsRomanizationResult.Unavailable -> LyricsTranslationUiState.Idle
+        }
+        if (result is LyricsRomanizationResult.Romanized) {
+            lyricsDisplayMode = LyricsDisplayMode.Romanized
+            translationTransition++
+        }
+    }
     val toggleTranslation: () -> Unit = toggleTranslation@{
+        // Asked for by hand: the automatic romanization stands down for this
+        // sheet, so a translation cannot be replaced the moment it finishes.
+        modeChosenByUser = true
         when (val state = translationState) {
             is LyricsTranslationUiState.Ready -> {
                 lyricsDisplayMode = if (showingTranslation) {
@@ -3235,6 +3298,7 @@ internal fun rememberLyricsTranslation(
         }
     }
     val toggleRomanization: () -> Unit = toggleRomanization@{
+        modeChosenByUser = true
         when (val state = romanizationState) {
             is LyricsTranslationUiState.Ready -> {
                 lyricsDisplayMode = if (showingRomanization) {
@@ -3313,6 +3377,7 @@ internal fun rememberLyricsTranslation(
 
     return LyricsTranslationUi(
         displayedLyrics = displayedLyrics,
+        panelLyrics = panelLyrics,
         subLines = lyricsSubLines,
         translationState = translationState,
         romanizationState = romanizationState,

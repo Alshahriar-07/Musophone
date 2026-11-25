@@ -1,8 +1,8 @@
-import { ChevronRight, Users } from 'lucide-react';
+import { ArrowUpRight, ChevronRight, Puzzle, Users } from 'lucide-react';
 import { lazy, Suspense, useState, type ComponentType, type ReactNode } from 'react';
-import { MdOutlineExtension } from 'react-icons/md';
 import { SiApplemusic, SiDiscord, SiSpotify, SiYoutubemusic } from 'react-icons/si';
 import { PageHeader } from '@/components/PageHeader';
+import { config } from '@/config';
 import { PrefetchLink } from '@/components/PrefetchLink';
 import { useDiscord } from '@/extension/useDiscord';
 import { useExtension } from '@/extension/useExtension';
@@ -98,7 +98,7 @@ export default function SettingsPage() {
           )}
           <LinkRow
             to="/extension"
-            icon={<Glyph Icon={MdOutlineExtension} color="#636366" />}
+            icon={<Glyph Icon={Puzzle} color="#232327" />}
             title="MusoPhone Extension"
             value={present ? `v${extension.extension.info.version}` : 'Not installed'}
           />
@@ -198,6 +198,31 @@ export default function SettingsPage() {
             {present ? <LyricSourcesAccess /> : <span className={settingsUi.value}>Needs the extension</span>}
           </div>
         </section>
+
+        <h2 className={settingsUi.sectionHeader}>About</h2>
+        <section className={settingsUi.group}>
+          <div className={settingsUi.integrationPlain}>
+            <span className={settingsUi.integrationName}>MusoPhone Web</span>
+            <span className={settingsUi.value}>v{config.version}</span>
+          </div>
+          <a
+            className={`${settingsUi.integrationPlain} ${settingsUi.linkRow}`}
+            href={config.androidAppUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span className={settingsUi.integrationName}>MusoPhone for Android</span>
+            <span className={settingsUi.value}>
+              Get the app
+              <ArrowUpRight size={15} strokeWidth={1.9} />
+            </span>
+          </a>
+        </section>
+        <p className={settingsUi.footer}>
+          MusoPhone is an independently developed music player with its own interface and design system. It is built on
+          open-source software under the GPL-3.0; the third-party libraries, APIs and artwork sources it uses are credited
+          in the project’s documentation.
+        </p>
       </div>
       {lyrics && (
         <Suspense fallback={null}>

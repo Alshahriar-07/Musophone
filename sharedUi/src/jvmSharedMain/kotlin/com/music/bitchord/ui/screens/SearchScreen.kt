@@ -20,6 +20,8 @@ import androidx.compose.foundation.clickable
 import com.music.bitchord.ui.components.PillSegmentedControl
 import com.music.bitchord.ui.components.longPressMenuClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -63,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusRequester
@@ -218,12 +221,31 @@ fun SearchScreen(
         // the search field sits cleanly below the bar instead of overlapping it.
         Column(modifier = Modifier.padding(top = topPadding)) {
             if (showField) {
-                Text(
-                    text = "MUSOPHONE SEARCH",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = PAGE_GUTTER + 2.dp, bottom = 7.dp),
-                )
+                Column(
+                    modifier = Modifier.padding(
+                        start = PAGE_GUTTER,
+                        end = PAGE_GUTTER,
+                        bottom = 8.dp,
+                    ),
+                ) {
+                    Text(
+                        text = "MUSOPHONE",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = stringResource(Res.string.search),
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Text(
+                        text = stringResource(Res.string.search_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 10.dp),
+                    )
+                }
                 SearchField(
                     query = query,
                     onQueryChange = onQueryChange,
@@ -314,7 +336,7 @@ fun SearchScreen(
                     }
                 }
                 results == null -> if (history.isEmpty()) {
-                    item { MessageState(stringResource(Res.string.search_empty)) }
+                    item(key = "search:blank") { SearchBlankState() }
                 } else {
                     recentSearches(
                         history = history,
@@ -339,6 +361,11 @@ fun SearchScreen(
                         } }
                     val isCurrentRow = playingRowMatcher(tracks, currentSong)
                     val topResult = results.data.filterIsInstance<SearchResult.TopTrack>().firstOrNull()
+                    if (results.data.isEmpty()) {
+                        item(key = "search:no-results") {
+                            SearchNoResultsState(query = query)
+                        }
+                    }
                     if (filter == SearchFilter.ALL && topResult != null) {
                         item(key = "search:top-result:${topResult.song.videoId}") {
                             SwipeToQueueBox(
@@ -357,20 +384,32 @@ fun SearchScreen(
                     searchSections(results.data, filter).forEach { section ->
                         section.title?.let { title ->
                             item(key = "search-section:$title") {
-                                Text(
-                                    text = title,
-                                    modifier = Modifier.padding(
-                                        start = PAGE_GUTTER,
-                                        end = PAGE_GUTTER,
-                                        top = 16.dp,
-                                        bottom = 6.dp,
-                                    ),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
+                                SearchSectionHeader(title = title, count = section.rows.size)
                             }
                         }
+                        if (section.rows.isNotEmpty() && section.rows.all { it is SearchResult.Browse }) {
+                            section.rows.chunked(2).forEachIndexed { gridIndex, chunk ->
+                                item(key = "search-grid:${section.title ?: filter.name}:$gridIndex") {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = PAGE_GUTTER, vertical = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    ) {
+                                        chunk.forEach { row ->
+                                            val browse = (row as SearchResult.Browse).item
+                                            SearchBrowseTile(
+                                                item = browse,
+                                                onClick = { onBrowseClick(browse) },
+                                                onLongPress = onBrowseLongPress?.let { { it(browse) } },
+                                                modifier = Modifier.weight(1f),
+                                            )
+                                        }
+                                        if (chunk.size == 1) Spacer(Modifier.weight(1f))
+                                    }
+                                }
+                            }
+                        } else {
                         itemsIndexed(
                             items = section.rows,
                             key = { index, row ->
@@ -408,6 +447,7 @@ fun SearchScreen(
                                 )
                             }
                         }
+                        }
                     }
                     if (loadingMore) {
                         songListSkeleton(
@@ -423,6 +463,88 @@ fun SearchScreen(
 }
 
 private data class SearchSection(val title: String?, val rows: List<SearchResult>)
+
+/** A results group heading: accent marker, name, and the honest size of the group. */
+@Composable
+private fun SearchSectionHeader(title: String, count: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 20.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 3.dp, height = 16.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary),
+        )
+        Spacer(Modifier.width(9.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** An album, playlist or artist hit as a cover card instead of a list row. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SearchBrowseTile(
+    item: BrowseItem,
+    onClick: () -> Unit,
+    onLongPress: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val shape = if (item.type == BrowseType.ARTIST) CircleShape else RoundedCornerShape(16.dp)
+    Column(
+        modifier = modifier
+            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .contextClick(onLongPress),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .thumbnailBorder(shape),
+        ) {
+            AsyncImage(
+                model = item.thumbnailUrl.artworkAt(ROW_ART_PX),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = item.subtitle.ifBlank {
+                item.type.name.lowercase(Locale.ROOT).replaceFirstChar { it.uppercase(Locale.ROOT) }
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
 
 /** The unfiltered page is useful only when its mixed result types are readable at a glance. */
 private fun searchSections(rows: List<SearchResult>, filter: SearchFilter): List<SearchSection> {
@@ -532,16 +654,20 @@ private fun TopResultCard(
             .fillMaxWidth()
             .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 18.dp, bottom = 8.dp)
             .clip(cardShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
-            .border(0.5.dp, MaterialTheme.colorScheme.outline, cardShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, cardShape)
             .padding(18.dp)
             .longPressMenuClickable(onClick = onPlay, onLongClick = onLongPress)
             .contextClick(onLongPress),
     ) {
         Text(
-            text = "TOP RESULT",
+            text = "BEST MATCH",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
+                .padding(horizontal = 10.dp, vertical = 5.dp),
         )
         Spacer(Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -549,7 +675,7 @@ private fun TopResultCard(
                 model = song.thumbnailUrl?.artworkAt(ROW_ART_PX),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.trackArtSize(84.dp, song.isVideo).clip(RoundedCornerShape(18.dp)),
+                modifier = Modifier.trackArtSize(96.dp, song.isVideo).clip(RoundedCornerShape(22.dp)),
             )
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
@@ -579,6 +705,7 @@ private fun TopResultCard(
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(
                 onClick = onPlay,
+                shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -590,6 +717,7 @@ private fun TopResultCard(
             }
             OutlinedButton(
                 onClick = onPlaylist,
+                shape = CircleShape,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
             ) {
                 Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = null)
@@ -836,41 +964,62 @@ private fun LazyListScope.recentSearches(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = PAGE_GUTTER, vertical = 10.dp),
+                .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 20.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 3.dp, height = 18.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+            Spacer(Modifier.width(9.dp))
             Text(
                 text = stringResource(Res.string.recent_searches),
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.weight(1f),
             )
             Text(
                 text = stringResource(Res.string.clear),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(percent = 50))
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable(onClick = onClear)
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
             )
         }
     }
-    items(history, key = { "recent:${it.id}" }) { entity ->
-        // A recent track gets the same menu and swipe as a result row, so it can
-        // be queued without interrupting what's playing. The ids an old build
-        // saved as raw queries ("q:…") have no track behind them.
-        val song = entity.toSong()
-        RecentSearchEntityRow(
-            entity = entity,
-            isCurrent = entity.entityType == EntityType.TRACK && entity.id == currentSong?.videoId,
-            isPlaying = isPlaying,
-            onClick = { onClick(entity) },
-            onLongPress = song?.let { { onSongLongPress(it) } },
-            onRemove = { onRemove(entity.id) },
-            onSwipeToQueue = song?.let { { onSongSwipe(it) } },
-        )
+    history.chunked(2).forEachIndexed { rowIndex, row ->
+        item(key = "recent:row:$rowIndex") {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = PAGE_GUTTER, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                row.forEach { entity ->
+                    // A recent track gets the same menu and swipe as a result
+                    // row, so it can be queued without interrupting playback.
+                    val song = entity.toSong()
+                    RecentSearchEntityRow(
+                        entity = entity,
+                        isCurrent = entity.entityType == EntityType.TRACK &&
+                            entity.id == currentSong?.videoId,
+                        isPlaying = isPlaying,
+                        onClick = { onClick(entity) },
+                        onLongPress = song?.let { { onSongLongPress(it) } },
+                        onRemove = { onRemove(entity.id) },
+                        onSwipeToQueue = song?.let { { onSongSwipe(it) } },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
     }
 }
 
@@ -961,70 +1110,90 @@ private fun RecentSearchEntityRow(
     onLongPress: (() -> Unit)?,
     onRemove: () -> Unit,
     onSwipeToQueue: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
+    val shape = RoundedCornerShape(16.dp)
     SwipeToQueueBox(
         onSwipeToQueue = onSwipeToQueue,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
                 .longPressMenuClickable(
                     onClick = onClick,
                     onLongClick = onLongPress,
-                    liftPadding = PaddingValues(start = PAGE_GUTTER, end = 8.dp),
+                    liftPadding = PaddingValues(horizontal = PAGE_GUTTER),
                 )
                 .contextClick(onLongPress)
-                .padding(start = PAGE_GUTTER, end = 8.dp, top = 6.dp, bottom = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(10.dp),
         ) {
-            Box(Modifier.size(52.dp)) {
-                AsyncImage(
-                    model = entity.artworkUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .thumbnailBorder(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (entity.artworkUrl != null) {
+                    AsyncImage(
+                        model = entity.artworkUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Rounded.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
                 if (isCurrent && isPlaying) {
                     SearchPlayingBars(Modifier.align(Alignment.Center))
                 }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.78f))
+                        .clickable(onClick = onRemove),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = stringResource(Res.string.recent_search_remove, entity.title),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(15.dp),
+                    )
+                }
             }
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = entity.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = entity.subtitle.ifBlank { entity.entityType.name.lowercase(Locale.ROOT).replaceFirstChar { it.uppercase(Locale.ROOT) } },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onRemove),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Rounded.Close,
-                    contentDescription = stringResource(Res.string.recent_search_remove, entity.title),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = entity.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = entity.subtitle.ifBlank {
+                    entity.entityType.name.lowercase(Locale.ROOT)
+                        .replaceFirstChar { it.uppercase(Locale.ROOT) }
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -1076,6 +1245,73 @@ private fun BrowseRow(item: BrowseItem, onClick: () -> Unit, onLongPress: (() ->
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+/** A submitted search that genuinely found nothing, without dropping the field. */
+@Composable
+private fun SearchNoResultsState(query: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 36.dp, vertical = 44.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(26.dp),
+            )
+        }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            text = stringResource(Res.string.search_no_results, query),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+/** The blank search page: one deliberate invitation instead of an orphaned sentence. */
+@Composable
+private fun SearchBlankState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 36.dp, vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(76.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(30.dp),
+            )
+        }
+        Spacer(Modifier.height(18.dp))
+        Text(
+            text = stringResource(Res.string.search_empty),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

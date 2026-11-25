@@ -3,16 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // The extension trusts https://bitchord.in only (web/extension/site.config.ts),
-      // so www goes there before anything loads, keeping its path and query.
-      if (location.hostname === 'www.bitchord.in') location.replace('https://bitchord.in' + location.pathname + location.search + location.hash);
+      // One canonical host: bare it is, and www goes there before anything
+      // loads, keeping the path and query. Domain-agnostic, so a fork that
+      // deploys elsewhere gets the same behaviour without editing this file.
+      if (location.hostname.startsWith('www.')) {
+        location.replace(location.protocol + '//' + location.hostname.slice(4) + location.pathname + location.search + location.hash);
+      }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f1f1f" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
-    <title>MusoPhone</title>
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f5f8" />
+
+    <title>MusoPhone — Premium music, uninterrupted</title>
+    <meta
+      name="description"
+      content="MusoPhone is an independent, premium music player for the web, Android and your browser: your library, synced and translated lyrics, playlists and lossless playback in one quiet interface."
+    />
+    <link rel="canonical" href="https://musophone.vercel.app/" />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Social sharing: the card in public/og-image.png, rendered from scripts/brand/og-image.html. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MusoPhone" />
+    <meta property="og:title" content="MusoPhone — Premium music, uninterrupted" />
+    <meta
+      property="og:description"
+      content="An independent, premium music player for the web, Android and your browser. Your library, lyrics, playlists and lossless playback in one quiet interface."
+    />
+    <meta property="og:url" content="https://musophone.vercel.app/" />
+    <meta property="og:image" content="https://musophone.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="MusoPhone — music, uninterrupted" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MusoPhone — Premium music, uninterrupted" />
+    <meta
+      name="twitter:description"
+      content="An independent, premium music player for the web, Android and your browser."
+    />
+    <meta name="twitter:image" content="https://musophone.vercel.app/og-image.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "MusoPhone",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Android, Web",
+        "url": "https://musophone.vercel.app/",
+        "description": "An independent, premium music player for the web, Android and your browser.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+        "image": "https://musophone.vercel.app/og-image.png"
+      }
+    </script>
+
     <!-- DM Sans is the app's typeface (web/docs/apple-music-dom.md, "Font"). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

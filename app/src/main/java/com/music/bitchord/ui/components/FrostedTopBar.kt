@@ -17,6 +17,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -74,6 +77,7 @@ import kotlinx.coroutines.launch
 import com.music.bitchord.R
 import com.music.bitchord.data.model.Account
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.ui.icons.MusoIcons
 import com.music.bitchord.ui.theme.stableStatusBarInsets
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -513,31 +517,45 @@ private fun artworkPageSurface(
 }
 
 /**
- * The account affordance at the right end of the bar.
+ * The Profile affordance at the right end of the bar.
  *
- * It is the signed-in Google account's own photo — the same one YouTube Music
- * shows there — and tapping it opens Settings, where the account lives. Signed
- * out, or before the account menu has come back, it falls back to a person
- * glyph on a filled circle so the tap target never disappears.
+ * v2.5 replaced the account photograph here with the app's own profile glyph.
+ * The photo was a menu in an earlier version and a settings shortcut in the
+ * last one; it read as an account switcher wherever it appeared, and put a
+ * second portrait next to the one Home already drew. The glyph is the same
+ * shape on every page, opens the Profile *page* rather than a menu, and leaves
+ * the account's picture where it belongs — on that page, at full size.
  *
- * The hairline ring is what keeps a photo with light edges from dissolving into
- * the bar's glass; it is the same one thumbnails elsewhere carry.
+ * The surface and hairline are the same pair [MusoIconButton] uses, so this
+ * reads as one of the app's controls rather than as a piece of chrome.
  */
 @Composable
 fun TopBarAccountButton(
-    account: Account?,
+    @Suppress("UNUSED_PARAMETER") account: Account?,
     onClick: () -> Unit,
     onSwipeProfile: ((forward: Boolean) -> Boolean)? = null,
     modifier: Modifier = Modifier,
 ) {
     val translation = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
-    // Wrapped in an IconButton so it keeps the touch target, the ripple and the
-    // spacing every other action in this bar has.
-    IconButton(
-        onClick = onClick,
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.9f else 1f,
+        animationSpec = tween(90),
+        label = "profile-button-press",
+    )
+    Box(
         modifier = modifier
-            .graphicsLayer { translationY = translation.value }
+            .size(PROFILE_BUTTON_SIZE)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                translationY = translation.value
+            }
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .thumbnailBorder(CircleShape)
             .pointerInput(onSwipeProfile) {
                 if (onSwipeProfile == null) return@pointerInput
                 var drag = 0f
@@ -551,36 +569,20 @@ fun TopBarAccountButton(
                         }
                     },
                 )
-            },
-    ) {
-        val photo = account?.thumbnailUrl
-        if (photo != null) {
-            AsyncImage(
-                model = photo,
-                contentDescription = stringResource(R.string.switch_account),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(AVATAR_SIZE)
-                    .clip(CircleShape)
-                    .thumbnailBorder(CircleShape),
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(AVATAR_SIZE)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .thumbnailBorder(CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Rounded.Person,
-                    contentDescription = stringResource(R.string.switch_account),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp),
-                )
             }
-        }
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = MusoIcons.Profile,
+            contentDescription = stringResource(R.string.profile_title),
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(19.dp),
+        )
     }
 }
 
@@ -685,4 +687,4 @@ private val PUCK_OVERSHOOT = 20.dp
  * Smaller than an icon's 24dp box: a filled circle carries more weight than a
  * glyph does, and at 24 it sat heavier in the bar than the wordmark opposite it.
  */
-private val AVATAR_SIZE = 28.dp
+private val PROFILE_BUTTON_SIZE = 32.dp
