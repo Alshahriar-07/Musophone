@@ -605,8 +605,8 @@ internal fun CurrentLyricStrip(
     onClick: () -> Unit,
 ) {
     // Compute the active lyric text so we can determine RTL direction at the
-    // strip level.  This lets us override the parent Column's forced
-    // CenterHorizontally alignment and flush RTL lines to the right edge.
+    // strip level — the local layout direction below follows the line's own
+    // script, so the chevron and the sweep fall on the side the words run to.
     val isSynced = remember(lines) { lines.any { it.timeMs > 0L } }
     var stripRtl by remember { mutableStateOf(false) }
     var activeText by remember { mutableStateOf("") }
@@ -629,7 +629,12 @@ internal fun CurrentLyricStrip(
         stripRtl = isRtl(activeText)
     }
 
-    val align: Alignment = if (stripRtl) Alignment.CenterStart else Alignment.CenterStart
+    // v3.1: centred, above the scrubber. The line used to start at the page's
+    // left edge, which put the one piece of text in the player that is about
+    // the song at the edge of the glass; centred, it sits under the sleeve it
+    // belongs to and reads as the player's own line rather than as a label on
+    // the seek bar.
+    val align: Alignment = Alignment.Center
 
     CompositionLocalProvider(LocalLayoutDirection provides if (stripRtl) LayoutDirection.Rtl else LayoutDirection.Ltr) {
         Box(
@@ -2801,8 +2806,20 @@ private fun LyricLine.withoutBracketPunctuation(): LyricLine = copy(
 
 private fun String.stripParens(): String = replace("(", "").replace(")", "").trim()
 
-/** The strip's fixed line box — about what Latin type at 16sp makes of itself. */
-private val STRIP_LINE_HEIGHT = 23.sp
+/**
+ * The strip's fixed line box.
+ *
+ * v3.1 grows the strip from the 18sp titleMedium it inherited: one line at the
+ * foot of a half-player is the only lyric most listeners ever read there, and at
+ * 18sp it read as a caption under the artwork rather than as the song. The box
+ * is declared here and read by the player, so the strip and the slot it sits in
+ * cannot disagree about how tall a line is — see [lyricSlotHeight] in
+ * NowPlayingScreen.
+ */
+internal val STRIP_LINE_HEIGHT = 27.sp
+
+/** The strip's type size, on the box above. */
+internal val STRIP_FONT_SIZE = 21.sp
 
 /** How much of a line's own length it spends fading out at the end, clamped to this range. */
 private const val LYRIC_FADE_FRACTION = 0.28f
@@ -2831,7 +2848,7 @@ private fun CurrentLyricLine(
     // Gurmukhi line is taller than a Latin one and the credits and artwork
     // above this strip shift up and down as lines change language.
     val stripStyle = MaterialTheme.typography.titleMedium.copy(
-        fontSize = 18.sp,
+        fontSize = STRIP_FONT_SIZE,
         lineHeight = STRIP_LINE_HEIGHT,
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,

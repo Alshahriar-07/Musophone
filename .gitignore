@@ -51,3 +51,5 @@ AGENTS.md
 # Claude Code session files (launch configs, worktrees)
 .claude/
 release/
+# Build-only JDK used by the release scripts on this machine
+.jdk/

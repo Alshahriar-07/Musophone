@@ -194,6 +194,12 @@ fun FloatingBottomBar(
     onActiveTabTap: () -> Unit = {},
 ) {
     val pillShape = RoundedCornerShape(percent = 50)
+    // v3.2: a full-width glass dock attached to the bottom edge. Only its top
+    // corners are rounded — the bottom is the screen's own edge, so there is
+    // no floating gap and no black strip beneath it. The surface runs all the
+    // way into the gesture area; only the *content* is inset above the system
+    // navigation bar, which is what keeps the glass behind the gesture hint.
+    val dockShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
     val container = MaterialTheme.colorScheme.surface
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
@@ -259,39 +265,35 @@ fun FloatingBottomBar(
 
     Box(
         modifier = modifier
-            // Full width and flush with the bottom edge: this is the app's
-            // navigation surface, not a card floating over the page. The
-            // background runs behind the system navigation area; the content
-            // above is inset from it, so labels never sit under the gesture
-            // bar while the surface still reaches the screen's edge.
             .fillMaxWidth()
             .then(
                 if (reduceDynamicBlur) {
-                    Modifier.background(container)
+                    Modifier.clip(dockShape).background(container)
                 } else if (useGlass) {
-                    Modifier.liquidGlass(shape = RoundedCornerShape(0.dp))
+                    Modifier.liquidGlass(shape = dockShape)
                 } else {
-                    Modifier.optimizedHazeEffect(
-                        state = hazeState,
-                        style = HazeMaterials.regular(container),
-                    )
+                    Modifier
+                        .clip(dockShape)
+                        .optimizedHazeEffect(
+                            state = hazeState,
+                            style = HazeMaterials.regular(container),
+                        )
                 },
             )
-            // One hairline along the top edge instead of a border on all four:
-            // the surface is continuous with the page above it, and only the
-            // boundary needs drawn.
-            .drawBehind {
-                val stroke = 0.5.dp.toPx()
-                drawLine(
-                    color = GLASS_EDGE_COLOR,
-                    start = Offset(0f, stroke / 2f),
-                    end = Offset(size.width, stroke / 2f),
-                    strokeWidth = stroke,
-                )
-            }
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 4.dp, vertical = TAB_VERTICAL_PADDING),
+            // The film and its lit rim, brightest along the top edge — the rim
+            // is the only thing separating the dock from the page, so it has
+            // to read as a lit lip rather than a border.
+            .musoGlassSurface(dockShape, depth = 0.55f, body = 0.14f),
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                // The glass reaches the screen edge; the tabs stop above the
+                // gesture hint. One inset, applied inside the surface, so
+                // nothing is painted over the system bar's area except glass.
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 4.dp, vertical = TAB_VERTICAL_PADDING),
+        ) {
         if (tabWidthPx > 0f) {
             // The selection is a compact capsule inside the tab's cell rather
             // than the whole cell: it reads as something resting under the
@@ -318,7 +320,7 @@ fun FloatingBottomBar(
                     // an Ocean one look blue at a glance. v2.6 keeps it quieter
                     // than v2.5's: the indicator says "here", and the glyph and
                     // its label are what say which destination that is.
-                    .background(accentPalette.accent.copy(alpha = 0.09f)),
+                    .background(accentPalette.accent.copy(alpha = 0.16f)),
             )
         }
 
@@ -389,6 +391,7 @@ fun FloatingBottomBar(
                     modifier = Modifier.weight(1f),
                 )
             }
+        }
         }
     }
 }

@@ -109,15 +109,20 @@ fun MusoAccentTheme.palette(dark: Boolean): MusoAccentPalette {
         // the backdrop, which is what made every theme look like a different
         // colour of smoke; it now lives in the controls, glows and active
         // states over one shared, genuinely dark base.
-        backdropTop = if (dark) Color(0xFF000000) else Color(0xFFF7F5F8),
-        backdropBottom = if (dark) Color(0xFF000000) else Color(0xFFF2EFF3),
-        glassTint = if (dark) Color.White.copy(alpha = 0.035f) else Color.White.copy(alpha = 0.42f),
+        // v3.1 correction: a flat pure-black field is what made every screen
+        // read as "black app with grey boxes". The dark base is now a shallow
+        // vertical wash — near-black at the foot, a breath of charcoal at the
+        // head — so a translucent panel has something to sit *on* rather than
+        // something to disappear into. Still dark enough for AMOLED phones.
+        backdropTop = if (dark) Color(0xFF0B0B11) else Color(0xFFF7F5F8),
+        backdropBottom = if (dark) Color(0xFF040406) else Color(0xFFF2EFF3),
+        glassTint = if (dark) Color.White.copy(alpha = 0.07f) else Color.White.copy(alpha = 0.42f),
         glassBorder = if (dark) {
-            lerp(Color.White.copy(alpha = 0.09f), accent, 0.20f)
+            lerp(Color.White.copy(alpha = 0.18f), accent, 0.24f)
         } else {
             lerp(Color.Black.copy(alpha = 0.08f), accent, 0.22f)
         },
-        navGlow = accent.copy(alpha = if (dark) 0.24f else 0.20f),
+        navGlow = accent.copy(alpha = if (dark) 0.30f else 0.20f),
     )
 }
 
@@ -133,12 +138,15 @@ fun MusoAccentTheme.colorScheme(dark: Boolean): ColorScheme {
     val base = p.backdropTop
     // AMOLED surfaces are neutral: charcoal steps on black. Surfaces, type and
     // spacing are the same in every theme; only the accent roles move.
-    val surface = if (dark) Color(0xFF0A0A0C) else lerp(Color(0xFFFFFCFD), p.accent, 0.012f)
-    val surfaceHigh = if (dark) Color(0xFF161619) else lerp(Color(0xFFF1EDF0), p.accent, 0.075f)
+    // v3.1 correction: three neutral charcoal steps above a near-black ground.
+    // The old #111114 was close enough to the base to read as a hole; these
+    // steps are what let a glass panel's lit edge and gradient be seen at all.
+    val surface = if (dark) Color(0xFF16161C) else lerp(Color(0xFFFFFCFD), p.accent, 0.012f)
+    val surfaceHigh = if (dark) Color(0xFF202028) else lerp(Color(0xFFF1EDF0), p.accent, 0.075f)
     val onBase = lerp(if (dark) Color(0xFFF7F7F9) else Color(0xFF1A1418), p.accent, 0.02f)
     val onSurfaceVariant = lerp(if (dark) Color(0xFFA4A4AC) else Color(0xFF6C5F66), p.accent, 0.06f)
-    val outline = if (dark) Color(0xFF2A2A30) else lerp(base, p.accent, 0.30f)
-    val outlineVariant = if (dark) Color(0xFF1B1B20) else lerp(base, p.accent, 0.17f)
+    val outline = if (dark) Color(0xFF3A3A45) else lerp(base, p.accent, 0.30f)
+    val outlineVariant = if (dark) Color(0xFF2A2A33) else lerp(base, p.accent, 0.17f)
     val container = lerp(Color(0xFF101014), p.accent, if (dark) 0.22f else 0.14f)
     val onContainer = if (dark) lerp(Color.White, p.accent, 0.28f) else lerp(Color(0xFF140F12), p.accent, 0.20f)
     return if (dark) {
@@ -154,7 +162,7 @@ fun MusoAccentTheme.colorScheme(dark: Boolean): ColorScheme {
             onSecondaryContainer = onContainer,
             tertiary = p.accentSecondary,
             onTertiary = p.accentSecondary.onColorFor(),
-            background = Color(0xFF000000),
+            background = Color(0xFF07070B),
             onBackground = onBase,
             surface = surface,
             onSurface = onBase,
@@ -212,16 +220,16 @@ fun MusoAccentTheme.colorScheme(dark: Boolean): ColorScheme {
 fun MusoAccentTheme.backdropBrush(dark: Boolean): Brush {
     val p = palette(dark)
     return Brush.verticalGradient(
-        0f to p.backdropTop,
-        0.55f to lerp(p.backdropTop, p.backdropBottom, 0.75f),
+        0f to lerp(p.backdropTop, p.accent, if (dark) 0.035f else 0.01f),
+        0.45f to lerp(p.backdropTop, p.backdropBottom, 0.45f),
         1f to p.backdropBottom,
     )
 }
 
-/** A raised panel over the AMOLED base: one charcoal step, not a glass sheet. */
+/** A raised panel over the near-black base: one charcoal step, not a glass sheet. */
 fun MusoAccentTheme.elevatedSurface(dark: Boolean): Color {
     val p = palette(dark)
-    return if (dark) lerp(Color(0xFF121215), p.accent, 0.025f) else Color(0xFFFFFCFD)
+    return if (dark) lerp(Color(0xFF191920), p.accent, 0.025f) else Color(0xFFFFFCFD)
 }
 
 /** The soft accent halo drawn behind the content, at the top of the app. */
@@ -229,7 +237,7 @@ fun MusoAccentTheme.glowBrush(dark: Boolean): Brush {
     val p = palette(dark)
     return Brush.radialGradient(
         colors = listOf(
-            p.accent.copy(alpha = if (dark) 0.09f else 0.10f),
+            p.accent.copy(alpha = if (dark) 0.16f else 0.10f),
             Color.Transparent,
         ),
     )

@@ -91,11 +91,18 @@ class MusoAccentThemeTest {
     }
 
     @Test
-    fun `dark appearance is true black with neutral charcoal surfaces`() {
+    fun `dark appearance is a deep ground with neutral charcoal surfaces`() {
         val black = Color(0xFF000000)
         for (theme in MusoAccentTheme.entries) {
             val scheme = theme.colorScheme(dark = true)
-            assertEquals("$theme dark background", black, scheme.background)
+            // v3.1 correction: the ground is near-black rather than a flat
+            // #000 field, so translucent glass has something to sit on. It has
+            // to stay dark enough to read as the app's black foundation.
+            assertTrue("$theme dark background must not be flat black", scheme.background != black)
+            assertTrue(
+                "$theme dark background must stay near-black",
+                luminance(scheme.background) < 0.004,
+            )
             assertTrue("$theme surface must sit above black", luminance(scheme.surface) > 0.0)
             assertTrue(
                 "$theme surface must not be a tinted wash",

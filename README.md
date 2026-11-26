@@ -35,16 +35,19 @@ True-black AMOLED design · hi-res audio · word-synced lyrics</p>
 
 <div align="center">
 
-<h2><a id="whats-new"></a>What's new in 2.7</h2>
+<h2><a id="whats-new"></a>What's new in 3.2</h2>
 
-<p><sub>Version code <b>51</b> · released 25 November 2026 · <a href="release/v2.7/RELEASE_NOTES.md">release notes</a></sub></p>
+<p><sub>Version code <b>53</b> · released 26 November 2026 · <a href="release/v3.2/RELEASE_NOTES.md">release notes</a></sub></p>
 
 | | Change |
 | :-- | :-- |
-| **Home** | The masthead lockup is a touch larger and sits further left, at its original aspect ratio. |
-| **Player** | The enclosing black panel around the controls is gone — the lyric line, timeline, transport, volume, modes, actions and output label now sit directly on the player's own backdrop. |
+| **Ambient backdrop** | One shared, slowly drifting Liquid Glass gradient — near-black, MusoPhone accent, muted violet and a whisper of white — behind every page, sampled by the glass. Stops when backgrounded or under "Reduce animation". |
+| **Bottom navigation** | A full-width glass dock attached to the screen edge. No floating capsule, no side gaps, no strip beneath it; the tabs are inset for the gesture bar and the glass runs to the edge. |
+| **Mini player** | Much more transparent: 10% body over the ultra-thin frost, with a lit rim, so the ambient wash and artwork show through. |
+| **Updates** | Complete in-app updates from the official GitHub Releases: release check, update popup, Skip for 1 Day, background WorkManager download, SHA-256/package/signature verification and Android's installer. |
+| **Settings** | A quiet Updates section: installed version, check now, automatic checks and the last successful check. |
 
-<p><sub>Playback, queue, lyrics, routing and every existing feature are unchanged.</sub></p>
+<p><sub>Playback, queue, lyrics, routing, the player's artwork background and every existing feature are unchanged.</sub></p>
 
 </div>
 
@@ -119,7 +122,7 @@ True-black AMOLED design · hi-res audio · word-synced lyrics</p>
 
 <a href="https://github.com/Alshahriar-07/Musophone/releases" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/supported/android/cozy.svg" alt="Download for Android" height="52"/></a>
 
-<p><sub><b>MusoPhone 2.7</b> · version code 51 · Android 8.0 (API 26) or newer · signed with the same certificate as 2.6</sub></p>
+<p><sub><b>MusoPhone 3.1</b> · version code 52 · Android 8.0 (API 26) or newer · signed with the same certificate as 2.7</sub></p>
 
 </div>
 
@@ -127,12 +130,12 @@ Grab the latest signed APK from the [Releases](https://github.com/Alshahriar-07/
 
 | APK | Architecture | Size |
 | :-- | :-- | --: |
-| [`MusoPhone-v2.7.apk`](release/v2.7/MusoPhone-v2.7.apk) | universal (arm64-v8a + armeabi-v7a + x86_64) | 84.3 MB |
-| [`MusoPhone-v2.7-arm64-v8a.apk`](release/v2.7/MusoPhone-v2.7-arm64-v8a.apk) | arm64-v8a | 46.9 MB |
-| [`MusoPhone-v2.7-armeabi-v7a.apk`](release/v2.7/MusoPhone-v2.7-armeabi-v7a.apk) | armeabi-v7a | 40.2 MB |
-| [`MusoPhone-v2.7-x86_64.apk`](release/v2.7/MusoPhone-v2.7-x86_64.apk) | x86_64 | 49.4 MB |
+| [`MusoPhone-v3.1.apk`](release/v3.1/MusoPhone-v3.1.apk) | universal (arm64-v8a + armeabi-v7a + x86_64) | 84.3 MB |
+| [`MusoPhone-v3.1-arm64-v8a.apk`](release/v3.1/MusoPhone-v3.1-arm64-v8a.apk) | arm64-v8a | 46.9 MB |
+| [`MusoPhone-v3.1-armeabi-v7a.apk`](release/v3.1/MusoPhone-v3.1-armeabi-v7a.apk) | armeabi-v7a | 40.2 MB |
+| [`MusoPhone-v3.1-x86_64.apk`](release/v3.1/MusoPhone-v3.1-x86_64.apk) | x86_64 | 49.4 MB |
 
-<sub>Sums: [`SHA256SUMS.txt`](release/v2.7/SHA256SUMS.txt) · build details: [`build-info.txt`](release/v2.7/build-info.txt) · notes: [`RELEASE_NOTES.md`](release/v2.7/RELEASE_NOTES.md) · history: [`CHANGELOG.md`](CHANGELOG.md)</sub>
+<sub>Sums: [`SHA256SUMS.txt`](release/v3.1/SHA256SUMS.txt) · build details: [`build-info.txt`](release/v3.1/build-info.txt) · notes: [`RELEASE_NOTES.md`](release/v3.1/RELEASE_NOTES.md) · history: [`CHANGELOG.md`](CHANGELOG.md)</sub>
 
 Project website: <https://musophone.vercel.app>
 

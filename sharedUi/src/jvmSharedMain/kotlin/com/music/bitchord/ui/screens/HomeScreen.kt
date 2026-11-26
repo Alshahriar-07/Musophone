@@ -9,6 +9,8 @@ import org.jetbrains.compose.resources.DrawableResource
 import androidx.compose.foundation.Image
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,9 +57,13 @@ import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -87,6 +93,7 @@ import java.util.Locale
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.PAGE_GUTTER
+import com.music.bitchord.ui.components.PAGE_HEADER_LIFT
 import com.music.bitchord.ui.components.RowMoreButton
 import com.music.bitchord.ui.components.MusoV26
 import com.music.bitchord.ui.components.PullToRefresh
@@ -106,20 +113,14 @@ import com.music.bitchord.ui.player.PlayerSettings
 /**
  * How much of the page's top inset the masthead takes back.
  *
- * The page is handed padding that clears the whole floating bar — its 52dp of
- * content and the 12dp gap under it. Home draws the top of the page itself (the
- * lockup, the heading and the listener), so it does not need to clear a bar it
- * starts underneath: it pulls the feed up by the bar's content height, then adds
- * back [HOME_MASTHEAD_TOP] so the mark still rests a comfortable distance under
- * the status bar rather than against it.
+ * The page is handed padding that clears the whole floating bar, but Home draws
+ * the top of the page itself (the lockup, the heading and the listener), so it
+ * does not need to clear a bar it starts underneath. [PAGE_HEADER_LIFT] is that
+ * pull-back: the bar's content height less the breathing room the mark keeps
+ * under the status bar. Explore and Library use the same value, so all three
+ * tabs open at one height.
  */
-private val HOME_BAR_CONTENT_HEIGHT = 52.dp
-
-/** The breathing room between the status bar and the top of the masthead's mark. */
-private val HOME_MASTHEAD_TOP = 8.dp
-
-/** How far the Listen now heading and feed sit above the shared top inset. */
-private val HOME_TITLE_LIFT = HOME_BAR_CONTENT_HEIGHT + 12.dp - HOME_MASTHEAD_TOP
+private val HOME_TITLE_LIFT = PAGE_HEADER_LIFT
 
 /**
  * How far the masthead's ambient wash reaches down the page. Past this the feed
@@ -377,6 +378,7 @@ private fun RecentShelf(
             ShelfRow(
                 contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.pagerEdgeFade(),
             ) {
                 items(shelf.items.chunked(RECENT_TRACKS_PER_COLUMN)) { column ->
                     Column(Modifier.width(columnWidth)) {
@@ -392,6 +394,41 @@ private fun RecentShelf(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Softens the trailing edge of the Recents pager.
+ *
+ * The pager shows the next column of four songs partly on screen on purpose — a
+ * row that ends flush with the screen gives no sign that it scrolls. What it
+ * showed, though, was one 44dp sleeve and a slice of its title cut off
+ * mid-word by the edge of the glass, which reads as a row that broke rather
+ * than as a page waiting to the right. Fading the last 28dp turns the peek
+ * into a continuation: the artwork comes out of the background instead of being
+ * lopped off by it. Mirrored under RTL, where the next page is on the left.
+ */
+@Composable
+private fun Modifier.pagerEdgeFade(): Modifier {
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    // Its own layer, or the mask would blend against everything already painted
+    // on the page — the feed's backdrop included — and punch a transparent hole
+    // through the screen instead of fading the row into it.
+    return this
+        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+        drawContent()
+        val fade = 28.dp.toPx().coerceAtMost(size.width * 0.2f)
+        if (fade > 0f) {
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color.Black, Color.Transparent),
+                    startX = if (rtl) fade else size.width - fade,
+                    endX = if (rtl) 0f else size.width,
+                ),
+                blendMode = BlendMode.DstIn,
+            )
         }
     }
 }
@@ -575,7 +612,11 @@ private fun HomeTitle(
     // v2.7: the lockup a touch larger and a touch further left than v2.6's
     // 22 dp flush with the page gutter. Only the mark moves: the heading below
     // keeps the gutter it shares with every other page.
-    val logoHeight = 26.dp
+    // v3.1 correction: the masthead was still reading as a chip beside the
+    // avatar. One and a half times the previous 34dp puts the wordmark at the
+    // weight of a title, without changing the avatar opposite it.
+    // [LOGO_ASPECT] fixes the width, so the mark cannot stretch.
+    val logoHeight = 51.dp
     // Read outside the draw lambda: a draw scope is not a composable scope.
     val accent = MaterialTheme.colorScheme.primary
     Column(
@@ -594,7 +635,7 @@ private fun HomeTitle(
                 )
             }
             // No top padding of its own: [HOME_TITLE_LIFT] already leaves the
-            // mark [HOME_MASTHEAD_TOP] under the status bar, and adding more
+            // mark 8dp under the status bar, and adding more
             // here only pushed the heading away from the top of the page.
             .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, bottom = 6.dp),
     ) {
@@ -607,7 +648,7 @@ private fun HomeTitle(
                     .offset(x = (-6).dp)
                     .height(logoHeight)
                     .aspectRatio(LOGO_ASPECT)
-                    .widthIn(max = 156.dp),
+                    .widthIn(max = 306.dp),
             )
             Spacer(Modifier.weight(1f))
             if (replayYear != null) {

@@ -987,33 +987,26 @@ private fun LazyListScope.recentSearches(
             )
         }
     }
-    history.chunked(2).forEachIndexed { rowIndex, row ->
-        item(key = "recent:row:$rowIndex") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = PAGE_GUTTER, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                row.forEach { entity ->
-                    // A recent track gets the same menu and swipe as a result
-                    // row, so it can be queued without interrupting playback.
-                    val song = entity.toSong()
-                    RecentSearchEntityRow(
-                        entity = entity,
-                        isCurrent = entity.entityType == EntityType.TRACK &&
-                            entity.id == currentSong?.videoId,
-                        isPlaying = isPlaying,
-                        onClick = { onClick(entity) },
-                        onLongPress = song?.let { { onSongLongPress(it) } },
-                        onRemove = { onRemove(entity.id) },
-                        onSwipeToQueue = song?.let { { onSongSwipe(it) } },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                if (row.size == 1) Spacer(Modifier.weight(1f))
-            }
-        }
+    // v3.1: one row per entity. These were a two-up grid of full-width square
+    // covers — two artists and the rest of the page below the fold, on the one
+    // screen whose whole job is to get somebody to their results quickly. A
+    // recent search is a shortcut, so it is drawn the size of a shortcut: the
+    // same 52dp thumbnail and two lines of text as a catalogue row on the
+    // results themselves, which is also what the Addons tab's recents are.
+    items(history, key = { "recent:${it.entityType}:${it.id}" }) { entity ->
+        // A recent track gets the same menu and swipe as a result row, so it
+        // can be queued without interrupting playback.
+        val song = entity.toSong()
+        RecentSearchEntityRow(
+            entity = entity,
+            isCurrent = entity.entityType == EntityType.TRACK &&
+                entity.id == currentSong?.videoId,
+            isPlaying = isPlaying,
+            onClick = { onClick(entity) },
+            onLongPress = song?.let { { onSongLongPress(it) } },
+            onRemove = { onRemove(entity.id) },
+            onSwipeToQueue = song?.let { { onSongSwipe(it) } },
+        )
     }
 }
 
@@ -1025,26 +1018,33 @@ private fun LazyListScope.recentAddonSearches(
     onClear: () -> Unit,
 ) {
     item(key = "addon-recent:header") {
+        // The same heading and the same Clear control as the YouTube and Library
+        // tabs' recents: one tab's history should not announce itself in a
+        // different size from another's.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = PAGE_GUTTER, vertical = 10.dp),
+                .padding(start = PAGE_GUTTER, end = PAGE_GUTTER, top = 16.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(Res.string.recent_searches),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = stringResource(Res.string.clear),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(percent = 50))
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable(onClick = onClear)
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
             )
         }
     }
@@ -1090,9 +1090,13 @@ private fun LazyListScope.recentAddonSearches(
 }
 
 /**
- * Spotify-style entity row: square thumbnail, bold title, subtitle with type,
- * and a removal button. Tapping navigates to the entity or plays it directly;
- * holding a track opens its menu.
+ * One recent search: the artwork, the name, what kind of thing it is, and a
+ * button that forgets it. Laid out as a catalogue row rather than as a card,
+ * so ten of them cost about what four of the old tiles did.
+ *
+ * Tapping navigates to the entity or plays it directly; holding a track opens
+ * its menu; swiping it queues it, exactly as the same track in the results
+ * below does.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -1106,31 +1110,31 @@ private fun RecentSearchEntityRow(
     onSwipeToQueue: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(12.dp)
+    // An artist is a face, not a sleeve: the same circle the results list gives
+    // one, so the same artist looks like the same thing in both places.
+    val artShape = if (entity.entityType == EntityType.ARTIST) CircleShape else RoundedCornerShape(8.dp)
     SwipeToQueueBox(
         onSwipeToQueue = onSwipeToQueue,
         modifier = modifier,
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(shape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
                 .longPressMenuClickable(
                     onClick = onClick,
                     onLongClick = onLongPress,
                     liftPadding = PaddingValues(horizontal = PAGE_GUTTER),
                 )
                 .contextClick(onLongPress)
-                .padding(10.dp),
+                .padding(start = PAGE_GUTTER, end = 4.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.background),
+                    .size(52.dp)
+                    .clip(artShape)
+                    .thumbnailBorder(artShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center,
             ) {
                 if (entity.artworkUrl != null) {
@@ -1145,49 +1149,49 @@ private fun RecentSearchEntityRow(
                         imageVector = Icons.Rounded.Search,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(22.dp),
                     )
                 }
                 if (isCurrent && isPlaying) {
                     SearchPlayingBars(Modifier.align(Alignment.Center))
                 }
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.78f))
-                        .clickable(onClick = onRemove),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Rounded.Close,
-                        contentDescription = stringResource(Res.string.recent_search_remove, entity.title),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(15.dp),
-                    )
-                }
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = entity.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = entity.subtitle.ifBlank {
-                    entity.entityType.name.lowercase(Locale.ROOT)
-                        .replaceFirstChar { it.uppercase(Locale.ROOT) }
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = entity.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = entity.subtitle.ifBlank {
+                        entity.entityType.name.lowercase(Locale.ROOT)
+                            .replaceFirstChar { it.uppercase(Locale.ROOT) }
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            // A full 40dp target, styled and placed like the Addons tab's own
+            // remove button so the two lists of recents end the same way.
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onRemove),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Rounded.Close,
+                    contentDescription = stringResource(Res.string.recent_search_remove, entity.title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    modifier = Modifier.size(16.dp),
+                )
+            }
         }
     }
 }

@@ -67,9 +67,8 @@ import com.music.bitchord.ui.components.MusoIconButton
 import com.music.bitchord.ui.components.MusoLoadingState
 import com.music.bitchord.ui.components.MusoPill
 import com.music.bitchord.ui.components.MusoSectionHeading
-import com.music.bitchord.ui.components.MusoStatTile
 import com.music.bitchord.ui.components.MusoTokens
-import com.music.bitchord.ui.components.MusoV26Stat
+import com.music.bitchord.ui.components.musoGlassSurface
 import com.music.bitchord.ui.icons.MusoIcons
 import java.util.Locale
 
@@ -160,7 +159,7 @@ fun ProfileScreen(
                 MusoGlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                        .padding(horizontal = MusoTokens.Gutter, vertical = 8.dp),
                     onClick = onSignIn,
                 ) {
                     Column {
@@ -196,53 +195,75 @@ fun ProfileScreen(
                 val stats = summary ?: return@LazyColumn
 
                 item(key = "profile:stats") {
-                    // v2.6: one panel of four figures instead of four cards of
-                    // their own. Four raised boxes made the numbers look like
-                    // four unrelated things; one panel reads as this listener's
-                    // listening, and takes a third less height.
+                    // v3.1 correction: one figure leads and the rest answer it.
+                    // The old 2×2 of equal numbers read as a table; a hero time
+                    // with a quiet three-up beneath it reads as a page.
                     MusoGlassCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = MusoTokens.Gutter, vertical = 6.dp),
-                        corner = MusoTokens.CardRadius,
-                        contentPadding = 16.dp,
+                        corner = MusoTokens.GroupRadius,
+                        contentPadding = 18.dp,
                     ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                            Row {
-                                MusoV26Stat(
-                                    value = formatListeningTime(stats.totalMs),
-                                    label = stringResource(R.string.profile_listened),
-                                    modifier = Modifier.weight(1f),
-                                )
-                                MusoV26Stat(
-                                    value = stats.distinctSongs.toString(),
-                                    label = stringResource(R.string.profile_songs),
-                                    modifier = Modifier.weight(1f),
+                        Column {
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        text = formatListeningTime(stats.totalMs),
+                                        style = MaterialTheme.typography.headlineLarge,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                    )
+                                    Spacer(Modifier.height(3.dp))
+                                    Text(
+                                        text = stringResource(R.string.profile_listened).uppercase(),
+                                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        maxLines = 1,
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(R.string.profile_plays, stats.totalPlays),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
                                 )
                             }
+                            Spacer(Modifier.height(16.dp))
+                            // A lit hairline rather than a flat rule: it reads as
+                            // the edge of the glass catching light.
                             Box(
                                 Modifier
                                     .fillMaxWidth()
                                     .height(0.5.dp)
-                                    .background(MaterialTheme.colorScheme.outlineVariant),
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(
+                                                Color.Transparent,
+                                                Color.White.copy(alpha = 0.16f),
+                                                Color.Transparent,
+                                            ),
+                                        ),
+                                    ),
                             )
-                            Row {
-                                MusoV26Stat(
+                            Spacer(Modifier.height(16.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                ProfileStat(
+                                    value = stats.distinctSongs.toString(),
+                                    label = stringResource(R.string.profile_songs),
+                                    modifier = Modifier.weight(1f),
+                                )
+                                ProfileStat(
                                     value = stats.distinctArtists.toString(),
                                     label = stringResource(R.string.profile_artists),
                                     modifier = Modifier.weight(1f),
                                 )
-                                MusoV26Stat(
+                                ProfileStat(
                                     value = stats.distinctAlbums.toString(),
                                     label = stringResource(R.string.profile_albums),
                                     modifier = Modifier.weight(1f),
                                 )
                             }
-                            Text(
-                                text = stringResource(R.string.profile_plays, stats.totalPlays),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            )
                         }
                     }
                 }
@@ -263,12 +284,12 @@ fun ProfileScreen(
                             eyebrow = stringResource(R.string.profile_history_eyebrow),
                             action = stringResource(R.string.profile_view_all),
                             onAction = onOpenHistory,
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 8.dp),
+                            modifier = Modifier.padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = MusoTokens.SectionGap, bottom = 8.dp),
                         )
                     }
                     item(key = "profile:recent") {
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            contentPadding = PaddingValues(horizontal = MusoTokens.Gutter),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             items(history.data.take(10)) { song ->
@@ -283,7 +304,7 @@ fun ProfileScreen(
                         MusoSectionHeading(
                             title = stringResource(R.string.profile_top_songs),
                             eyebrow = period.chip,
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 8.dp),
+                            modifier = Modifier.padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = MusoTokens.SectionGap, bottom = 8.dp),
                         )
                     }
                     items(stats.songs.take(5), key = { "song:${it.song.videoId}" }) { ranked ->
@@ -300,12 +321,12 @@ fun ProfileScreen(
                         MusoSectionHeading(
                             title = stringResource(R.string.profile_top_artists),
                             eyebrow = period.chip,
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 10.dp),
+                            modifier = Modifier.padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = MusoTokens.SectionGap, bottom = 10.dp),
                         )
                     }
                     item(key = "profile:artists") {
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            contentPadding = PaddingValues(horizontal = MusoTokens.Gutter),
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
                             items(stats.artists.take(10)) { artist ->
@@ -320,12 +341,12 @@ fun ProfileScreen(
                         MusoSectionHeading(
                             title = stringResource(R.string.profile_top_albums),
                             eyebrow = period.chip,
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 10.dp),
+                            modifier = Modifier.padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = MusoTokens.SectionGap, bottom = 10.dp),
                         )
                     }
                     item(key = "profile:albums") {
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            contentPadding = PaddingValues(horizontal = MusoTokens.Gutter),
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
                             items(stats.albums.take(10)) { album ->
@@ -340,12 +361,12 @@ fun ProfileScreen(
                         MusoSectionHeading(
                             title = stringResource(R.string.profile_top_playlists),
                             eyebrow = period.chip,
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 10.dp),
+                            modifier = Modifier.padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = MusoTokens.SectionGap, bottom = 10.dp),
                         )
                     }
                     item(key = "profile:playlists") {
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            contentPadding = PaddingValues(horizontal = MusoTokens.Gutter),
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
                             items(stats.playlists.take(10)) { playlist ->
@@ -416,9 +437,9 @@ private fun ProfileActions(
 @Composable
 private fun ProfileActionDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 61.dp, end = 14.dp),
+        modifier = Modifier.padding(start = 52.dp, end = 14.dp),
         thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
     )
 }
 
@@ -429,56 +450,23 @@ private fun ProfileHeader(
     onAppSettings: () -> Unit,
 ) {
     val accent = MaterialTheme.colorScheme.primary
+    val shape = RoundedCornerShape(MusoTokens.GroupRadius)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            // One soft wash of the theme's own light behind the portrait, so
-            // the page opens on a lit surface rather than on flat black. It is
-            // the same gesture Home's masthead makes, at the same opacity.
-            .drawBehind {
-                drawRect(
-                    brush = Brush.radialGradient(
-                        colors = listOf(accent.copy(alpha = 0.11f), Color.Transparent),
-                        center = Offset(size.width * 0.12f, 0f),
-                        radius = size.width * 0.95f,
-                    ),
-                )
-            }
-            .padding(start = MusoTokens.Gutter, end = MusoTokens.Gutter, top = 6.dp, bottom = 6.dp),
+            .padding(horizontal = MusoTokens.Gutter)
+            .padding(top = 4.dp),
     ) {
+        // The page's name as an overline, with the app's own settings one tap
+        // away — the same opening every other page makes.
         Row(verticalAlignment = Alignment.CenterVertically) {
-            MusoAvatar(
-                name = account?.name,
-                imageUrl = account?.thumbnailUrl?.takeIf { signedIn },
-                size = 64.dp,
+            Text(
+                text = stringResource(R.string.profile_title).uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
             )
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = account?.name?.takeIf { signedIn } ?: stringResource(R.string.profile_guest),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = account?.email?.takeIf { signedIn && it.isNotBlank() }
-                        ?: stringResource(if (signedIn) R.string.signed_in else R.string.not_signed_in),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(6.dp))
-                MusoFactRow(
-                    facts = listOf(
-                        stringResource(R.string.profile_local_stats),
-                        stringResource(R.string.profile_private),
-                    ),
-                )
-            }
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.weight(1f))
             MusoIconButton(
                 icon = MusoIcons.Settings,
                 contentDescription = stringResource(R.string.settings),
@@ -486,14 +474,81 @@ private fun ProfileHeader(
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
+        Spacer(Modifier.height(10.dp))
 
-        // One heading, not two: v2.5 printed the section name twice, as an
-        // eyebrow and again as a display heading, which spent a third of the
-        // first screen saying the same words.
-        Spacer(Modifier.height(20.dp))
+        // The identity is one sheet of glass, not loose text on black. The
+        // portrait sits on a lit accent ring inside it, the name is the
+        // block's heading, and the account line and its two facts answer it
+        // underneath. Nothing here floats unattached.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .musoGlassSurface(shape, depth = 1.15f)
+                // Inside the glass, behind the portrait: a corner of the page's
+                // own light, so the panel has a direction rather than a fill.
+                .drawBehind {
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(accent.copy(alpha = 0.20f), Color.Transparent),
+                            center = Offset(0f, 0f),
+                            radius = size.width * 0.72f,
+                        ),
+                    )
+                }
+                .padding(18.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(88.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.10f)),
+                            ),
+                        )
+                        .padding(3.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    MusoAvatar(
+                        name = account?.name,
+                        imageUrl = account?.thumbnailUrl?.takeIf { signedIn },
+                        size = 82.dp,
+                    )
+                }
+                Spacer(Modifier.width(16.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = account?.name?.takeIf { signedIn } ?: stringResource(R.string.profile_guest),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = account?.email?.takeIf { signedIn && it.isNotBlank() }
+                            ?: stringResource(if (signedIn) R.string.signed_in else R.string.not_signed_in),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(9.dp))
+                    MusoFactRow(
+                        facts = listOf(
+                            stringResource(R.string.profile_local_stats),
+                            stringResource(R.string.profile_private),
+                        ),
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(18.dp))
         Text(
             text = stringResource(R.string.profile_your_listening),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(2.dp))
@@ -501,6 +556,33 @@ private fun ProfileHeader(
             text = stringResource(R.string.profile_your_listening_body),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(4.dp))
+    }
+}
+
+/** One quiet figure under the listening total: the number, then what it counts. */
+@Composable
+private fun ProfileStat(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+        )
+        Spacer(Modifier.height(1.dp))
+        Text(
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.0.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
         )
     }
 }
@@ -514,8 +596,8 @@ private fun ListeningActivity(
     MusoGlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        corner = 24.dp,
+            .padding(horizontal = MusoTokens.Gutter, vertical = 8.dp),
+        corner = MusoTokens.GroupRadius,
     ) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -603,7 +685,7 @@ private fun ProfileSongRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = MusoTokens.Gutter, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

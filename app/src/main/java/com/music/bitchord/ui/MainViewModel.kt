@@ -687,6 +687,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Set once per launch if GitHub has a release newer than this build. */
     val updateAvailable: StateFlow<AppUpdateChecker.UpdateInfo?> = AppUpdateChecker.available
 
+    /**
+     * The throttled foreground check. Called when the app comes back to the
+     * front, never on navigation; [AppUpdateChecker] drops it if the last
+     * check is less than six hours old.
+     */
+    fun checkForUpdates(force: Boolean = false) {
+        viewModelScope.launch { AppUpdateChecker.check(force) }
+    }
+
     // ---- Ratings, library and playlists -------------------------------------
 
     /**

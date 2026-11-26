@@ -280,6 +280,9 @@ import com.music.bitchord.ui.components.FloatingBarsTapGuard
 import com.music.bitchord.ui.components.BottomTab
 import com.music.bitchord.ui.components.FLOATING_BAR_MAX_WIDTH
 import com.music.bitchord.ui.components.FloatingBottomBar
+import com.music.bitchord.ui.components.MusoAmbientCache
+import com.music.bitchord.ui.components.drawMusoAmbient
+import com.music.bitchord.ui.components.rememberAmbientPhase
 import com.music.bitchord.ui.components.GlassNavBar
 import com.music.bitchord.ui.components.floatingtabbar.rememberFloatingTabBarScrollConnection
 import com.music.bitchord.ui.components.FrostedTopBar
@@ -483,6 +486,21 @@ class MainActivity : AppCompatActivity() {
                 val backdropBrush = remember(accentTheme, darkTheme) {
                     accentTheme.backdropBrush(darkTheme)
                 }
+                // v3.2: the backdrop is the app's one ambient layer — the
+                // accent, a muted violet and a whisper of white drifting over
+                // the near-black ground. Shared by every page, so the glass
+                // surfaces genuinely sample a moving picture rather than a
+                // static wash. The phase is read in the draw pass only: it
+                // invalidates pixels, never a page of lists.
+                val ambientAccent = remember(accentTheme, darkTheme) {
+                    accentTheme.palette(darkTheme).accent
+                }
+                val ambientCache = remember(ambientAccent, darkTheme) {
+                    MusoAmbientCache(ambientAccent, darkTheme)
+                }
+                val ambientPhase = rememberAmbientPhase(
+                    active = com.music.bitchord.ui.rememberIsForeground(),
+                )
                 // One soft accent halo in the top corner, over the vertical
                 // wash. It is the same on every page, which is what makes the
                 // theme read as the room the app is in rather than a colour
@@ -504,6 +522,7 @@ class MainActivity : AppCompatActivity() {
                     remember(backdropBrush, glowBrush, windowBackground) {
                         {
                             drawRect(brush = backdropBrush)
+                            drawMusoAmbient(ambientCache.layerFor(size), ambientPhase.value)
                             drawRect(brush = glowBrush)
                             drawContent()
                         }
@@ -646,7 +665,12 @@ private fun BitChordApp(
     // Top Picks turns over each hour; coming back to the app after a
     // turn-over is an open too.
     LaunchedEffect(appForeground) {
-        if (appForeground) viewModel.refreshTopPicksIfStale()
+        if (appForeground) {
+            viewModel.refreshTopPicksIfStale()
+            // A return to the foreground is an update check, throttled to one
+            // every six hours by the checker — never a check per screen.
+            viewModel.checkForUpdates()
+        }
     }
     // Where the two ends of opening and closing the player meet: the mini
     // player's cover reports itself here, the sheet its offset, and the player
@@ -5864,8 +5888,7 @@ private fun BitChordApp(
         if (showUpdateDialog && onboardingComplete) {
             updateNotice?.let { update ->
                 UpdateAvailableDialog(
-                    version = update.version,
-                    notes = update.notes,
+                    update = update,
                     hazeState = hazeState,
                     // A download in progress keeps running behind the closed
                     // sheet — only the sheet itself goes away. The top bar's
@@ -5873,18 +5896,24 @@ private fun BitChordApp(
                     onDismiss = { showUpdateDialog = false },
                     onDownload = {
                         if (update.apkUrl != null) {
-                            scope.launch { AppUpdateChecker.downloadApk(context) }
+                            AppUpdateChecker.downloadApk(context)
                         } else {
+                            // No APK on the release at all: the release page is
+                            // the only honest destination left.
                             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(update.releaseUrl)))
                             showUpdateDialog = false
                         }
                     },
                     onCancelDownload = {
-                        AppUpdateChecker.cancelDownload()
+                        AppUpdateChecker.cancelDownload(context)
                     },
                     onInstall = {
                         val ready = AppUpdateChecker.download.value as? AppUpdateChecker.DownloadState.Ready
                         ready?.let { AppUpdateChecker.installApk(context, it.file) }
+                    },
+                    onSkip = {
+                        AppUpdateChecker.skipForOneDay(context)
+                        showUpdateDialog = false
                     },
                     onOpenReleasePage = {
                         AppUpdateChecker.resetDownload()

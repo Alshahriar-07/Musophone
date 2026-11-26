@@ -73,6 +73,7 @@ import com.music.bitchord.ui.components.LIBRARY_GRID_SPACING
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.MusoV26Header
 import com.music.bitchord.ui.components.PAGE_GUTTER
+import com.music.bitchord.ui.components.PAGE_HEADER_LIFT
 import com.music.bitchord.ui.components.PullToRefresh
 import com.music.bitchord.ui.components.contextClick
 import com.music.bitchord.ui.components.libraryGrid
@@ -146,7 +147,18 @@ fun LibraryScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = contentPadding,
+            // Library draws its own heading, so it sits the same distance under
+            // the status bar as Home and Explore rather than a whole frosted
+            // bar lower — see [PAGE_HEADER_LIFT].
+            contentPadding = if (showTitle) {
+                PaddingValues(
+                    top = (contentPadding.calculateTopPadding() - PAGE_HEADER_LIFT)
+                        .coerceAtLeast(0.dp),
+                    bottom = contentPadding.calculateBottomPadding(),
+                )
+            } else {
+                contentPadding
+            },
         ) {
             if (showTitle) {
                 item(key = "library:header") {

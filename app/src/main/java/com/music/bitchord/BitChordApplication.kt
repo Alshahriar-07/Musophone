@@ -177,6 +177,11 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory, Configu
         Downloads.init(this)
         // After both of the things a check reads: the setting and the record.
         PlaylistSync.init(this)
+        // In-app updates: the checker needs an application context for the
+        // skip/last-check store and for WorkManager, and the daily check is
+        // scheduled here so it exists even if the UI is never composed.
+        com.music.bitchord.data.AppUpdateChecker.init(this)
+        com.music.bitchord.data.update.UpdateScheduler.ensurePeriodic(this)
         // Before anything could run a scheduled backup: its worker reads the
         // account and the schedule this loads.
         com.music.bitchord.data.backup.DriveBackup.init(this)

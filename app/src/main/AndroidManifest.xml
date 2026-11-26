@@ -22,6 +22,20 @@
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
 
     <!--
+      Bluetooth output is an option, not a requirement. Declared explicitly
+      because the merger otherwise *implies* a required android.hardware.bluetooth
+      from the BLUETOOTH permission below, and a required feature is an install
+      gate: a device without a radio — a Wi-Fi-only tablet or a TV box — would be
+      refused by the installer even though the app plays perfectly through the
+      speaker, a USB DAC or a cast route. `tools:node="replace"` makes this
+      declaration win over the implied one instead of merging beside it.
+    -->
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false"
+        tools:node="replace" />
+
+    <!--
       Asked for only when the output picker is first opened, and only on API 31+
       where it exists. Without it a paired headset is listed by the audio
       framework under a generic name rather than its own, which turns a list of
@@ -545,6 +559,18 @@
         <receiver
             android:name=".download.PlaylistSyncApproval"
             android:exported="false" />
+
+        <!--
+          WorkManager's foreground service, given the dataSync type its own
+          manifest leaves off. The update download is the work that needs it:
+          a 40-85 MB APK should not be killed because the app was backgrounded,
+          and Android 14+ refuses a foreground service with no declared type.
+          Merge rather than replace, so WorkManager's other declarations stay.
+        -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
 
         <!--
           WorkManager comes up on first use instead of at every launch, since the

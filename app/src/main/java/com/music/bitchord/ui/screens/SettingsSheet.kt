@@ -1,5 +1,6 @@
 package com.music.bitchord.ui.screens
 
+import com.music.bitchord.data.AppUpdateChecker
 import com.music.bitchord.ui.icons.MusoIcons
 import com.music.bitchord.ui.icons.SfIcons
 import com.music.bitchord.wear.WatchInstaller
@@ -57,6 +58,7 @@ import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.Gradient
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.SystemUpdateAlt
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Language
@@ -289,7 +291,6 @@ fun SettingsScreen(
     val syncDownloadedPlaylists by AppSettings.syncDownloadedPlaylists.collectAsStateWithLifecycle()
     val downloadLikedSongs by AppSettings.downloadLikedSongs.collectAsStateWithLifecycle()
     val stopOnTaskRemoved by AppSettings.stopOnTaskRemoved.collectAsStateWithLifecycle()
-    val hideVolumeBar by AppSettings.hideVolumeBar.collectAsStateWithLifecycle()
     val hideStatusBarInPlayer by AppSettings.hideStatusBarInPlayer.collectAsStateWithLifecycle()
     val hideSongStatus by AppSettings.hideSongStatus.collectAsStateWithLifecycle()
     val showQueueHistory by AppSettings.showQueueHistory.collectAsStateWithLifecycle()
@@ -479,6 +480,10 @@ fun SettingsScreen(
             // when their rows answer here instead (below).
             if (!searching) {
                 SettingsCategoryList(onOpen = onOpenSection)
+                // Updates are a small, quiet section of their own: the version
+                // that is installed, a manual check, and whether the daily
+                // background check runs. Nothing else belongs here.
+                UpdateSettingsGroup(version = version)
                 if (watchAvailable) {
                     SettingsGroup {
                         WearOsSettingsRow(onClick = onWearOs)
@@ -1707,21 +1712,10 @@ fun SettingsScreen(
                     onClick = { AppSettings.setStopOnTaskRemoved(!stopOnTaskRemoved) },
                 )
             }
-            val hideVolumeBarTitle = stringResource(R.string.hide_volume_bar)
-            row(hideVolumeBarTitle, "volume", "player") {
-                SettingsRow(
-                    icon = SfIcons.VolumeOff,
-                    title = hideVolumeBarTitle,
-                    subtitle = stringResource(R.string.hide_volume_bar_subtitle),
-                    trailing = {
-                        IosSwitch(
-                            checked = hideVolumeBar,
-                            onCheckedChange = AppSettings::setHideVolumeBar,
-                        )
-                    },
-                    onClick = { AppSettings.setHideVolumeBar(!hideVolumeBar) },
-                )
-            }
+            // v3.1: "Hide volume bar" is gone with the bar itself — the full
+            // player no longer has a volume slider, so a switch that removed one
+            // would remove nothing. The phone's volume keys and the output
+            // sheet's own slider still set the level.
             val listenTogetherButtonTitle = stringResource(R.string.show_listen_together_button)
             row(listenTogetherButtonTitle, "party", "jam", "output", "headphones", "player") {
                 SettingsRow(
@@ -2633,6 +2627,86 @@ internal fun SettingsGroup(
                 end = GROUP_INSET + 4.dp,
                 top = 8.dp,
             ),
+        )
+    }
+}
+
+/**
+ * The Update section. Small on purpose: the installed version, a check the
+ * user can ask for, and the automatic-check switch. The last-check line is
+ * the only status text, and it says when the check happened rather than
+ * nagging about it.
+ */
+@Composable
+internal fun UpdateSettingsGroup(version: String) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val auto by AppUpdateChecker.autoCheck.collectAsStateWithLifecycle()
+    val lastAt by AppUpdateChecker.lastCheckAt.collectAsStateWithLifecycle()
+    val failed by AppUpdateChecker.lastCheckFailed.collectAsStateWithLifecycle()
+    var checking by remember { mutableStateOf(false) }
+    var result by remember { mutableStateOf<String?>(null) }
+
+    val lastCheckedLabel = when {
+        lastAt <= 0L -> stringResource(R.string.update_never_checked)
+        else -> stringResource(
+            R.string.update_last_checked,
+            android.text.format.DateUtils.getRelativeTimeSpanString(
+                lastAt,
+                System.currentTimeMillis(),
+                android.text.format.DateUtils.MINUTE_IN_MILLIS,
+            ),
+        )
+    }
+
+    SettingsGroup(header = stringResource(R.string.update_settings_section)) {
+        SettingsRow(
+            icon = Icons.Rounded.SystemUpdateAlt,
+            title = stringResource(R.string.update_current_version),
+            value = version,
+        )
+        RowDivider()
+        SettingsRow(
+            icon = Icons.Rounded.Cached,
+            title = stringResource(R.string.check_for_updates),
+            subtitle = when {
+                checking -> stringResource(R.string.update_checking)
+                result != null -> result
+                failed -> stringResource(R.string.update_check_failed)
+                else -> lastCheckedLabel
+            },
+            enabled = !checking,
+            onClick = {
+                scope.launch {
+                    checking = true
+                    result = null
+                    val outcome = AppUpdateChecker.check(force = true)
+                    result = when (outcome) {
+                        AppUpdateChecker.CheckResult.Ok ->
+                            context.getString(R.string.update_found)
+                        AppUpdateChecker.CheckResult.NoUpdate ->
+                            context.getString(R.string.update_up_to_date)
+                        AppUpdateChecker.CheckResult.NetworkError ->
+                            context.getString(R.string.update_check_failed)
+                        AppUpdateChecker.CheckResult.HttpError ->
+                            context.getString(R.string.update_check_failed)
+                        AppUpdateChecker.CheckResult.Throttled -> null
+                    }
+                    checking = false
+                }
+            },
+        )
+        RowDivider()
+        SettingsRow(
+            icon = Icons.Rounded.Cached,
+            title = stringResource(R.string.update_automatic_checking),
+            subtitle = lastCheckedLabel,
+            trailing = {
+                IosSwitch(
+                    checked = auto,
+                    onCheckedChange = { AppUpdateChecker.setAutoCheck(context, it) },
+                )
+            },
         )
     }
 }

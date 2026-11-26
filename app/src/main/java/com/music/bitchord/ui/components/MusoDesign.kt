@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -88,12 +89,86 @@ object MusoTokens {
 }
 
 /**
- * The app's one raised panel.
+ * The Liquid Glass vocabulary, as tokens.
  *
- * A v2.5 panel is a single neutral charcoal step with a hairline rim and a
- * whisper of light along its top edge — no captured backdrop, no long
- * gradient. Screens should not invent their own elevation: a card from Profile
- * and a card from Settings are recognisably the same object.
+ * Apple's material is not transparency for its own sake: it is a thin, uneven
+ * film — brighter where the light lands at the top, darker where it sits in
+ * its own shade — with a lit hairline rim and a translucent body that keeps a
+ * little of the page underneath. Those four ingredients are the values here so
+ * every panel, pill, icon button and bar in the app is cut from the same film
+ * instead of each screen inventing a grey.
+ */
+object MusoGlass {
+    /** The film's strength at the top edge (backwards-compatible alias). */
+    const val TintAlpha = 0.085f
+
+    /** What is left of the film at the bottom edge — a whisper, not zero. */
+    const val TintFloorAlpha = 0.018f
+
+    /** The lit top of the rim, the neutral middle and the shadowed foot. */
+    const val BorderTopAlpha = 0.28f
+    const val BorderMidAlpha = 0.12f
+    const val BorderBottomAlpha = 0.07f
+
+    /** A press is a film of light under the finger, never a filled disc. */
+    const val PressedAlpha = 0.10f
+
+    val BorderWidth: Dp = 0.7.dp
+
+    /**
+     * How opaque a panel's body is.
+     *
+     * v3.2 lowered this from 0.55: with a moving ambient backdrop there is
+     * finally something worth seeing through the glass, and a panel that keeps
+     * 45% of the page is still comfortably readable for text while reading as
+     * a pane rather than a cut-out. Bars go lighter still at their call sites.
+     */
+    const val BodyAlpha = 0.44f
+}
+
+/**
+ * The app's one glass surface.
+ *
+ * A translucent charcoal body, a vertical light-to-shade gradient and a hairline
+ * rim that is brightest along the top. Applied to cards, groups, pills, the
+ * mini player and the navigation bar, so they read as one material at different
+ * depths. [depth] scales the film: 1 is a panel, 0.5 a row or a bar, 0.25 a
+ * pressed state.
+ */
+@Composable
+fun Modifier.musoGlassSurface(
+    shape: Shape,
+    depth: Float = 1f,
+    tint: Color = Color.White,
+    /** How much of the page the body keeps out. Bars sit lighter than panels. */
+    body: Float = MusoGlass.BodyAlpha,
+): Modifier = this
+    .clip(shape)
+    .background(MaterialTheme.colorScheme.surface.copy(alpha = body), shape)
+    .background(
+        Brush.verticalGradient(
+            0f to tint.copy(alpha = (MusoGlass.TintAlpha * depth).coerceIn(0f, 1f)),
+            0.52f to tint.copy(alpha = (MusoGlass.TintAlpha * 0.38f * depth).coerceIn(0f, 1f)),
+            1f to tint.copy(alpha = (MusoGlass.TintFloorAlpha * depth).coerceIn(0f, 1f)),
+        ),
+        shape,
+    )
+    .border(
+        width = MusoGlass.BorderWidth,
+        brush = Brush.verticalGradient(
+            0f to Color.White.copy(alpha = (MusoGlass.BorderTopAlpha * depth).coerceIn(0f, 1f)),
+            0.5f to Color.White.copy(alpha = (MusoGlass.BorderMidAlpha * depth).coerceIn(0f, 1f)),
+            1f to Color.White.copy(alpha = (MusoGlass.BorderBottomAlpha * depth).coerceIn(0f, 1f)),
+        ),
+        shape = shape,
+    )
+
+/**
+ * The app's one raised panel: a sheet of [MusoGlass] with room inside it.
+ *
+ * No screen should invent its own elevation — a card from Profile, a group on
+ * Settings and the activity panel are recognisably the same object at the same
+ * depth, and they all lift off the page rather than reading as cut-outs.
  */
 @Composable
 fun MusoGlassCard(
@@ -104,33 +179,15 @@ fun MusoGlassCard(
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(corner)
-    val fill = MaterialTheme.colorScheme.surfaceVariant
     Box(
         modifier = modifier
-            .clip(shape)
-            .background(fill, shape)
-            .drawTopSheen(shape)
-            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+            .musoGlassSurface(shape)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(contentPadding),
     ) {
         content()
     }
 }
-
-/**
- * A hairline of light along the top edge of a surface.
- *
- * The one piece of depth every panel in the app shares; it reads as the room's
- * light catching an edge rather than as a gradient laid over the card.
- */
-private fun Modifier.drawTopSheen(shape: RoundedCornerShape): Modifier = this.background(
-    Brush.verticalGradient(
-        0f to Color.White.copy(alpha = 0.045f),
-        0.14f to Color.Transparent,
-    ),
-    shape,
-)
 
 /** A small glass capsule for periods, filters and secondary actions. */
 @Composable
@@ -142,18 +199,19 @@ fun MusoPill(
 ) {
     val shape = CircleShape
     val active = MaterialTheme.colorScheme.primary
-    val inactive = MaterialTheme.colorScheme.surfaceVariant
     Box(
         modifier = modifier
-            .clip(shape)
-            .background(if (selected) active else inactive, shape)
-            .border(
-                width = if (selected) 0.dp else 0.5.dp,
-                color = if (selected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant,
-                shape = shape,
+            .then(
+                if (selected) {
+                    Modifier
+                        .clip(shape)
+                        .background(active, shape)
+                } else {
+                    Modifier.musoGlassSurface(shape, depth = 0.55f)
+                },
             )
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(horizontal = 15.dp, vertical = 8.dp),
     ) {
         Text(
             text = text,
@@ -176,7 +234,8 @@ fun MusoIconButton(
     modifier: Modifier = Modifier,
     size: Dp = MusoTokens.GlyphBox,
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    filled: Boolean = true,
+    /** Always transparent by default: a glyph is the control, not the plate. */
+    filled: Boolean = false,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
@@ -196,14 +255,11 @@ fun MusoIconButton(
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(shape)
             .then(
                 if (filled) {
-                    Modifier
-                        .background(MaterialTheme.colorScheme.surfaceVariant, shape)
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+                    Modifier.musoGlassSurface(shape, depth = 0.7f)
                 } else {
-                    Modifier
+                    Modifier.clip(shape)
                 },
             )
             .clickable(
@@ -242,33 +298,23 @@ fun MusoActionRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
-            .heightIn(min = MusoTokens.RowHeight)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .heightIn(min = 52.dp)
+            .padding(start = 6.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(
-                    if (accent) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-                    } else {
-                        MaterialTheme.colorScheme.surfaceVariant
-                    },
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
+        // Bare glyph, no plate. The row is already the target; a second filled
+        // box inside it was what made this list read as four heavy chips.
+        Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = if (accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(19.dp),
+                modifier = Modifier.size(21.dp),
             )
         }
-        Spacer(Modifier.width(13.dp))
+        Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -291,8 +337,8 @@ fun MusoActionRow(
         Icon(
             imageVector = MusoIcons.ChevronRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f),
+            modifier = Modifier.size(16.dp),
         )
     }
 }

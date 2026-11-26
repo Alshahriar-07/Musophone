@@ -117,6 +117,19 @@ import androidx.compose.foundation.border
 val PAGE_GUTTER = 16.dp
 
 /**
+ * How far a tab page that opens on its own heading sits above the shared top
+ * inset.
+ *
+ * The inset clears the whole floating bar — its 52dp of content and the 12dp gap
+ * under it — because a page whose first row is content starts underneath that
+ * bar. A page that draws its own heading instead pulls the height back, keeping
+ * the 8dp the heading rests under the status bar. Home has done this since v2.6;
+ * Explore and Library do it too as of v3.1, so every tab opens on its heading at
+ * one height rather than two.
+ */
+val PAGE_HEADER_LIFT = 56.dp
+
+/**
  * The inset the floating chrome sits at: the mini player, the tab bar and the
  * top bar's controls. The same as [PAGE_GUTTER], so the bars' edges line up
  * with the content scrolling beneath them rather than sitting just outside it.

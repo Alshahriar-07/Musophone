@@ -94,3 +94,10 @@
 -dontwarn org.conscrypt.**
 -dontwarn com.android.org.conscrypt.**
 -dontwarn io.github.muntashirakon.adb.**
+
+# ---- In-app update workers ------------------------------------------------------
+# WorkManager instantiates these by class name from its own database, so R8 must
+# not remove or rename their constructors even though nothing in the app calls
+# `new UpdateDownloadWorker(...)` directly.
+-keep class com.music.bitchord.data.update.UpdateDownloadWorker { *; }
+-keep class com.music.bitchord.data.update.UpdateCheckWorker { *; }

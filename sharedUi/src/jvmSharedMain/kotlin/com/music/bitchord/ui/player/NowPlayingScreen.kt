@@ -1034,13 +1034,12 @@ fun NowPlayingScreen(
     val seekToLyric: (Long) -> Unit = { lineTimeMs ->
         onSeek(adjustedLyricsSeekTarget(lineTimeMs, lyricsOffsetMs))
     }
-    val hideVolumeBar by PlayerSettings.hideVolumeBar.collectAsStateWithLifecycle()
     val disableBlendEffects by PlayerSettings.disableBlendEffects.collectAsStateWithLifecycle()
-    // The lyric slot above the scrubber: the tallest line it holds — titleMedium's
-    // own line box — and the 4dp each of them is padded by above and below.
-    val lyricSlotHeight = with(density) {
-        MaterialTheme.typography.titleMedium.lineHeight.takeIf { it.isSpecified }?.toDp() ?: 24.dp
-    } + 8.dp
+    // The lyric slot above the scrubber: the strip's own line box, scaled by the
+    // reader's font preference, and the 4dp each line is padded by above and
+    // below. Read from the strip's constant rather than from a type style, so a
+    // louder lyric line cannot outgrow the slot it was drawn for.
+    val lyricSlotHeight = with(density) { STRIP_LINE_HEIGHT.toDp() } + 8.dp
     val hideSongStatus by PlayerSettings.hideSongStatus.collectAsStateWithLifecycle()
 
     // Animated cover art: the looping video some labels publish alongside a
@@ -1482,7 +1481,6 @@ fun NowPlayingScreen(
         label = "artScale",
     )
 
-    val volume = rememberPlayerVolume()
     // Present when you arrive, out of the way once you are actually reading.
     //
     // The panel opens with the player under it so the scrubber and transport
@@ -1491,11 +1489,12 @@ fun NowPlayingScreen(
     // whole screen. Scrolling up brings it back and restarts the wait, since
     // that write to [lyricsControlsOpen] re-keys this effect.
     //
-    // Never while a finger is on the scrubber or the volume bar: those are the
-    // two controls that are *being used* while nothing else on screen moves,
-    // and timing out underneath them would take the thing away mid-gesture.
-    LaunchedEffect(lyricsOpen, lyricsControlsOpen, scrub.scrubbing, volume.dragging) {
-        if (lyricsOpen && lyricsControlsOpen && !scrub.scrubbing && !volume.dragging) {
+    // Never while a finger is on the scrubber: that is the one control that is
+    // *being used* while nothing else on screen moves, and timing out underneath
+    // it would take the thing away mid-gesture. (It used to say "or the volume
+    // bar" too; the player's own volume bar is gone in v3.1.)
+    LaunchedEffect(lyricsOpen, lyricsControlsOpen, scrub.scrubbing) {
+        if (lyricsOpen && lyricsControlsOpen && !scrub.scrubbing) {
             delay(LYRICS_CONTROLS_IDLE_MS)
             lyricsControlsOpen = false
         }
@@ -1679,13 +1678,12 @@ fun NowPlayingScreen(
         spotifyCanvasAutoHide,
         isPlaying,
         scrub.scrubbing,
-        volume.dragging,
         lyricsOpen,
         queueOpen,
         mixing,
     ) {
         if (!spotifyCanvasPresentation || !spotifyCanvasControlsOpen ||
-            !spotifyCanvasAutoHide || !isPlaying || scrub.scrubbing || volume.dragging ||
+            !spotifyCanvasAutoHide || !isPlaying || scrub.scrubbing ||
             lyricsOpen || queueOpen || mixing
         ) return@LaunchedEffect
         delay(SPOTIFY_CANVAS_CONTROLS_IDLE_MS)
@@ -1886,8 +1884,6 @@ fun NowPlayingScreen(
         haptics.play(Haptic.Select)
         scrub.release(onSeekFraction)
     }
-    val onVolumeChange: (Float) -> Unit = volume::drag
-    val onVolumeChangeFinished: () -> Unit = volume::release
 
     // Lyrics, output and queue, with the output name under them — the row both
     // layouts end on, and the only thing in the landscape player's left column
@@ -2597,17 +2593,11 @@ fun NowPlayingScreen(
                                     animationsActive = !panelOpen,
                                 )
                             },
-                            volume = if (hideVolumeBar) {
-                                null
-                            } else {
-                                {
-                                    VolumeRow(
-                                        value = { volume.level.value },
-                                        onValueChange = onVolumeChange,
-                                        onValueChangeFinished = onVolumeChangeFinished,
-                                    )
-                                }
-                            },
+                            // v3.1: no volume bar in the full player. The phone's own
+                            // volume keys and the output sheet's slider are the two
+                            // places a level is set; a third one here took a row out
+                            // of the artwork for a control most listeners never touch.
+                            volume = null,
                         )
                     },
                     lyricsPane = {
@@ -4675,38 +4665,19 @@ fun NowPlayingScreen(
                                 (!spotifyCanvasPresentation || spotifyCanvasControlsOpen || mixing),
                         )
                     }
-                    if (!hideVolumeBar) {
-                        // The transport rides midway between the two blocks it
-                        // separates: the scrubber above it, and the volume bar and
-                        // toggle row below, which sit close enough together to read
-                        // as one. Both of its own gaps take half the spread, so on a
-                        // tall screen it holds the centre rather than drifting up
-                        // under the seek bar.
-                        Spacer(Modifier.height(8.dp + controlSpread / 2))
-                        transport()
-                        Spacer(Modifier.height(12.dp + controlSpread / 2))
-                        VolumeRow(
-                            value = { volume.level.value },
-                            onValueChange = onVolumeChange,
-                            onValueChangeFinished = onVolumeChangeFinished,
-                        )
-                        // The volume slider already has 13dp below its drawn track.
-                        // Balance that invisible inset with the caption gap below the icons.
-                        Spacer(Modifier.height(6.dp))
-                    } else {
-                        // No volume bar: the transport centres itself in the whole run
-                        // between the scrubber and the bottom row instead. The run is
-                        // exactly as tall as with the bar, so the half-player's height
-                        // never depends on the setting — only where the transport sits.
-                        // The scrubber draws its times 9dp above their slot, which
-                        // leaves that much more visible room above; half of it moves
-                        // from the top gap to the bottom one.
-                        val run = 8.dp + 12.dp + 6.dp + controlSpread + VOLUME_ROW_HEIGHT
-                        val lift = SCRUBBER_LABEL_LIFT / 2
-                        Spacer(Modifier.height(run / 2 - lift))
-                        transport()
-                        Spacer(Modifier.height(run / 2 + lift))
-                    }
+                    // v3.1: no volume bar, and no padded-out run standing in for
+                    // one. With the bar gone the transport centres itself between
+                    // the scrubber and the modes row, and the height the bar used
+                    // to occupy goes back to the artwork above rather than being
+                    // spread into two wider gaps.
+                    //
+                    // The scrubber draws its times 9dp above their slot, which
+                    // leaves that much more visible room above; half of it moves
+                    // from the top gap to the bottom one.
+                    val transportLift = SCRUBBER_LABEL_LIFT / 2
+                    Spacer(Modifier.height(8.dp + controlSpread / 2 - transportLift))
+                    transport()
+                    Spacer(Modifier.height(12.dp + controlSpread / 2 + transportLift))
 
                     // ---- Queue modes, then the action dock ----
                     // Shuffle, repeat and autoplay answer how the queue plays,

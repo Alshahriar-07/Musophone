@@ -402,18 +402,26 @@ fun MiniPlayer(
                 locked = controlsLocked,
                 onBlocked = onBlockedControl,
             )
-            .clip(shape)
             .then(
                 if (reduceDynamicBlur) {
-                    Modifier.background(MaterialTheme.colorScheme.surface)
+                    Modifier.clip(shape).background(MaterialTheme.colorScheme.surface)
                 } else {
-                    Modifier.optimizedHazeEffect(
-                        state = hazeState,
-                        style = HazeMaterials.thin(MaterialTheme.colorScheme.surface),
-                    )
+                    Modifier
+                        .clip(shape)
+                        .optimizedHazeEffect(
+                            state = hazeState,
+                            // v3.2: the thinnest frost, so the ambient wash and
+                            // the artwork behind it stay visible through the
+                            // bar. It should read as a pane of glass resting on
+                            // the page, not as a solid card laid over it.
+                            style = HazeMaterials.ultraThin(MaterialTheme.colorScheme.surface),
+                        )
                 },
             )
-            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+            // The same film and lit rim as every other glass surface, at the
+            // lightest body in the app: only the rim and the gradient catch
+            // the light, and the page keeps moving underneath.
+            .musoGlassSurface(shape, depth = 0.55f, body = 0.10f)
             // Deliberately silent: the whole bar is the target, so it catches
             // stray taps meant for the page behind it, and the sheet rising is
             // its own confirmation. The glyphs on it still buzz.

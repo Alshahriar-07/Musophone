@@ -1527,4 +1527,26 @@
     <string name="accent_crimson">Crimson Red</string>
     <string name="accent_sunset">Sunset Amber</string>
     <string name="about">About</string>
+    <string name="update_dialog_title">MusoPhone Update Available</string>
+    <string name="update_dialog_body">A new version of MusoPhone is available. Install the latest update to enjoy new features, improvements and fixes.</string>
+    <string name="update_current_version">Current version</string>
+    <string name="update_new_version">New version</string>
+    <string name="update_download_size">Download size</string>
+    <string name="install">Install</string>
+    <string name="skip_one_day">Skip for 1 Day</string>
+    <string name="update_downloading_percent">Downloading · %1$d%%</string>
+    <string name="update_verifying">Verifying the download…</string>
+    <string name="update_channel_name">App updates</string>
+    <string name="update_channel_description">Downloading a MusoPhone update.</string>
+    <string name="update_download_title">MusoPhone update</string>
+    <string name="update_download_progress">Downloading %1$s · %2$d%%</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="update_automatic_checking">Automatic update checks</string>
+    <string name="update_last_checked">Last checked %1$s</string>
+    <string name="update_never_checked">Not checked yet</string>
+    <string name="update_up_to_date">MusoPhone is up to date</string>
+    <string name="update_found">Update available</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_check_failed">Couldn’t reach GitHub</string>
+    <string name="update_settings_section">Updates</string>
 </resources>

@@ -49,6 +49,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -726,54 +727,6 @@ internal fun TransportRow(
     }
 }
 
-/** ThinSlider's fixed touch target at the volume bar's size: 10dp + 22dp. */
-internal val VOLUME_ROW_HEIGHT = 32.dp
-
-/** The volume bar between its two speaker glyphs. */
-@Composable
-internal fun VolumeRow(
-    /**
-     * Read inside the row, so the level's tween recomposes the row alone rather
-     * than the whole player around it.
-     */
-    value: () -> Float,
-    onValueChange: (Float) -> Unit,
-    onValueChangeFinished: () -> Unit,
-) {
-    val chrome = LocalPlayerChrome.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            Icons.AutoMirrored.Rounded.VolumeDown,
-            contentDescription = null,
-            tint = if (chrome) brightRowInk() else chromeWhite(0.5f),
-            modifier = Modifier.size(20.dp).brightRowChrome(chrome),
-        )
-        Spacer(Modifier.width(10.dp))
-        val ink = sliderInk()
-        ThinSlider(
-            value = value(),
-            onValueChange = onValueChange,
-            onValueChangeFinished = onValueChangeFinished,
-            idleHeight = 6.dp,
-            activeHeight = 10.dp,
-            modifier = Modifier.weight(1f),
-            vibrant = ink != null,
-            activeColor = ink?.active ?: Color.White.copy(alpha = 0.92f),
-            inactiveColor = ink?.inactive ?: Color.White.copy(alpha = 0.26f),
-        )
-        Spacer(Modifier.width(10.dp))
-        Icon(
-            Icons.AutoMirrored.Rounded.VolumeUp,
-            contentDescription = null,
-            tint = if (chrome) brightRowInk() else chromeWhite(0.5f),
-            modifier = Modifier.size(20.dp).brightRowChrome(chrome),
-        )
-    }
-}
-
 /**
  * Lyrics, the capsule, and the queue — the row both layouts end on.
  *
@@ -923,11 +876,9 @@ internal fun PlayerActionRow(
     }
 }
 
-/** How much more of the ink [CircleGlyph]'s disc takes than its plain white — 0.45 at rest, 0.85 lit. */
-private const val CIRCLE_DISC_DODGE_GAIN = 2.5f
-
-/** The star and ⋯ discs' fill at rest. */
-private const val CIRCLE_DISC_ALPHA = 0.18f
+/** The Best Part pill's body over its frost: the ink at a readable strength. */
+private fun discFill(chrome: Boolean): Color =
+    if (chrome) VibrantChromeInk.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.18f)
 
 /**
  * The lyrics, output and queue glyphs, and the volume bar's speakers, dodged
@@ -1006,12 +957,15 @@ private fun sliderInk(): SliderInk? =
     }
 
 /**
- * Translucent circular button used for the track menu and the like control.
+ * The star and ⋯ beside the credits: bare glyphs, no plate.
  *
- * [active] brightens the disc rather than only the glyph: this sits on album
- * artwork of any colour, and a white icon on a white-ish sleeve has no tint
- * change left to make. The filled star carries the state as a shape too —
- * see [BitChordIcons.StarFilled].
+ * These were opaque discs with a frost behind them, which made two secondary
+ * actions the heaviest objects on the player. Apple's controls at this position
+ * are the glyph and nothing else until a finger lands, so the surface here is
+ * invisible at rest and only a soft film of light while pressed. The touch box
+ * stays 40dp, well above the visible glyph, so the control is still easy to hit
+ * on artwork of any colour. [active] carries the state in the accent and the
+ * filled star shape rather than in a filled circle.
  */
 @Composable
 internal fun CircleGlyph(
@@ -1023,17 +977,16 @@ internal fun CircleGlyph(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
-    val discAlpha by animateFloatAsState(
-        targetValue = if (active) 0.34f else CIRCLE_DISC_ALPHA,
-        label = "glyphDisc",
-    )
-    val chrome = LocalPlayerChrome.current
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val tint = if (active) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.94f)
     Box(
         modifier = modifier
-            .size(34.dp)
+            .size(40.dp)
             .clip(CircleShape)
+            .background(if (pressed) Color.White.copy(alpha = 0.10f) else Color.Transparent)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interaction,
                 indication = null,
             ) {
                 haptics.play(haptic)
@@ -1041,17 +994,6 @@ internal fun CircleGlyph(
             },
         contentAlignment = Alignment.Center,
     ) {
-        // The disc carries the blend, dodged as the bottom row's glyphs are, and
-        // the glyph sits on it in plain white. The ink is mixed in at a few times
-        // the plain disc's strength: a dodge laid on this thinly is next to nothing.
-        Box(
-            Modifier
-                .matchParentSize()
-                .vibrantChrome(chrome)
-                .background(discFill(chrome, discAlpha)),
-        )
-        // Outside the blend: the rim is light catching the edge, not ink.
-        Box(Modifier.matchParentSize().glassRim(CircleShape))
         Crossfade(
             targetState = icon,
             animationSpec = tween(durationMillis = 180),
@@ -1060,23 +1002,12 @@ internal fun CircleGlyph(
             Icon(
                 imageVector = glyph,
                 contentDescription = contentDescription,
-                tint = Color.White,
-                modifier = Modifier.size(19.dp),
+                tint = tint,
+                modifier = Modifier.size(21.dp),
             )
         }
     }
 }
-
-/**
- * The star and ⋯ discs' fill at [alpha]: under the blend, the ink at a few
- * times that strength, since a dodge laid on this thinly is next to nothing.
- */
-private fun discFill(chrome: Boolean, alpha: Float = CIRCLE_DISC_ALPHA): Color =
-    if (chrome) {
-        VibrantChromeInk.copy(alpha = (alpha * CIRCLE_DISC_DODGE_GAIN).coerceAtMost(1f))
-    } else {
-        Color.White.copy(alpha = alpha)
-    }
 
 /**
  * Whether an AutoMix transition is armed or mixing. The glass goes flat for it, as it
@@ -1108,41 +1039,22 @@ internal fun Modifier.glassFrost(hazeState: HazeState?, flat: Boolean): Modifier
     }
 
 /**
- * The star and ⋯ discs beside the credits, behind one frost between them.
+ * The star and ⋯ beside the credits, as one plain row.
  *
- * One blur, cut to both circles, rather than one per disc: the two always move
- * together (a skip's slide, the collapse), and each would otherwise be blurred
- * again on every frame of it, side by side, from the same source.
+ * This used to draw a single frost cut to both discs. That shared blur was the
+ * last thing keeping a visible dark pair behind the two glyphs, so it is gone:
+ * the controls are now exactly the glyphs, and the row exists only to keep their
+ * spacing and alignment in one place for the portrait and landscape players.
  */
 @Composable
 internal fun GlassDiscPair(
     hazeState: HazeState?,
-    /** See [BestPartPill]'s, which goes flat for the same reason. */
+    /** Kept for the call sites; the pair no longer draws a surface to flatten. */
     overlayOpen: () -> Boolean,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val reduceDynamicBlur by PlayerSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val autoMixHold = rememberAutoMixFrostHold()
-    Box(modifier) {
-        Box(
-            Modifier
-                .matchParentSize()
-                .clip(DiscPairShape)
-                .glassFrost(hazeState, flat = reduceDynamicBlur || overlayOpen() || autoMixHold()),
-        )
-        Row(verticalAlignment = Alignment.CenterVertically, content = content)
-    }
-}
-
-/**
- * A disc at each end of a row as tall as one: both glyphs, or the ⋯ alone
- * (a row no wider than it is tall) for a guest, who gets no star.
- */
-private val DiscPairShape = GenericShape { size, _ ->
-    val d = size.height
-    addOval(Rect(0f, 0f, d, d))
-    if (size.width >= d * 1.5f) addOval(Rect(size.width - d, 0f, size.width, d))
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, content = content)
 }
 
 /**

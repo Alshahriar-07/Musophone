@@ -52,6 +52,7 @@ import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.MusoPageTitle
 import com.music.bitchord.ui.components.MusoV26Header
 import com.music.bitchord.ui.components.PAGE_GUTTER
+import com.music.bitchord.ui.components.PAGE_HEADER_LIFT
 import com.music.bitchord.ui.components.PullToRefresh
 import com.music.bitchord.ui.components.ShimmerBox
 import com.music.bitchord.ui.components.feedSkeleton
@@ -81,7 +82,22 @@ fun ExploreScreen(
             val columns = moodColumns(maxWidth)
             LazyColumn(
                 state = listState,
-                contentPadding = contentPadding,
+                // Explore draws its own heading, so it does not need to clear a
+                // bar it starts underneath. The page is handed padding for the
+                // whole frosted bar — its content and the gap under it — which
+                // left the word "Explore" floating a bar's height below the
+                // status bar on an otherwise empty page. Home takes the same
+                // lift back for the same reason, and the constant is shared so
+                // the two tabs open at the same height.
+                contentPadding = if (showTitle) {
+                    PaddingValues(
+                        top = (contentPadding.calculateTopPadding() - PAGE_HEADER_LIFT)
+                            .coerceAtLeast(0.dp),
+                        bottom = contentPadding.calculateBottomPadding(),
+                    )
+                } else {
+                    contentPadding
+                },
                 modifier = Modifier.fillMaxSize(),
             ) {
                 if (showTitle) {
