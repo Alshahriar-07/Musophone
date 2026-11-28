@@ -23,9 +23,9 @@ interface DetailHeaderProps {
 
 /** Shuffle (circle) · Play (pill), report §14; also the Spotify playlist's Import button. */
 export const detailButton = {
-  pill: 'inline-flex h-9 min-w-[150px] items-center justify-center gap-1.5 rounded-[24px] bg-pill-bg px-3 type-title-3-emphasized text-pill disabled:opacity-40 enabled:hover:opacity-90',
+  pill: 'press inline-flex h-10 min-w-[150px] items-center justify-center gap-1.5 rounded-pill bg-key-bg px-4 type-[600_13px/17px] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_14px_30px_-16px_var(--keyColor)] disabled:opacity-40 enabled:hover:brightness-110',
   circle:
-    'grid size-9 place-items-center rounded-full border-[0.75px] border-quaternary bg-quinary text-primary disabled:opacity-40 enabled:hover:bg-quaternary',
+    'press glass-field grid size-10 place-items-center rounded-full text-primary disabled:opacity-40 enabled:hover:text-key',
 };
 
 /**
@@ -39,31 +39,31 @@ export function DetailHeader({ info, onPlay, onShuffle, canPlay, extra, motion }
   const library = signedIn ? info.library : null;
   return (
     // Artwork beside the headings, description and actions; stacked and centred below 768px.
-    <div className="mx-(--body-gutter) mb-10 grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_1fr_auto] gap-x-[34px] pt-11 [grid-template-areas:'artwork_headings'_'artwork_description'_'artwork_actions'] max-md:grid-cols-[1fr] max-md:grid-rows-[auto] max-md:justify-items-center max-md:pt-4 max-md:text-center max-md:[grid-template-areas:'artwork'_'headings'_'actions'_'description']">
-      <div className="relative w-[270px] self-start rounded-artwork-lg shadow-[0_10px_20px_0_var(--radiosityShadowColor)] [grid-area:artwork] max-lg:w-[220px] max-md:w-[min(270px,70vw)]">
+    <div className="mx-(--body-gutter) mb-10 grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_1fr_auto] gap-x-9 pt-9 [grid-template-areas:'artwork_headings'_'artwork_description'_'artwork_actions'] max-md:grid-cols-[1fr] max-md:grid-rows-[auto] max-md:justify-items-center max-md:pt-2 max-md:text-center max-md:[grid-template-areas:'artwork'_'headings'_'actions'_'description']">
+      <div className="glass-tile relative w-[286px] self-start rounded-[26px] p-2.5 [grid-area:artwork] max-lg:w-[232px] max-md:w-[min(286px,72vw)]">
         {info.thumbnail && (
-          // A blurred copy behind the artwork: Apple's radiosity glow.
-          <div className="absolute inset-0 -z-1 scale-88 opacity-30 blur-[20px] saturate-200" aria-hidden="true">
+          // A blurred copy behind the artwork: the cover's own light in the glass.
+          <div className="absolute inset-2 -z-1 scale-90 opacity-45 blur-[26px] saturate-200" aria-hidden="true">
             <Artwork src={info.thumbnail} displayWidth={80} radius="var(--radius-artwork-large)" />
           </div>
         )}
-        <Artwork src={info.thumbnail} displayWidth={270} radius="var(--radius-artwork-large)" eager />
+        <Artwork src={info.thumbnail} displayWidth={270} radius="18px" eager />
         {/* Apple's motion artwork, over the cover once it's playing. */}
         {motion && (
           <MotionArtwork
             key={motion.url}
             motion={motion}
-            className="absolute inset-0 size-full rounded-artwork-lg object-cover opacity-0 transition-opacity duration-600 ease-in data-ready:opacity-100"
+            className="absolute inset-2 rounded-[18px] object-cover opacity-0 transition-opacity duration-600 ease-in data-ready:opacity-100"
           />
         )}
       </div>
-      <div className="flex flex-col pt-[37px] [grid-area:headings] max-md:items-center max-md:pt-5">
-        <h1 className="flex items-center type-large-title-emphasized leading-[30px] max-md:justify-center">
+      <div className="flex flex-col pt-4 [grid-area:headings] max-md:items-center max-md:pt-5">
+        <h1 className="flex items-center text-[clamp(26px,2.6vw,36px)] leading-[1.08] font-bold tracking-[-0.03em] max-md:justify-center">
           {info.title}
           {info.explicit && <ExplicitBadge size={16} />}
         </h1>
         {info.artists.length > 0 && (
-          <div className="type-large-title leading-[30px] text-primary">
+          <div className="text-[clamp(17px,1.5vw,21px)] leading-[1.25] font-normal tracking-[-0.015em] text-primary">
             {info.artists.map((artist, i) => {
               const href = artistHref(artist.id);
               return (

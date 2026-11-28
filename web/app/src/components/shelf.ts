@@ -8,18 +8,18 @@
 /** What a shelf holds, named after it (Apple's letters in the comments). */
 export type ShelfKind = 'editorial' | 'square' | 'tracks' | 'horizontal' | 'video' | 'circle';
 
-export const shelfSection = 'pt-9';
+export const shelfSection = 'pt-7';
 
-export const shelfHeader = 'mx-(--body-gutter) mb-3.5 flex min-h-[22px] items-center type-title-2-emphasized';
+export const shelfHeader = 'mx-(--body-gutter) mb-3 flex min-h-[26px] items-center type-[700_19px/24px] tracking-[-0.02em]';
 
 /** The scrolling grid; a kind from `shelfKinds` fills in its rows, widths and column counts. */
 export const shelfList = [
   'grid grid-flow-col grid-rows-[repeat(var(--rows),max-content)] auto-cols-(--xs-width) gap-x-2.5 gap-y-(--row-gap)',
-  // 15px bleed so hover shadows aren't clipped (--standard-lockup-shadow-offset).
-  '-my-[15px] px-(--body-gutter) py-[15px] scroll-px-(--body-gutter)',
+  // Bleed so the slabs' lift and shadows aren't clipped by the scroll port.
+  '-my-4 px-(--body-gutter) py-4 scroll-px-(--body-gutter)',
   'overflow-x-auto overflow-y-hidden overscroll-x-none snap-x snap-mandatory scroll-smooth motion-reduce:scroll-auto',
   '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden *:min-w-0 *:snap-start',
-  '[--gap:20px] [--n:var(--cols-s)] min-[1260px]:[--n:var(--cols-m)] min-[1580px]:[--n:var(--cols-l)] min-[1940px]:[--n:var(--cols-xl)]',
+  '[--gap:16px] [--n:var(--cols-s)] min-[1260px]:[--n:var(--cols-m)] min-[1580px]:[--n:var(--cols-l)] min-[1940px]:[--n:var(--cols-xl)]',
   'lg:auto-cols-[calc((100%-(var(--n)-1)*var(--gap))/var(--n))] lg:gap-x-(--gap)',
 ].join(' ');
 

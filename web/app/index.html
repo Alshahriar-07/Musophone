@@ -12,7 +12,7 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
-    <meta name="theme-color" content="#f7f5f8" />
+    <meta name="theme-color" content="#f3f1f6" />
     <script>
       // Paint the saved theme and accent before React arrives. System follows
       // the OS; the store in state/appearance.ts takes over after boot.
@@ -33,7 +33,7 @@
         root.dataset.accent = accent;
         root.style.colorScheme = dark ? 'dark' : 'light';
         var theme = document.querySelector('meta[name="theme-color"]');
-        if (theme) theme.setAttribute('content', dark ? '#000000' : '#f7f5f8');
+        if (theme) theme.setAttribute('content', dark ? '#0e0f12' : '#f3f1f6');
       })();
     </script>
 
@@ -126,7 +126,7 @@
         align-items: center;
         justify-content: center;
         gap: 14px;
-        background: #f7f5f8;
+        background: #f3f1f6;
         color: #16121a;
         font-family: 'DM Sans', system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
@@ -161,7 +161,7 @@
         }
       }
       :root[data-appearance='dark'] #boot {
-        background: #000000;
+        background: #0e0f12;
         color: #f7f7f9;
       }
       :root[data-appearance='dark'] #boot img {

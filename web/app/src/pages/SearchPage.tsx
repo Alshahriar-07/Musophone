@@ -38,16 +38,16 @@ function shelvesFor(results: SearchResults): Shelf[] {
   ].filter((s): s is Shelf => !!s);
 }
 
-const sectionTitle = 'mx-(--body-gutter) mt-3 type-title-2-emphasized';
-// Top Results: 3 columns, gap 20px; 118px cards with 90px artwork.
+const sectionTitle = 'mx-(--body-gutter) mt-6 mb-1 flex items-center type-[700_19px/24px] tracking-[-0.02em]';
+// Top Results: 3 columns; cards are glass slabs with 90px artwork.
 const topGrid =
-  'mx-(--body-gutter) mt-3 mb-8 grid grid-cols-3 gap-5 max-lg:grid-cols-2 max-[607px]:grid-cols-[minmax(0,1fr)] max-[607px]:gap-1';
+  'mx-(--body-gutter) mt-3 mb-8 grid grid-cols-3 gap-4 max-lg:grid-cols-2 max-[607px]:grid-cols-[minmax(0,1fr)]';
 // The card is a relative box and the play/link layer fills it: a playable
 // item's track menu is a sibling over the card's bottom-right corner, because a
 // button can't be nested inside the card's own link or button.
-const topCard = 'group/top relative rounded-[12px] glass-card transition-[filter] duration-150 hover:brightness-[1.04]';
+const topCard = 'glass-tile group/top relative rounded-tile p-2';
 const top =
-  'grid min-h-[118px] w-full grid-cols-[90px_minmax(0,1fr)] items-center gap-x-3.5 px-3 py-3.5 text-left';
+  'grid min-h-[112px] w-full grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3.5 rounded-[14px] px-2 py-2 text-left focus-visible:outline-offset-4';
 const topMenu =
   'absolute right-2 bottom-2 z-3 grid size-7 place-items-center rounded-full text-key opacity-0 transition-opacity duration-100 ease-in group-hover/top:opacity-100 focus-visible:opacity-100 hover:bg-quinary data-open:opacity-100';
 const topText = 'flex min-w-0 flex-col gap-0.5';
@@ -57,11 +57,11 @@ function TopResult({ item }: { item: MusicItem }) {
   const playable = item.kind === 'song' || item.kind === 'video';
   const body = (
     <>
-      <div className="w-[90px]">
-        <Artwork src={item.thumbnail} displayWidth={90} radius={item.kind === 'artist' ? '50%' : 'var(--radius-artwork-small)'} />
+      <div className="w-[84px]">
+        <Artwork src={item.thumbnail} displayWidth={84} radius={item.kind === 'artist' ? '50%' : '10px'} />
       </div>
       <div className={playable ? `${topText} pr-9` : topText}>
-        <span className="line-clamp-2 type-title-3">{item.title}</span>
+        <span className="line-clamp-2 type-[600_13px/17px]">{item.title}</span>
         <span className="truncate type-callout text-secondary">
           {[KIND_LABEL[item.kind], item.kind === 'artist' ? null : item.artists.map((a) => a.name).join(', ')].filter(Boolean).join(' · ')}
         </span>

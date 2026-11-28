@@ -8,7 +8,7 @@ import { sourceById } from '@/lyrics/sources';
 
 const section = 'mx-1 mt-[18px] mb-1.5 type-subhead-emphasized uppercase text-secondary';
 const note = 'mx-1 mb-2 type-callout text-secondary';
-const group = 'overflow-hidden rounded-[10px] bg-quinary';
+const group = 'overflow-hidden rounded-[14px] bg-quinary shadow-[inset_0_1px_0_var(--tileRim),inset_0_0_0_1px_var(--tileHairline)]';
 const row = 'flex items-center gap-2 py-2 pr-2.5 pl-3';
 const toggle = 'flex min-w-0 flex-1 cursor-pointer items-center gap-2.5';
 const checkbox = 'size-4 accent-key';
@@ -57,16 +57,23 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
 
   return createPortal(
     // A modal (report §8): scrim, 14px card radius, fade with a slight zoom, 30px close circle.
-    <div className="fixed inset-0 z-(--z-modal) grid animate-fade place-items-center bg-scrim" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="fixed inset-0 z-(--z-modal) grid animate-fade place-items-center bg-scrim backdrop-blur-[6px]"
+      onPointerDown={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div
-        className="glass-dialog flex max-h-[min(720px,calc(100vh-48px))] w-[min(520px,calc(100vw-32px))] animate-zoom flex-col rounded-[18px]"
+        className="glass-dialog flex max-h-[min(720px,calc(100vh-48px))] w-[min(520px,calc(100vw-32px))] animate-zoom flex-col rounded-[24px]"
         role="dialog"
         aria-modal="true"
         aria-label="Lyric settings"
       >
-        <header className="flex items-center justify-between px-5 pt-[18px] pb-2">
-          <h2 className="type-title-2-emphasized">Lyrics</h2>
-          <button className="grid size-[30px] place-items-center rounded-full bg-[#333336] text-secondary" aria-label="Close" onClick={onClose}>
+        <header className="flex items-center justify-between px-5 pt-4 pb-2">
+          <h2 className="type-[700_20px/26px] tracking-[-0.02em]">Lyrics</h2>
+          <button
+            className="press grid size-8 place-items-center rounded-full bg-quinary text-secondary shadow-[inset_0_1px_0_var(--tileRim),inset_0_0_0_1px_var(--tileHairline)] hover:text-primary"
+            aria-label="Close"
+            onClick={onClose}
+          >
             <X size={16} />
           </button>
         </header>
@@ -127,7 +134,10 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
                 KuGou, Musixmatch, Genius and PaxSenix don’t let web pages ask them directly. Allow the extension to,
                 once.
               </p>
-              <button className="flex-none rounded-[14px] bg-key-bg px-3.5 py-1.5 type-callout-emphasized text-white" onClick={() => void getBridge()?.call('lyrics.requestPermissions', { origins: missing })}>
+              <button
+                className="press flex-none rounded-pill bg-key-bg px-3.5 py-1.5 type-callout-emphasized text-white"
+                onClick={() => void getBridge()?.call('lyrics.requestPermissions', { origins: missing })}
+              >
                 Allow
               </button>
             </div>
@@ -137,7 +147,7 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
 
           <h3 className={section}>PaxSenix key</h3>
           <input
-            className="w-full rounded-[10px] border-0 bg-quinary px-3 py-2 type-body text-primary"
+            className="glass-field w-full rounded-[12px] border-0 px-3 py-2 type-body text-primary"
             type="password"
             placeholder="For PaxSenix: Spotify and Musixmatch"
             value={key}

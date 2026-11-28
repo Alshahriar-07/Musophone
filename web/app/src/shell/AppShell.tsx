@@ -12,32 +12,16 @@ import { isMobileBrowser } from '@/lib/platform';
 import { useUi } from '@/state/ui';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { Banner, bannerButtonClass } from './Banner';
-import { MobileTopBar } from './MobileTopBar';
+import { pageTitleFor } from './TopBar';
 import { PlayerBar } from './PlayerBar';
 import { SidePanel } from './SidePanel';
 import { Sidebar } from './Sidebar';
+import { TopBar } from './TopBar';
 
 const mobile = isMobileBrowser();
 
 // It carries am-lyrics; loaded the first time it opens, as the side panel's lyrics are.
 const FullScreenPlayer = lazy(() => import('./FullScreenPlayer').then((m) => ({ default: m.FullScreenPlayer })));
-
-const TITLES: [RegExp, string][] = [
-  [/^\/$|^\/home/, 'Home'],
-  [/^\/search/, 'Search'],
-  [/^\/new/, 'New'],
-  [/^\/library/, 'Library'],
-  [/^\/album/, 'Album'],
-  [/^\/artist/, 'Artist'],
-  [/^\/playlist/, 'Playlist'],
-  [/^\/browse/, 'Browse'],
-  [/^\/spotify/, 'Spotify'],
-  [/^\/settings\/listen-together|^\/invite/, 'Listen Together'],
-  [/^\/settings\/discord/, 'Discord'],
-  [/^\/settings/, 'Settings'],
-  [/^\/extension/, 'Extension'],
-  [/^\/about/, 'About'],
-];
 
 /**
  * The document title follows the page, so tabs, history and shared links read
@@ -46,14 +30,15 @@ const TITLES: [RegExp, string][] = [
 function useDocumentTitle() {
   const { pathname } = useLocation();
   useEffect(() => {
-    const page = TITLES.find(([pattern]) => pattern.test(pathname))?.[1];
+    const page = pageTitleFor(pathname);
     document.title = page ? `${page} · MusoPhone` : 'MusoPhone — Premium music, uninterrupted';
   }, [pathname]);
 }
 
 /**
- * The app frame (report §1): glass sidebar, the scrolling page, the floating
- * player pill, the side panel, and the bottom band when there is one.
+ * The app frame: a fixed ambient light field, a floating glass rail, the
+ * command bar, and the page as a frost sheet that scrolls between them. The
+ * player dock floats over the sheet's foot; Up Next / Lyrics slide in over it.
  */
 export function AppShell() {
   useDocumentTitle();
@@ -90,8 +75,8 @@ export function AppShell() {
   } else if (extension.state === 'missing' && !bannerDismissed) {
     banner = (
       <Banner
-        title="Play YouTube Music with the MusoPhone extension."
-        detail="Playback, YouTube Music sign-in, Spotify and Discord need the extension. Addons and lyrics work without it."
+        title="Play YouTube Music with the extension."
+        detail="Playback, YouTube Music sign-in, Spotify and Discord need it. Addons and lyrics work without it."
         action={
           <PrefetchLink className={bannerButtonClass} to="/extension">
             Get the Extension
@@ -103,30 +88,39 @@ export function AppShell() {
   }
 
   return (
-    <div className="relative isolate grid h-full grid-rows-[minmax(0,1fr)_auto]">
-      <div className="app-ambient" aria-hidden="true" />
-      {/* The side panel slides in from beyond the right edge; never let it scroll the page. */}
-      <div className="relative min-h-0 overflow-hidden">
-        <Sidebar />
-        <MobileTopBar />
-        {/* The page scrolls under the fixed sidebar and the floating player. */}
-        <main
-          id="scrollable-page"
-          className="absolute inset-0 overflow-x-hidden overflow-y-auto pl-(--web-navigation-width) [scrollbar-gutter:stable] data-tint:bg-(--page-tint) data-tint:transition-[background-color] data-tint:duration-300 data-tint:ease-in max-sm:pt-(--mobile-top-bar-height) max-sm:pl-0"
-        >
-          {/* Clears the floating pill: its height, its offset, and some air. */}
-          <div className="min-h-full pb-[calc(var(--player-pill-height)+var(--player-bottom-offset)+40px)]">
-            {/* Keyed by route, so each page settles in once; reduced motion
-                collapses the animation in the stylesheet. */}
-            <div key={pathname} className="animate-page">
-              <Outlet />
-            </div>
-          </div>
-        </main>
-        <PlayerBar />
-        <SidePanel />
+    <div className="relative isolate h-full overflow-hidden">
+      {/* The light field the glass refracts: three drifting lights and a beam. */}
+      <div className="app-ambient" aria-hidden="true">
+        <span className="app-ambient__light app-ambient__light--one" />
+        <span className="app-ambient__light app-ambient__light--two" />
+        <span className="app-ambient__light app-ambient__light--three" />
+        <span className="app-ambient__beam" />
+        <span className="app-ambient__vignette" />
       </div>
-      {banner}
+
+      <div className="app-stage flex h-full min-h-0 gap-(--app-frame-gap) p-(--app-frame-padding)">
+        <Sidebar />
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          <TopBar />
+          <div className="relative mt-(--app-frame-gap) min-h-0 flex-1">
+            <main
+              id="scrollable-page"
+              className="glass-sheet absolute inset-0 overflow-x-hidden overflow-y-auto rounded-sheet [scrollbar-gutter:stable]"
+            >
+              {/* Clears the floating dock: its height, its offset, and some air. */}
+              <div
+                key={pathname}
+                className="animate-page min-h-full pb-[calc(var(--player-pill-height)+var(--player-bottom-offset)+96px)]"
+              >
+                <Outlet />
+              </div>
+            </main>
+            <PlayerBar />
+            <SidePanel />
+            {banner}
+          </div>
+        </div>
+      </div>
       {fullScreen && (
         <Suspense fallback={null}>
           <FullScreenPlayer />

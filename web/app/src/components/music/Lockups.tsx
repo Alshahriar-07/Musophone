@@ -9,12 +9,13 @@ import { TrackMenu } from './TrackMenu';
 
 const isPlayable = (item: MusicItem) => item.kind === 'song' || item.kind === 'video';
 
-/* Lockups (report §2). */
-const lockup = 'flex min-w-0 flex-col';
-const caption = 'mt-2 flex min-w-0 flex-col gap-px';
-const title = 'flex min-w-0 items-center type-callout [&>:first-child]:truncate';
-const subtitle = 'truncate type-callout text-secondary';
+/* Lockups: artwork on a glass slab, the caption written on the slab. */
+const tile = 'glass-tile group/tile flex min-w-0 flex-col rounded-tile p-2';
+const caption = 'flex min-w-0 flex-col gap-0.5 px-1 pt-2.5 pb-0.5';
+const title = 'flex min-w-0 items-center gap-1 type-[600_12.5px/16px] [&>:first-child]:truncate';
+const subtitle = 'truncate type-[500_11px/14px] text-secondary';
 const overlayLink = 'absolute inset-0 z-1 rounded-[inherit]';
+const innerArt = 'rounded-[14px]';
 
 /** Artist names as links where YouTube links them, else the given subtitle. */
 function Byline({ item }: { item: MusicItem }) {
@@ -41,10 +42,12 @@ function Byline({ item }: { item: MusicItem }) {
   );
 }
 
-function PlayPlatter({ item }: { item: MusicItem }) {
+/** The glass platter that appears over artwork on hover. */
+function PlayPlatter({ item, size = 34 }: { item: MusicItem; size?: number }) {
   return (
     <button
-      className="pointer-events-auto absolute bottom-2.5 left-2.5 grid size-[30px] place-items-center rounded-full bg-thin-material text-white [backdrop-filter:saturate(180%)_blur(60px)] hover:bg-key-bg"
+      className="pointer-events-auto absolute bottom-2.5 left-2.5 grid place-items-center rounded-full bg-[rgb(10_10_14/0.42)] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.35),0_8px_20px_-8px_rgb(0_0_0/0.7)] backdrop-blur-xl transition-[background-color,transform] duration-(--duration-fast) hover:bg-key-bg active:scale-95"
+      style={{ width: size, height: size }}
       aria-label={`Play ${item.title}`}
       onClick={(e) => {
         e.preventDefault();
@@ -52,42 +55,48 @@ function PlayPlatter({ item }: { item: MusicItem }) {
         playTrack(item);
       }}
     >
-      <PlayIcon size={16} />
+      <PlayIcon size={size * 0.52} />
     </button>
   );
 }
 
-/** The artwork with its hover scrim, linking to the item or playing it. */
+/** The artwork with its hover sheen, linking to the item or playing it. */
 function LockupArtwork({ item, width, aspect }: { item: MusicItem; width: number; aspect: number }) {
   const href = hrefFor(item);
   return (
-    <div className="group/art relative rounded-artwork-md">
-      <Artwork src={item.thumbnail} displayWidth={width} aspect={aspect} radius="var(--radius-artwork-medium)" />
+    <div className="group/art relative">
+      <Artwork
+        src={item.thumbnail}
+        displayWidth={width}
+        aspect={aspect}
+        radius="var(--radius-artwork-medium)"
+        className={innerArt}
+      />
       {href ? (
         <PrefetchLink to={href} className={overlayLink} aria-label={item.title} />
       ) : (
         <button className={overlayLink} aria-label={`Play ${item.title}`} onClick={() => playTrack(item)} />
       )}
-      {/* Hover scrim and platter (report §2: --lockupHoverBGColor, opacity .1s ease-in). */}
-      <div className="pointer-events-none absolute inset-0 z-2 rounded-[inherit] bg-lockup-hover opacity-0 transition-opacity duration-100 ease-in group-focus-visible/art:opacity-100 group-hover/art:opacity-100">{isPlayable(item) && <PlayPlatter item={item} />}</div>
-      {/* The track menu (report §14) for playable items: top-right, the
-          platter's counterpart in the same glass, revealed with the scrim
-          and held visible while its menu is open. */}
+      {/* Hover scrim and platter, fading in over the slab. */}
+      <div className="pointer-events-none absolute inset-0 z-2 overflow-hidden rounded-[inherit] bg-[linear-gradient(180deg,transparent_40%,rgb(0_0_0/0.4))] opacity-0 transition-opacity duration-200 ease-in group-focus-visible/art:opacity-100 group-hover/art:opacity-100">
+        {isPlayable(item) && <PlayPlatter item={item} />}
+      </div>
+      {/* The track menu for playable items: top-right, in the same glass. */}
       {isPlayable(item) && (
         <TrackMenu
           track={toTrack(item)}
-          className="absolute top-2 right-2 z-3 grid size-7 place-items-center rounded-full bg-thin-material text-white opacity-0 transition-opacity duration-100 ease-in [backdrop-filter:saturate(180%)_blur(60px)] group-hover/art:opacity-100 focus-visible:opacity-100 hover:bg-key-bg data-open:opacity-100"
+          className="absolute top-2 right-2 z-3 grid size-7 place-items-center rounded-full bg-[rgb(10_10_14/0.42)] text-white opacity-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] backdrop-blur-xl transition-[opacity,background-color] duration-150 ease-in group-hover/art:opacity-100 focus-visible:opacity-100 hover:bg-key-bg data-open:opacity-100"
         />
       )}
     </div>
   );
 }
 
-/** Square lockup (report §2): artwork, hover scrim with play platter, title and subtitle. */
+/** Square lockup: a glass slab holding the artwork, title and subtitle. */
 export function SquareLockup({ item, width = 220 }: { item: MusicItem; width?: number }) {
   const href = hrefFor(item);
   return (
-    <div className={lockup}>
+    <div className={tile}>
       <LockupArtwork item={item} width={width} aspect={1} />
       <div className={caption}>
         <div className={title}>
@@ -108,10 +117,10 @@ export function SquareLockup({ item, width = 220 }: { item: MusicItem; width?: n
   );
 }
 
-/** 16:9 video lockup (report §2, type C). */
+/** 16:9 video lockup, on the same slab. */
 export function VideoLockup({ item, width = 300 }: { item: MusicItem; width?: number }) {
   return (
-    <div className={lockup}>
+    <div className={tile}>
       <LockupArtwork item={item} width={width} aspect={16 / 9} />
       <div className={caption}>
         <div className={title}>
@@ -124,49 +133,47 @@ export function VideoLockup({ item, width = 300 }: { item: MusicItem; width?: nu
   );
 }
 
-/** Circular artist lockup (report §2, type H). */
+/** Circular artist lockup: a glass halo around the portrait. */
 export function CircleLockup({ item, width = 160 }: { item: MusicItem; width?: number }) {
   return (
-    <PrefetchLink to={hrefFor(item) ?? '#'} className="group/circle flex min-w-0 flex-col items-center gap-2.5">
-      <Artwork src={item.thumbnail} displayWidth={width} radius="50%" />
-      <span className="max-w-full truncate text-center type-body group-hover/circle:underline">{item.title}</span>
+    <PrefetchLink to={hrefFor(item) ?? '#'} className="group/circle flex min-w-0 flex-col items-center gap-2 p-1">
+      <span className="relative block w-full rounded-full p-1 shadow-[inset_0_1px_0_var(--tileRim),inset_0_0_0_1px_var(--tileHairline),0_16px_34px_-24px_var(--tileShadow)] transition-transform duration-300 ease-spring group-hover/circle:-translate-y-1">
+        <Artwork src={item.thumbnail} displayWidth={width} radius="50%" />
+      </span>
+      <span className="max-w-full truncate text-center type-[600_11.5px/15px] group-hover/circle:underline">{item.title}</span>
     </PrefetchLink>
   );
 }
 
-/** A song row inside a shelf (report §2, track lockup): 40px art, title, byline. */
+/** A song row inside a shelf: 40px art, title, byline; the row lights on hover. */
 export function TrackLockup({ item, onPlay }: { item: MusicItem; onPlay?: () => void }) {
   const play = onPlay ?? (() => playTrack(item));
   return (
-    // 52px art column (40 + 12 gap), content, menu; 55px tall.
-    <div className="group/track grid h-[55px] grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 py-[7.5px] pr-3.5 pl-0">
-      <button className="group/art relative w-10 rounded-artwork-sm" aria-label={`Play ${item.title}`} onClick={play}>
-        <Artwork src={item.thumbnail} displayWidth={40} radius="var(--radius-artwork-small)" />
+    <div className="group/track -mx-1 grid h-[52px] grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-[13px] px-1 py-[6px] transition-colors duration-150 hover:bg-quinary">
+      <button className="group/art relative w-9 rounded-[9px]" aria-label={`Play ${item.title}`} onClick={play}>
+        <Artwork src={item.thumbnail} displayWidth={36} radius="var(--radius-artwork-small)" />
         <span
-          className="absolute inset-0 grid place-items-center rounded-[inherit] bg-lockup-hover text-white opacity-0 transition-opacity duration-100 ease-in group-hover/track:opacity-100 group-focus-visible/art:opacity-100"
+          className="absolute inset-0 grid place-items-center rounded-[9px] bg-[rgb(0_0_0/0.42)] text-white opacity-0 transition-opacity duration-150 group-hover/track:opacity-100 group-focus-visible/art:opacity-100"
           aria-hidden="true"
         >
-          <PlayIcon size={16} />
+          <PlayIcon size={14} />
         </span>
       </button>
-      <div className="flex min-w-0 flex-col gap-px px-1">
-        <div className="flex min-w-0 items-center type-body">
+      <div className="flex min-w-0 flex-col gap-px px-0.5">
+        <div className="flex min-w-0 items-center gap-1 type-[600_12.5px/16px]">
           <button className="min-w-0 truncate text-left" onClick={play}>
             {item.title}
           </button>
           {item.explicit && <ExplicitBadge />}
         </div>
-        <div className="truncate type-callout text-secondary">
+        <div className="truncate type-[500_11px/14px] text-secondary">
           <Byline item={item} />
         </div>
       </div>
-      {/* The track row's ⋯ (report §14), at the card's end: revealed on hover
-          or focus, and held visible while its menu is open. The space is
-          always reserved so the title doesn't jump when it appears. */}
       {isPlayable(item) && (
         <TrackMenu
           track={toTrack(item)}
-          className="grid size-7 place-items-center rounded-full text-key opacity-0 transition-opacity duration-100 ease-in group-hover/track:opacity-100 focus-visible:opacity-100 hover:bg-quinary data-open:opacity-100"
+          className="grid size-7 place-items-center rounded-full text-secondary opacity-0 transition-opacity duration-150 group-hover/track:opacity-100 focus-visible:opacity-100 hover:bg-quinary hover:text-primary data-open:opacity-100"
         />
       )}
     </div>

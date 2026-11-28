@@ -1,44 +1,79 @@
-import { detectExtension, type DetectedExtension } from '@musophone/shared/bridge';
+import { handshake, type DetectedExtension, type DetectDiagnostics } from '@musophone/shared/bridge';
 import { useQuery } from '@tanstack/react-query';
 import { config } from '@/config';
 import { queryClient } from '@/lib/queryClient';
 
+/** A handshake result: the extension when one genuinely answered, and why not when none did. */
+export interface ExtensionCheck {
+  extension: DetectedExtension | null;
+  diagnostics: DetectDiagnostics;
+}
+
 export type ExtensionStatus =
-  | { state: 'checking' }
-  | { state: 'missing' }
-  | { state: 'present'; extension: DetectedExtension };
+  | { state: 'checking'; diagnostics: DetectDiagnostics }
+  | { state: 'missing'; diagnostics: DetectDiagnostics }
+  | { state: 'present'; extension: DetectedExtension; diagnostics: DetectDiagnostics };
 
 export const extensionQueryKey = ['extension', 'detect'] as const;
 
-/** Re-pings after a miss: an MV3 service worker waking from sleep can miss the first one. */
+/** Re-pings after a miss: a sleeping MV3 worker waking on the first message can miss it. */
 const RECHECKS = 4;
-const RECHECK_MS = 1500;
-/** After those, a still-missing extension is polled slowly, so one that wakes late (or is installed meanwhile) is picked up without a reload. */
-const SLOW_RECHECK_MS = 5000;
+/** Backs off from 1.5 s to this, so a late install is picked up without hammering the worker. */
+const RECHECK_MIN_MS = 1500;
+const RECHECK_MAX_MS = 15_000;
 
 /**
- * One ping. When the extension was already known, a miss gets a second, more
- * patient ping, and if that misses too the known extension is kept: a worker
- * that fell asleep or restarted must not flip the site to "not installed" and
- * strand everything that reads the bridge (history reporting, lyrics) until a
- * reload. A bridge is only a function over chrome.runtime, so it recovers on
- * its own when the worker is back; a removed extension fails each call instead.
+ * The cache under `extensionQueryKey` holds only the detected extension, which
+ * is what the bridge, the player, history reporting and the auth hooks read.
+ * The handshake's diagnostics ride alongside in this module variable (read back
+ * by `extensionDiagnostics`) so a miss can explain itself without changing the
+ * shape every other caller depends on.
+ */
+let lastDiagnostics: DetectDiagnostics;
+
+/**
+ * One handshake. Both ids are pinged together: the configured one (a store
+ * build) and the unpacked build's pinned id, so either install is found.
+ *
+ * A miss gets a second, more patient handshake — a worker that has just been
+ * put to sleep needs longer than 2 s to answer. If that fails too the answer is
+ * "not installed", never a cached "connected": the site may only claim the
+ * extension when the extension itself answered.
  */
 async function detect(): Promise<DetectedExtension | null> {
-  const known = queryClient.getQueryData<DetectedExtension | null>(extensionQueryKey) ?? null;
-  // The configured id (a store build) and the unpacked build's pinned id,
-  // so an install of either is found. `detectExtension` pings them together.
-  const chromiumExtensionIds = [config.chromiumExtensionId, config.devChromiumExtensionId];
-  const found = await detectExtension({ chromiumExtensionIds });
-  if (found || !known) return found;
-  return (await detectExtension({ chromiumExtensionIds, timeoutMs: 4000 })) ?? known;
+  const ids = [config.chromiumExtensionId, config.devChromiumExtensionId];
+  const first = await handshake({ chromiumExtensionIds: ids });
+  lastDiagnostics = first.diagnostics;
+  if (first.detected) return first.detected;
+  const retry = await handshake({ chromiumExtensionIds: ids, timeoutMs: 4000, attempts: 2 });
+  lastDiagnostics = retry.diagnostics;
+  return retry.detected;
+}
+
+/** Before the first probe lands there is nothing to diagnose yet. */
+const IDLE_DIAGNOSTICS: DetectDiagnostics = {
+  origin: '',
+  secureContext: false,
+  runtimeExposed: false,
+  browser: 'other',
+  ids: [],
+  attempts: 0,
+  elapsedMs: 0,
+  failures: [],
+  hint: 'The extension has not been checked yet.',
+};
+lastDiagnostics = IDLE_DIAGNOSTICS;
+
+/** Re-runs the handshake now (the Extension page's "Check again", and the debug page). */
+export function recheckExtension(): Promise<void> {
+  return queryClient.invalidateQueries({ queryKey: extensionQueryKey, exact: true });
 }
 
 /**
- * Whether the companion extension is installed (prompt §4.2: a `ping` on
- * startup). A miss is reported at once, so a visitor without the extension
- * sees the install prompt straight away, but re-checked a few times: a
- * sleeping worker answering late flips the page to its content on its own.
+ * Whether the companion extension is installed: a `ping` handshake on
+ * startup, then a backoff while it's missing and a fresh probe whenever the tab
+ * comes back (an extension updated, reloaded or installed meanwhile reports
+ * itself without a page reload).
  */
 export function useExtension(): ExtensionStatus {
   const query = useQuery({
@@ -47,13 +82,23 @@ export function useExtension(): ExtensionStatus {
     staleTime: 30_000,
     gcTime: Infinity,
     retry: false,
-    // Re-pinged when the tab comes back, so an extension updated or reloaded
-    // meanwhile reports its new version (useExtensionUpdate).
     refetchOnWindowFocus: true,
-    refetchInterval: (q) =>
-      q.state.data === null ? (q.state.dataUpdateCount <= RECHECKS ? RECHECK_MS : SLOW_RECHECK_MS) : false,
+    // Also re-probe when the device comes back online: a failed handshake on a
+    // flaky connection must not leave the site stuck on "not installed".
+    refetchOnReconnect: true,
+    refetchInterval: (q) => {
+      if (q.state.data) return false;
+      const missingFor = q.state.dataUpdateCount;
+      if (missingFor > RECHECKS) return RECHECK_MAX_MS;
+      return Math.min(RECHECK_MAX_MS, RECHECK_MIN_MS * 2 ** missingFor);
+    },
   });
-  if (query.isPending) return { state: 'checking' };
-  if (!query.data) return { state: 'missing' };
-  return { state: 'present', extension: query.data };
+  if (query.isPending) return { state: 'checking', diagnostics: lastDiagnostics };
+  if (!query.data) return { state: 'missing', diagnostics: lastDiagnostics };
+  return { state: 'present', extension: query.data, diagnostics: lastDiagnostics };
+}
+
+/** The last handshake's diagnostics, for the extension and debug pages (no request). */
+export function extensionDiagnostics(): DetectDiagnostics | null {
+  return lastDiagnostics;
 }

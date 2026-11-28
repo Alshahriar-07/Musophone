@@ -67,10 +67,10 @@ export function SearchField({ initial, onSearch }: { initial: string; onSearch: 
           pick(active >= 0 ? options[active] : undefined);
         }}
       >
-        <Search size={15} strokeWidth={2.4} className="pointer-events-none absolute left-2.5 text-secondary" aria-hidden="true" />
+        <Search size={15} strokeWidth={2.4} className="pointer-events-none absolute left-3 text-secondary" aria-hidden="true" />
         <input
           ref={input}
-          className="glass-field h-[38px] w-full rounded-pill pt-1.5 pr-[30px] pb-[5px] pl-7 type-body text-primary placeholder:text-tertiary [&::-webkit-search-cancel-button]:hidden"
+          className="glass-field h-10 w-full rounded-pill pr-[32px] pl-8 type-body text-primary placeholder:text-tertiary [&::-webkit-search-cancel-button]:hidden"
           type="search"
           value={value}
           placeholder="Artists, Songs, Lyrics, and More"
@@ -103,7 +103,7 @@ export function SearchField({ initial, onSearch }: { initial: string; onSearch: 
         {value && (
           <button
             type="button"
-            className="absolute right-[9px] grid size-4 place-items-center rounded-full bg-tertiary text-page"
+            className="absolute right-3 grid size-4 place-items-center rounded-full bg-tertiary text-page"
             aria-label="Clear"
             onClick={() => {
               setValue('');
@@ -118,7 +118,7 @@ export function SearchField({ initial, onSearch }: { initial: string; onSearch: 
         // The dropdown: 302px of glass, 3px under the field.
         <ul
           id={listId}
-          className="glass-dialog absolute top-[calc(100%+3px)] left-0 z-(--z-contextual-menus) max-h-[min(700px,70vh)] w-[302px] overflow-y-auto rounded-[9px] py-1.5"
+          className="glass-dialog absolute top-[calc(100%+6px)] left-0 z-(--z-contextual-menus) max-h-[min(700px,70vh)] w-[320px] animate-menu-in overflow-y-auto rounded-[18px] p-1.5"
           role="listbox"
         >
           {options.map((option, i) => {
@@ -140,7 +140,7 @@ export function SearchField({ initial, onSearch }: { initial: string; onSearch: 
                 <>
                   <Search size={13} strokeWidth={2.4} aria-hidden="true" />
                   <span className="truncate">
-                    <span className="text-primary group-data-active/option:text-white">{option.typed}</span>
+                    <span className="text-primary">{option.typed}</span>
                     <span>{option.rest}</span>
                   </span>
                 </>
@@ -155,13 +155,13 @@ export function SearchField({ initial, onSearch }: { initial: string; onSearch: 
                   </div>
                   <div className="flex min-w-0 flex-col">
                     <span className="truncate type-body">{option.item.title}</span>
-                    <span className="mt-px truncate type-callout text-secondary group-data-active/option:text-white">{option.item.subtitle || kindLabel(option.item.kind)}</span>
+                    <span className="mt-px truncate type-callout text-secondary">{option.item.subtitle || kindLabel(option.item.kind)}</span>
                   </div>
                   {playable && item && (
                     <TrackMenu
                       track={toTrack(item)}
                       onOpenChange={onMenuOpenChange}
-                      className="grid size-7 place-items-center rounded-full text-secondary opacity-0 transition-opacity duration-100 ease-in group-hover/option:opacity-100 group-data-active/option:text-white focus-visible:opacity-100 hover:bg-quinary group-data-active/option:hover:bg-white/20 data-open:opacity-100"
+                      className="grid size-7 place-items-center rounded-full text-secondary opacity-0 transition-opacity duration-100 ease-in group-hover/option:opacity-100 focus-visible:opacity-100 hover:bg-quinary data-open:opacity-100"
                     />
                   )}
                 </>
@@ -176,9 +176,10 @@ export function SearchField({ initial, onSearch }: { initial: string; onSearch: 
 }
 
 // A suggestion row; hover or keyboard selection paints it in the key colour, white text.
-const optionRow = 'group/option mx-1.5 cursor-default rounded-[3px] data-active:bg-key-bg data-active:text-white';
-const hint = `${optionRow} grid grid-cols-[16px_minmax(0,1fr)] items-center p-1 type-body text-secondary`;
-const lockup = `${optionRow} mt-1.5 grid items-center gap-x-2.5 p-1.5`;
+const optionRow =
+  'group/option cursor-default rounded-[11px] transition-colors data-active:bg-key-glass data-active:text-primary data-active:shadow-[inset_0_0_0_1px_var(--tileHairline)]';
+const hint = `${optionRow} grid grid-cols-[16px_minmax(0,1fr)] items-center gap-2 px-2.5 py-1.5 type-body text-secondary`;
+const lockup = `${optionRow} mt-0.5 grid items-center gap-x-2.5 p-1.5`;
 const lockupCols = 'grid-cols-[46px_minmax(0,1fr)]';
 const lockupMenuCols = 'grid-cols-[46px_minmax(0,1fr)_auto]';
 

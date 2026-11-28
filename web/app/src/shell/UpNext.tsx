@@ -144,10 +144,10 @@ export function UpNext() {
 
   return (
     <>
-      <div className="flex items-center gap-1.5 px-5 pt-[23px] pb-3">
-        <h3 className="flex-1 type-title-2-emphasized">Up Next</h3>
+      <div className="flex items-center gap-1.5 px-4 pt-5 pb-3">
+        <h3 className="flex-1 type-[700_17px/22px] tracking-[-0.02em]">Up Next</h3>
         {canClear && (
-          <button className="mr-1 type-title-3 text-key" onClick={clearUpNext}>
+          <button className="mr-1 type-callout-emphasized text-key hover:underline" onClick={clearUpNext}>
             Clear
           </button>
         )}
@@ -180,8 +180,8 @@ export function UpNext() {
       {playingFrom && <p className="truncate px-5 pb-2 type-callout text-secondary">Playing from {playingFrom}</p>}
 
       {upcoming.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 pb-20 text-center type-callout text-secondary">
-          <p className="type-callout-emphasized">Nothing in Up Next</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 pb-20 text-center type-callout text-secondary">
+          <p className="type-[600_13px/17px] text-primary">Nothing in Up Next</p>
           <p>
             {autoplay && repeat === 'off' && index >= 0
               ? 'AutoPlay is finding similar music.'
@@ -189,7 +189,7 @@ export function UpNext() {
           </p>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-[120px] [scrollbar-width:thin]">
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-[140px] [scrollbar-width:thin]">
           <ol className={list}>{rows(beforeAutoplay)}</ol>
           {afterAutoplay.length > 0 && (
             <>

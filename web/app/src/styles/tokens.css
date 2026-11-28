@@ -42,28 +42,45 @@
   --footnote: 400 11px / 14px var(--font-family);
 
   /* ---- Layout ------------------------------------------------------------ */
-  --web-navigation-width: 260px;
+  --app-frame-padding: 0px;
+  --app-frame-gap: 0px;
+  --web-navigation-width: 248px;
+  --web-navigation-collapsed: 78px;
+  --appBackgroundImage: url('/musophone-background.jpg');
+  /* The app is edge-to-edge; only the floating chrome keeps an inset. */
+  --shell-inset: 12px;
   --body-gutter: 25px;
-  --player-pill-height: 56px;
-  --player-bottom-offset: 20px;
-  --side-panel-width: 300px;
-  --mobile-top-bar-height: 52px;
+  --player-pill-height: 80px;
+  --player-bottom-offset: 16px;
+  --side-panel-width: 320px;
+  --mobile-top-bar-height: 58px;
   --mini-player-height: 52px;
 
   /* ---- Radii ------------------------------------------------------------- */
-  --radius-artwork-small: 5px; /* 40px track rows, horizontal lockups */
-  --radius-artwork-medium: 7px; /* square lockups */
-  --radius-artwork-large: 10px; /* album header, editorial cards */
-  --radius-nav-item: 8px;
-  --radius-track-row: 6px;
+  --radius-artwork-small: 6px; /* 40px track rows, horizontal lockups */
+  --radius-artwork-medium: 10px; /* square lockups */
+  --radius-artwork-large: 14px; /* album header, editorial cards */
+  --radius-nav-item: 12px;
+  --radius-track-row: 10px;
   --radius-pill: 1000px;
+  /* The Liquid Glass shapes: one step per pane size. */
+  --radius-rail: 28px;
+  --radius-sheet: 26px;
+  --radius-dock: 26px;
+  --radius-tile: 20px;
+  --radius-field: 14px;
 
   /* ---- Motion ------------------------------------------------------------ */
   --ease-out-panel: cubic-bezier(0.215, 0.61, 0.355, 1);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --duration-panel: 0.3s;
+  /* Settles with a touch of overshoot: presses and panes, never layout. */
+  --ease-spring: cubic-bezier(0.22, 1.12, 0.36, 1);
+  /* Long, decelerating travel: page arrivals and sheets. */
+  --ease-glide: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-panel: 0.42s;
   --duration-fast: 140ms;
-  --duration-page: 320ms;
+  --duration-page: 420ms;
+  --duration-drift: 46s;
   --global-transition: opacity 0.1s ease-in;
   --duration-arrow: 0.25s;
 
@@ -80,12 +97,12 @@
 
   /* Warm porcelain rather than white: the app's light mode is a surface, not
    * a blank document. */
-  --pageBG: #f7f5f8;
-  --pageBG-rgb: 247, 245, 248;
+  --pageBG: #f3f1f6;
+  --pageBG-rgb: 243, 241, 246;
 
-  --systemPrimary: #16121ae0;
-  --systemSecondary: #16121a8f;
-  --systemTertiary: #16121a75;
+  --systemPrimary: #16121ae6;
+  --systemSecondary: #16121aa8;
+  --systemTertiary: #16121a85;
   --systemQuaternary: #16121a1a;
   --systemQuinary: #16121a0d;
 
@@ -117,43 +134,90 @@
   --labelDivider: #00000026;
   --vibrantDivider: #3c3c434a;
 
-  --glassMaterialBackground: #fbf9fca8;
+  --glassMaterialBackground: rgb(255 255 255 / 0.34);
   --glassMaterialShadowColor: #1a141a12;
   --glassMaterialInnerStroke: #000000;
   --glassMaterialInnerStrokeAlpha: 0.05;
-  --glassMaterialBackdropFilter: saturate(190%) blur(30px);
+  --glassMaterialBackdropFilter: saturate(155%) blur(11px) brightness(1.04);
+  /* Regular Glass: one shared recipe, scaled per pane. Low blur so the field
+   * stays legible through the pane; a masked 1px lit rim; a specular sweep. */
+  --glassBlurPanel: saturate(158%) blur(11px) brightness(1.05);
+  --glassBlurCard: saturate(145%) blur(7px) brightness(1.04);
+  --glassBlurField: saturate(150%) blur(8px) brightness(1.06);
+  --glassBlurDock: saturate(165%) blur(14px) brightness(1.06);
+  --glassBlurDialog: saturate(160%) blur(22px) brightness(1.03);
+  --glassEdge: rgb(255 255 255 / 0.98);
+  --glassEdgeDim: rgb(255 255 255 / 0.5);
+  --glassSpecular: rgb(255 255 255 / 0.34);
+  --glassSpecularSoft: rgb(255 255 255 / 0.09);
+  --contentVeil: linear-gradient(180deg, rgb(250 248 253 / 0.55), rgb(246 243 250 / 0.42));
 
-  /* Liquid Glass material: a translucent body, a lit upper edge, a darker
-   * lower rim, and a soft drop shadow. The ambient layer behind the app is
-   * what the body refracts; the rim is what makes the pane read as glass. */
-  --glassFill: #fbf9fcb8;
-  --glassFillStrong: #fbf9fcf0;
-  --glassCardFill: #ffffffc2;
-  --glassDialogFill: #f8f6f9f8;
-  --glassFieldFill: #ffffffb8;
-  --glassSheen: rgb(255 255 255 / 0.58);
-  --glassSheenSoft: rgb(255 255 255 / 0.18);
-  --glassRim: rgb(255 255 255 / 0.9);
-  --glassRimBottom: rgb(0 0 0 / 0.06);
-  --glassHairline: rgb(0 0 0 / 0.1);
-  --glassDrop: rgb(27 21 30 / 0.16);
-  --ambientBeam: rgb(255 255 255 / 0.48);
+  /*
+   * Liquid Glass. Every pane is built from the same five parts: a translucent
+   * body the ambient field shows through, a lit top edge, a darker bottom rim,
+   * a hairline all round, and a soft shadow that lifts it off the field. The
+   * body is a gradient rather than one flat colour, so the pane reads thicker
+   * at its top than at its foot.
+   */
+  --glassFill: rgb(255 255 255 / 0.3);
+  --glassFillStrong: rgb(255 255 255 / 0.46);
+  --glassCardFill: rgb(255 255 255 / 0.34);
+  --glassDialogFill: rgb(252 250 255 / 0.82);
+  --glassFieldFill: rgb(255 255 255 / 0.4);
+  --glassSheen: rgb(255 255 255 / 0.8);
+  --glassSheenSoft: rgb(255 255 255 / 0.24);
+  --glassRim: rgb(255 255 255 / 0.98);
+  --glassRimBottom: rgb(255 255 255 / 0.4);
+  --glassHairline: rgb(22 18 26 / 0.13);
+  --glassDrop: rgb(27 21 30 / 0.22);
+  --ambientBeam: rgb(255 255 255 / 0.5);
+  --appScrim: linear-gradient(180deg, rgb(250 248 253 / 0.86) 0%, rgb(244 241 249 / 0.8) 46%, rgb(238 234 245 / 0.88) 100%);
+
+  /* The stage the glass sits on: a pearl field with an accent-tinted aurora
+   * and one cool counter-light, so every pane has something to refract. */
   --ambientBackground:
-    radial-gradient(70% 58% at 10% -8%, #ffffff 0%, transparent 64%),
-    radial-gradient(52% 44% at 88% 6%, #e9e2ee 0%, transparent 70%),
-    radial-gradient(64% 48% at 52% 112%, #ede6f0 0%, transparent 72%),
-    linear-gradient(180deg, #f8f6f9 0%, #f2eef4 100%);
+    radial-gradient(120% 78% at 50% -26%, #ffffff 0%, rgb(255 255 255 / 0) 58%),
+    radial-gradient(78% 56% at 94% 6%, #e9e5f6 0%, rgb(233 229 246 / 0) 64%),
+    linear-gradient(168deg, #f5f2f9 0%, #ede8f3 48%, #e5e0ec 100%);
+  --auroraOne: color-mix(in srgb, var(--keyColor) 14%, #e2e4ee);
+  --auroraTwo: #e7e9f1;
+  --auroraThree: color-mix(in srgb, var(--keyColor) 9%, #f0e8e4);
+  --auroraVeil: rgb(255 255 255 / 0.55);
+  --auroraOpacity: 0.52;
 
-  --systemStandardThinMaterialSover: #f6f6f67a;
+  /* A page sheet: frost, not mirror — it must stay readable under text. */
+  --sheetFillTop: rgb(255 255 255 / 0.62);
+  --sheetFillBottom: rgb(255 255 255 / 0.32);
+  --sheetRim: rgb(255 255 255 / 0.88);
+  --sheetHairline: rgb(22 18 26 / 0.07);
+  --sheetShadow: rgb(28 22 36 / 0.1);
+
+  /* Cards inside the sheet: a brighter pane with its own top light. */
+  --tileTop: rgb(255 255 255 / 0.58);
+  --tileBottom: rgb(255 255 255 / 0.22);
+  --tileHairline: rgb(22 18 26 / 0.12);
+  --tileRim: rgb(255 255 255 / 0.98);
+  --tileShadow: rgb(30 24 40 / 0.16);
+  --tileHoverShadow: rgb(30 24 40 / 0.22);
+
+  /* The play control: the one place the accent is a solid surface. */
+  --playFill: var(--keyColor);
+  --playInk: #ffffff;
+
+  /* The one accent-tinted glass: the player's play button. */
+  --keyGlass: color-mix(in srgb, var(--keyColor) 88%, transparent);
+  --keyGlassRim: color-mix(in srgb, #ffffff 55%, var(--keyColor));
+
+  --systemStandardThinMaterialSover: #f6f6f666;
   --systemStandardThickMaterialSover: #f6f6f6b8;
-  --systemHeaderMaterialSover: #ffffffcc;
+  --systemHeaderMaterialSover: #ffffffd9;
 
-  --navSidebarSelectedState: #16121a12;
-  --tracklistHoverColor: #0000000d;
+  --navSidebarSelectedState: #16121a10;
+  --tracklistHoverColor: #16121a08;
   --shelfBG: #16121a0a;
   --opaqueShelfBG: #f1edf1;
   --footerBg: #f7f5f8;
-  --lockupHoverBGColor: #3333334d;
+  --lockupHoverBGColor: #33333340;
   --genericJoeColor: #ebebeb;
   --modalScrimColor: #00000073;
   --searchBarBorderColor: #00000026;
@@ -190,11 +254,11 @@
 :root[data-appearance='dark'] {
   color-scheme: dark;
 
-    /* True black, not dark grey: the AMOLED foundation the Android app moved
-     * to in v2.2, kept in v2.5. Every surface above it is a neutral charcoal
-     * step, and the accent never tints the backdrop. */
-    --pageBG: #000000;
-    --pageBG-rgb: 0, 0, 0;
+    /* Deep charcoal, not pure black: the stage has depth, and the glass has
+     * something to sit on. Every surface above it is a neutral step; the
+     * accent never tints the backdrop, only the light in it. */
+    --pageBG: #0e0f12;
+    --pageBG-rgb: 14, 15, 18;
 
     --systemPrimary: #f7f7f9eb;
     --systemSecondary: #a4a4ac;
@@ -221,35 +285,71 @@
     --labelDivider: #ffffff14;
     --vibrantDivider: #ffffff26;
 
-    --glassMaterialBackground: #0d0d11a8;
-    --glassMaterialShadowColor: #00000066;
+    --glassMaterialBackground: rgb(255 255 255 / 0.055);
+    --glassMaterialShadowColor: #00000080;
     --glassMaterialInnerStroke: #ffffff;
     --glassMaterialInnerStrokeAlpha: 0.12;
 
-    --glassFill: #17171ea8;
-    --glassFillStrong: #17171eeb;
-    --glassCardFill: #1a1a21b8;
-    --glassDialogFill: #121218f5;
-    --glassFieldFill: #121218a8;
-    --glassSheen: rgb(255 255 255 / 0.2);
-    --glassSheenSoft: rgb(255 255 255 / 0.07);
-    --glassRim: rgb(255 255 255 / 0.34);
-    --glassRimBottom: rgb(0 0 0 / 0.6);
-    --glassHairline: rgb(255 255 255 / 0.13);
-    --glassDrop: rgb(0 0 0 / 0.65);
-    --ambientBeam: rgb(191 195 214 / 0.18);
+    /* High transparency: the wave behind the pane must stay recognisable. */
+    --glassFill: rgb(255 255 255 / 0.055);
+    --glassFillStrong: rgb(255 255 255 / 0.1);
+    --glassCardFill: rgb(255 255 255 / 0.05);
+    --glassDialogFill: rgb(24 25 31 / 0.72);
+    --glassFieldFill: rgb(255 255 255 / 0.07);
+    --glassSheen: rgb(255 255 255 / 0.34);
+    --glassSheenSoft: rgb(255 255 255 / 0.1);
+    --glassRim: rgb(255 255 255 / 0.6);
+    --glassRimBottom: rgb(255 255 255 / 0.08);
+    --glassHairline: rgb(255 255 255 / 0.18);
+    --glassDrop: rgb(0 0 0 / 0.62);
+    --glassEdge: rgb(255 255 255 / 0.72);
+    --glassEdgeDim: rgb(255 255 255 / 0.28);
+    --glassSpecular: rgb(255 255 255 / 0.26);
+    --glassSpecularSoft: rgb(255 255 255 / 0.07);
+    --ambientBeam: rgb(206 210 224 / 0.11);
+    --appScrim: linear-gradient(180deg, rgb(6 7 10 / 0.5) 0%, rgb(6 7 10 / 0.26) 42%, rgb(6 7 10 / 0.64) 100%);
+    --contentVeil: linear-gradient(180deg, rgb(7 8 11 / 0.42), rgb(7 8 11 / 0.24));
+
+    /* Soft grey light over deep charcoal: radial shading, no colour wash. The
+     * accent is a whisper inside the grey, enough to make the light belong to
+     * the chosen accent without tinting the stage. */
     --ambientBackground:
-      radial-gradient(58% 62% at 7% -10%, #3d3d49 0%, transparent 64%),
-      radial-gradient(46% 42% at 92% 2%, #2a2a34 0%, transparent 70%),
-      radial-gradient(56% 44% at 48% 112%, #24242d 0%, transparent 72%),
-      linear-gradient(180deg, #08080a 0%, #000000 100%);
+      radial-gradient(96% 68% at 50% -18%, #212329 0%, rgb(17 18 21 / 0) 64%),
+      radial-gradient(72% 58% at 10% 104%, #17181d 0%, rgb(17 18 21 / 0) 72%),
+      linear-gradient(172deg, #14151a 0%, #0e0f12 54%, #0a0b0d 100%);
+    --auroraOne: color-mix(in srgb, var(--keyColor) 20%, #4b5260);
+    --auroraTwo: #2e3138;
+    --auroraThree: color-mix(in srgb, var(--keyColor) 12%, #2a2b30);
+    --auroraVeil: rgb(255 255 255 / 0.05);
+    --auroraOpacity: 0.22;
+
+    --sheetFillTop: rgb(62 65 77 / 0.6);
+    --sheetFillBottom: rgb(34 36 44 / 0.74);
+    --sheetRim: rgb(255 255 255 / 0.2);
+    --sheetHairline: rgb(255 255 255 / 0.075);
+    --sheetShadow: rgb(0 0 0 / 0.55);
+
+    --tileTop: rgb(255 255 255 / 0.14);
+    --tileBottom: rgb(255 255 255 / 0.045);
+    --tileHairline: rgb(255 255 255 / 0.16);
+    --tileRim: rgb(255 255 255 / 0.52);
+    --tileShadow: rgb(0 0 0 / 0.55);
+    --tileHoverShadow: rgb(0 0 0 / 0.65);
+
+    /* A lit accent surface with a dark glyph: the accent stays the star and
+     * the glyph stays legible on it. */
+    --playFill: color-mix(in srgb, var(--keyColor) 92%, #ffffff);
+    --playInk: #17131a;
+
+    --keyGlass: color-mix(in srgb, var(--keyColor) 16%, transparent);
+    --keyGlassRim: color-mix(in srgb, var(--keyColor) 45%, #ffffff);
 
     --systemStandardThinMaterialSover: #101012cc;
     --systemStandardThickMaterialSover: #141417e6;
     --systemHeaderMaterialSover: #000000cc;
 
-    --navSidebarSelectedState: #ffffff0f;
-    --tracklistHoverColor: #ffffff0a;
+    --navSidebarSelectedState: #ffffff0e;
+    --tracklistHoverColor: #ffffff09;
     --shelfBG: #ffffff08;
     --opaqueShelfBG: #121215;
     --footerBg: #0a0a0c;

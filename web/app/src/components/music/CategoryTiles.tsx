@@ -38,7 +38,7 @@ function useNearViewport<T extends HTMLElement>(rootMargin = '600px') {
 }
 
 const tile =
-  'relative flex aspect-video items-end overflow-hidden rounded-artwork-lg bg-[radial-gradient(120%_90%_at_100%_0%,color-mix(in_srgb,var(--tile-color)_70%,#fff)_0%,transparent_70%),linear-gradient(160deg,var(--tile-color),color-mix(in_srgb,var(--tile-color)_55%,#000))] px-3.5 py-3 text-white transition-[scale] duration-200 ease-panel hover:scale-[1.015]';
+  'relative flex aspect-video items-end overflow-hidden rounded-[20px] bg-[radial-gradient(120%_90%_at_100%_0%,color-mix(in_srgb,var(--tile-color)_70%,#fff)_0%,transparent_70%),linear-gradient(160deg,var(--tile-color),color-mix(in_srgb,var(--tile-color)_55%,#000))] px-4 py-3.5 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_0_0_1px_rgb(255_255_255/0.12),0_20px_44px_-26px_rgb(0_0_0/0.55)] transition-[transform,box-shadow] duration-300 ease-spring hover:-translate-y-1 hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.35),inset_0_0_0_1px_rgb(255_255_255/0.16),0_30px_60px_-26px_rgb(0_0_0/0.6)]';
 
 function CategoryTile({ category }: { category: Category }) {
   const { ready } = useYouTubeReady();
@@ -100,7 +100,7 @@ function CategoryTile({ category }: { category: Category }) {
         )}
         {/* The solid stripe down the left, as on the phone. */}
         <span aria-hidden="true" className="absolute inset-y-0 left-0 w-2.5" style={{ background: 'var(--tile-color)' }} />
-        <span className="relative type-title-2-emphasized [text-shadow:0_1px_8px_#0000004d]">{category.title}</span>
+        <span className="relative type-[700_16px/20px] tracking-[-0.01em] [text-shadow:0_1px_8px_#0000004d]">{category.title}</span>
       </PrefetchLink>
     </li>
   );
@@ -117,7 +117,7 @@ export function CategoryTiles({ groups }: { groups: CategoryGroup[] }) {
     <>
       {groups.map((group) => (
         <section key={group.title} className="pt-3" aria-label={group.title}>
-          <h2 className="mx-(--body-gutter) type-title-2-emphasized">{group.title}</h2>
+          <h2 className="mx-(--body-gutter) type-[700_19px/24px] tracking-[-0.02em]">{group.title}</h2>
           {/* 4 columns at ≥1000px, gap 20px (report §6); 3, then 2, below. */}
           <ul className="mx-(--body-gutter) mt-3 mb-8 grid grid-cols-4 gap-5 max-lg:grid-cols-3 max-[607px]:grid-cols-2 max-[607px]:gap-2.5">
             {group.categories.map((category) => (

@@ -69,7 +69,7 @@ export function applyAppearance(appearance: Appearance, accent: Accent): void {
   root.dataset.accent = accent;
   root.style.colorScheme = resolved;
   const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (themeColor) themeColor.content = resolved === 'dark' ? '#000000' : '#f7f5f8';
+  if (themeColor) themeColor.content = resolved === 'dark' ? '#0e0f12' : '#f3f1f6';
 }
 
 interface AppearanceState {

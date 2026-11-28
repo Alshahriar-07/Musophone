@@ -2,6 +2,15 @@
 export const PRODUCTION_ORIGIN = 'https://musophone.vercel.app';
 
 /**
+ * Every production address the site answers on. Vercel serves the project at
+ * `musophone-web.vercel.app` as well as the canonical `musophone.vercel.app`,
+ * and both are live; an install has to work on whichever one the user opens.
+ * Leaving one out is not a degraded state — Chrome refuses to expose
+ * `chrome.runtime` to the page at all, so the site reads "not installed".
+ */
+export const PRODUCTION_ORIGINS = ['https://musophone-web.vercel.app', PRODUCTION_ORIGIN] as const;
+
+/**
  * The site's previous addresses. They stay trusted so extensions already
  * installed keep working on them (and on old bookmarks); `bitchord://` invites
  * and `bitchord:*` storage keys are kept for the same reason.
@@ -9,8 +18,18 @@ export const PRODUCTION_ORIGIN = 'https://musophone.vercel.app';
 const LEGACY_ORIGIN = 'https://bitchord.in';
 const PAGES_ORIGIN = 'https://bitchord-8bw.pages.dev';
 
-/** The Vite dev server (web/app/vite.config.ts pins the port). */
-const DEV_ORIGIN = 'http://localhost:5173';
+/**
+ * The dev servers: Vite's own (web/app/vite.config.ts pins the port) and the
+ * ports a preview or a Vercel local run listens on. `[::1]` is what some
+ * browsers report for localhost; the explicit IPv4 spellings are listed
+ * because the page's origin is compared exactly at runtime.
+ */
+const DEV_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+];
 
 /**
  * The web app origins this extension serves. Every message is checked against
@@ -29,10 +48,10 @@ const env = (name: string, legacy: string) => process.env[name] ?? process.env[l
 export const SITE_ORIGINS: string[] = (
   env('MUSOPHONE_SITE_ORIGINS', 'BITCHORD_SITE_ORIGINS') ??
   [
-    PRODUCTION_ORIGIN,
+    ...PRODUCTION_ORIGINS,
     LEGACY_ORIGIN,
     PAGES_ORIGIN,
-    ...(env('MUSOPHONE_STORE_BUILD', 'BITCHORD_STORE_BUILD') === '1' ? [] : [DEV_ORIGIN]),
+    ...(env('MUSOPHONE_STORE_BUILD', 'BITCHORD_STORE_BUILD') === '1' ? [] : DEV_ORIGINS),
   ].join(',')
 )
   .split(',')

@@ -58,7 +58,7 @@ function Scrubber() {
           <MixWindowHighlight />
           <div
             ref={bar}
-            className="relative size-full origin-left scale-x-(--progress) bg-secondary transition-[background-color] duration-120 ease-in [--progress:0] group-hover/hit:bg-primary group-data-dragging/scrub:bg-primary"
+            className="relative size-full origin-left scale-x-(--progress) rounded-full bg-[linear-gradient(90deg,color-mix(in_srgb,var(--keyColor)_55%,transparent),var(--keyColor))] shadow-[0_0_10px_-2px_var(--keyColor)] [--progress:0]"
           />
         </div>
       </div>
@@ -96,7 +96,12 @@ function Transport() {
       <button className={skip} disabled={!hasTrack} aria-label="Previous" onClick={previous}>
         <BackwardIcon size={40} />
       </button>
-      <button className={`${transportButton} size-14 text-primary`} disabled={!hasTrack} aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay}>
+      <button
+        className="grid size-16 place-items-center rounded-full bg-[var(--playFill)] text-[var(--playInk)] shadow-[inset_0_1px_0_rgb(255_255_255/0.45),0_18px_40px_-16px_var(--keyColor)] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-95 disabled:opacity-40"
+        disabled={!hasTrack}
+        aria-label={playing ? 'Pause' : 'Play'}
+        onClick={togglePlay}
+      >
         {playing ? <PauseIcon size={48} /> : <PlayIcon size={48} />}
       </button>
       <button className={skip} disabled={!hasTrack || !hasNext} aria-label="Next" onClick={next}>
@@ -116,7 +121,7 @@ function Transport() {
 
 // Close, browser full screen, the column toggles and the speaker, in the corners.
 const chromeButton =
-  'grid size-8 place-items-center rounded-full text-secondary transition-[background-color,color] duration-100 ease-in hover:bg-quinary hover:text-primary';
+  'grid size-9 place-items-center rounded-full bg-[rgb(16_16_20/0.32)] text-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.26),inset_0_0_0_1px_rgb(255_255_255/0.12)] backdrop-blur-xl transition-[background-color,color,transform] duration-150 hover:bg-[rgb(255_255_255/0.14)] hover:text-primary active:scale-95';
 const chrome = `absolute z-1 ${chromeButton}`;
 const artworkLayer = 'absolute inset-0 size-full rounded-[inherit] object-cover opacity-0 transition-opacity duration-300 ease-in';
 
@@ -290,10 +295,11 @@ export function FullScreenPlayer() {
         >
           {/* Shrinks a touch while paused, as Apple's does. Beside a column, a music video plays here at 16:9. */}
           <div
-            className={`relative w-(--art) rounded-[10px] transition-[scale] duration-450 ease-[cubic-bezier(0.34,1.3,0.64,1)] motion-reduce:transition-none${
-              video ? ' aspect-video overflow-hidden bg-black' : ' aspect-square'
-            }${playing ? '' : ' scale-92'}${column ? ' max-md:hidden' : ''}${theater ? ' hidden' : ''}`}
+            className={`glass-tile relative w-(--art) rounded-[26px] p-2.5 transition-[scale] duration-450 ease-[cubic-bezier(0.34,1.3,0.64,1)] motion-reduce:transition-none${
+              playing ? '' : ' scale-92'
+            }${column ? ' max-md:hidden' : ''}${theater ? ' hidden' : ''}`}
           >
+            <div className={`relative overflow-hidden rounded-[18px] ${video ? 'aspect-video bg-black' : 'aspect-square'}`}>
             {nowPlaying.artworkUrl && (
               <>
                 <img
@@ -327,6 +333,7 @@ export function FullScreenPlayer() {
               />
             )}
             {video && !theater && <VideoSurface className="absolute inset-0" />}
+            </div>
           </div>
 
           <div className={`flex items-center gap-3${theater ? '' : ' mt-[clamp(20px,3.2vh,32px)]'}${column ? ' max-md:mt-0' : ''}`}>
@@ -334,7 +341,7 @@ export function FullScreenPlayer() {
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <div className="flex min-w-0 items-center">
                 <PageLink
-                  className={`min-w-0 max-w-full self-start truncate type-[600_17px/22px] ${pageLink}`}
+                  className={`min-w-0 max-w-full self-start truncate type-[700_20px/26px] tracking-[-0.02em] ${pageLink}`}
                   href={albumHref(album?.id ?? null)}
                   resolve={() => albumPageFor(videoId, album, [title, artist].filter(Boolean).join(' '))}
                 >
@@ -342,7 +349,7 @@ export function FullScreenPlayer() {
                 </PageLink>
                 {track?.explicit && <ExplicitBadge size={14} />}
               </div>
-              <span className="truncate type-title-3 text-secondary">
+              <span className="truncate type-[400_13px/18px] text-secondary">
                 {artist && <Credits videoId={videoId} line={artist} artists={track?.artists ?? []} className={pageLink} />}
                 {artist && album?.name && ' — '}
                 {album?.name && (

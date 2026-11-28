@@ -9,7 +9,7 @@ export default function DiscordSettingsPage() {
   return (
     <div className={settingsUi.centered}>
       <PageHeader title="Discord" />
-      <div className={settingsUi.body}>
+      <div className={`${settingsUi.body} ${settingsUi.narrow}`}>
         <section className={settingsUi.group}>
           <div className={settingsUi.integrationPlain}>
             <span className={settingsUi.integrationName}>Account</span>

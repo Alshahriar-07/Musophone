@@ -256,11 +256,11 @@ function ProviderPicker({ current, full, canRomanize }: { current: LyricsSourceI
       className={
         full
           ? 'flex items-center justify-between pb-1 opacity-0 transition-opacity duration-200 group-hover/panel:opacity-100 focus-within:opacity-100'
-          : 'flex items-center justify-between px-4 pt-4 pb-1'
+          : 'flex items-center justify-between px-4 pt-4 pb-2'
       }
     >
       <button
-        className="inline-flex items-center gap-1 rounded-[8px] px-2 py-1 type-callout-emphasized text-secondary hover:bg-quinary"
+        className="inline-flex items-center gap-1 rounded-[10px] px-2 py-1 type-callout-emphasized text-secondary transition-colors hover:bg-quinary hover:text-primary"
         aria-haspopup="menu"
         onClick={(e) => setAnchor(e.currentTarget)}
       >
@@ -270,7 +270,7 @@ function ProviderPicker({ current, full, canRomanize }: { current: LyricsSourceI
       <span className="flex items-center gap-1">
         {canRomanize && (
           <button
-            className={`inline-flex h-7 items-center gap-1 rounded-[8px] px-2 type-callout-emphasized transition-colors duration-150 ${
+            className={`inline-flex h-7 items-center gap-1 rounded-[10px] px-2 type-callout-emphasized transition-colors duration-150 ${
               latinScript ? 'bg-key-bg text-white' : 'text-secondary hover:bg-quinary hover:text-primary'
             }`}
             aria-label={latinScript ? 'Show original script' : 'Show Latin script'}
@@ -283,7 +283,7 @@ function ProviderPicker({ current, full, canRomanize }: { current: LyricsSourceI
           </button>
         )}
         <button
-          className="grid size-7 place-items-center rounded-[8px] text-secondary hover:bg-quinary"
+          className="grid size-7 place-items-center rounded-[10px] text-secondary transition-colors hover:bg-quinary hover:text-primary"
           aria-label="Lyric settings"
           onClick={() => setSettings(true)}
         >
@@ -330,7 +330,7 @@ function ProviderPicker({ current, full, canRomanize }: { current: LyricsSourceI
 function PermissionNotice({ origins }: { origins: string[] }) {
   const names = origins.map((o) => new URL(o).host.replace(/^www\./, ''));
   return (
-    <div className="mx-4 my-1.5 flex items-center gap-2.5 rounded-[10px] bg-quinary px-2.5 py-2 type-callout text-secondary">
+    <div className="mx-3 my-1.5 flex items-center gap-2.5 rounded-[12px] bg-quinary px-3 py-2 type-callout text-secondary">
       <span>
         {names.slice(0, 2).join(', ')}
         {names.length > 2 ? ` and ${names.length - 2} more` : ''} need the extension’s permission.

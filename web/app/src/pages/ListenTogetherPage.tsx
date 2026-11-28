@@ -48,7 +48,7 @@ export default function ListenTogetherPage() {
   return (
     <div className={settingsUi.centered}>
       <PageHeader title="Listen Together" />
-      <div className={settingsUi.body}>
+      <div className={`${settingsUi.body} ${settingsUi.narrow}`}>
         {state.code ? (
           <InParty />
         ) : inviteCode ? (

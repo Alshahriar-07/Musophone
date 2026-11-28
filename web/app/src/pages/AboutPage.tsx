@@ -51,8 +51,8 @@ export default function AboutPage() {
   return (
     <div className={settingsUi.centered}>
       <PageHeader title="About" />
-      <div className={settingsUi.body}>
-        <section className="relative mt-5 overflow-hidden rounded-[20px] bg-black px-7 py-8 text-white ring-1 ring-inset ring-white/10">
+      <div className={`${settingsUi.body} max-w-[900px]`}>
+        <section className="relative mt-2 overflow-hidden rounded-[26px] bg-[#0d0e11] px-7 py-8 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.16),inset_0_0_0_1px_rgb(255_255_255/0.08),0_30px_80px_-40px_rgb(0_0_0/0.6)]">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -top-28 -left-24 size-[360px] rounded-full bg-[radial-gradient(circle,rgb(255_77_103/0.28),transparent_66%)] blur-2xl"
@@ -74,16 +74,26 @@ export default function AboutPage() {
             Al Shahriar Sowan at Eagox Studio.
           </p>
           <div className="relative mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 type-body-emphasized">
-            <a className="inline-flex items-center gap-1.5 text-[#ff8c9f] hover:underline" href={WEBSITE} target="_blank" rel="noreferrer">
+            <a
+              className="inline-flex items-center gap-1.5 text-[color-mix(in_srgb,var(--keyColor)_55%,#ffffff)] hover:underline"
+              href={WEBSITE}
+              target="_blank"
+              rel="noreferrer"
+            >
               <Globe size={15} strokeWidth={2} aria-hidden="true" />
               musophone.vercel.app
             </a>
-            <a className="inline-flex items-center gap-1.5 text-[#ff8c9f] hover:underline" href={GITHUB} target="_blank" rel="noreferrer">
+            <a
+              className="inline-flex items-center gap-1.5 text-[color-mix(in_srgb,var(--keyColor)_55%,#ffffff)] hover:underline"
+              href={GITHUB}
+              target="_blank"
+              rel="noreferrer"
+            >
               <FaGithub size={15} aria-hidden="true" />
               GitHub
             </a>
             <a
-              className="inline-flex items-center gap-1.5 text-[#ff8c9f] hover:underline"
+              className="inline-flex items-center gap-1.5 text-[color-mix(in_srgb,var(--keyColor)_55%,#ffffff)] hover:underline"
               href={config.androidAppUrl}
               target="_blank"
               rel="noreferrer"

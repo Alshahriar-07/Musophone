@@ -8,9 +8,9 @@ import { browseHref } from './links';
 import { CircleLockup, SquareLockup, TrackLockup, VideoLockup } from './Lockups';
 import { playList } from './play';
 
-// Arrow buttons (report §2): 28×52 glass pills, only ≥1000px, shown on shelf hover.
+// Arrow buttons: round glass pucks, only ≥1000px, shown on shelf hover.
 const arrow =
-  'absolute top-1/2 z-3 hidden h-13 w-7 -translate-y-1/2 place-items-center rounded-pill bg-thin-material text-secondary opacity-0 transition-[opacity,background-color,color] duration-(--duration-arrow) ease-linear [backdrop-filter:saturate(180%)_blur(60px)] hover:text-primary disabled:pointer-events-none lg:grid lg:enabled:group-hover/shelf:opacity-100';
+  'absolute top-1/2 z-3 hidden size-9 -translate-y-1/2 place-items-center rounded-full bg-[rgb(12_12_16/0.45)] text-white opacity-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_10px_24px_-12px_rgb(0_0_0/0.7)] backdrop-blur-xl transition-[opacity,background-color,transform] duration-(--duration-arrow) ease-out hover:bg-key-bg active:scale-95 disabled:pointer-events-none lg:grid lg:enabled:group-hover/shelf:opacity-100';
 
 function renderItem(shelf: Shelf, item: MusicItem): ReactNode {
   switch (shelf.layout) {
@@ -59,23 +59,23 @@ export function ShelfScroller({ kind, children }: { kind: ShelfKind; children: R
   return (
     <div className="group/shelf relative">
       <button
-        className={`${arrow} left-1.5`}
+        className={`${arrow} left-3`}
         aria-label="Previous Page"
         disabled={edges.start}
         onClick={() => page(-1)}
       >
-        <ChevronLeft size={20} strokeWidth={2.4} />
+        <ChevronLeft size={18} strokeWidth={2.4} />
       </button>
       <ul ref={list} className={`${shelfList} ${shelfKinds[kind]}`} onScroll={measure}>
         {children}
       </ul>
       <button
-        className={`${arrow} right-1.5`}
+        className={`${arrow} right-3`}
         aria-label="Next Page"
         disabled={edges.end}
         onClick={() => page(1)}
       >
-        <ChevronRight size={20} strokeWidth={2.4} />
+        <ChevronRight size={18} strokeWidth={2.4} />
       </button>
     </div>
   );
@@ -85,11 +85,15 @@ export function ShelfScroller({ kind, children }: { kind: ShelfKind; children: R
 function ShelfTitle({ title, to }: { title: string; to?: string | null }) {
   return (
     <div className={shelfHeader}>
-      <h2 className="type-title-2-emphasized">
+      <h2 className="type-[700_19px/24px] tracking-[-0.02em]">
         {to ? (
-          <PrefetchLink to={to} className="group/title inline-flex items-center gap-0.5">
+          <PrefetchLink to={to} className="group/title inline-flex items-center gap-1">
             {title}
-            <ChevronRight size={18} strokeWidth={2.6} className="text-secondary group-hover/title:text-primary" />
+            <ChevronRight
+              size={16}
+              strokeWidth={2.6}
+              className="text-tertiary transition-transform duration-300 ease-spring group-hover/title:translate-x-0.5 group-hover/title:text-primary"
+            />
           </PrefetchLink>
         ) : (
           title

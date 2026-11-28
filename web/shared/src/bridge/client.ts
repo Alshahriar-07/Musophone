@@ -236,6 +236,49 @@ export interface DetectedExtension {
   info: ResultOf<'ping'>;
 }
 
+/**
+ * Why a probe did not become a detection. A missing extension, an extension
+ * that doesn't trust this origin, a sleeping worker and a protocol mismatch
+ * all used to look the same from the page; each is named here so the UI can
+ * say what actually went wrong instead of "not detected".
+ */
+export type DetectFailureCode =
+  | 'no-runtime' // Chromium exposes no chrome.runtime: nothing claims this origin
+  | 'no-answer' // the id was called and nothing answered (asleep, removed, or not allowed)
+  | 'timeout' // the call was made, but no answer arrived in time
+  | 'forbidden' // the extension answered and refused this page's origin
+  | 'protocol' // the extension answered, but with something unreadable
+  | 'error';
+
+export interface DetectFailure {
+  transport: 'external' | 'relay';
+  extensionId?: string;
+  code: DetectFailureCode;
+  message: string;
+}
+
+export interface DetectDiagnostics {
+  /** The page's origin, exactly as the extension compares it. */
+  origin: string;
+  /** Extension messaging only exists in a secure context (HTTPS or localhost). */
+  secureContext: boolean;
+  /** Chromium injects `chrome.runtime` into a page only when an installed extension lists its origin. */
+  runtimeExposed: boolean;
+  browser: 'chromium' | 'firefox' | 'other';
+  /** Every id that was pinged, in order. */
+  ids: string[];
+  attempts: number;
+  elapsedMs: number;
+  failures: DetectFailure[];
+  /** One sentence the UI can show: what to do about the failure. */
+  hint: string;
+}
+
+export interface HandshakeResult {
+  detected: DetectedExtension | null;
+  diagnostics: DetectDiagnostics;
+}
+
 export interface DetectOptions {
   /** The Chromium extension id (fixed by the manifest `key` in development). */
   chromiumExtensionId?: string | undefined;
@@ -245,33 +288,120 @@ export interface DetectOptions {
    * pinging both means either install is found.
    */
   chromiumExtensionIds?: string[] | undefined;
-  /** How long to wait for a `ping` answer on each transport. */
+  /** How long to wait for the first `ping` answer. Later tries wait longer. */
   timeoutMs?: number;
+  /** How many times to ping before giving up. A cold MV3 worker can miss the first. */
+  attempts?: number;
+}
+
+function pageOrigin(): string {
+  try {
+    return typeof location === 'undefined' ? '' : location.origin;
+  } catch {
+    return '';
+  }
+}
+
+function isSecure(): boolean {
+  try {
+    return typeof isSecureContext === 'boolean' ? isSecureContext : /^https:$|^http:\/\/(localhost|127\.0\.0\.1)$/.test(location.protocol + '//' + location.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function browserFamily(): DetectDiagnostics['browser'] {
+  try {
+    const ua = navigator.userAgent;
+    if (/firefox/i.test(ua)) return 'firefox';
+    // Chromium's own UA names it even when no extension trusts the page, which
+    // is exactly the case the diagnostics need to explain.
+    if (chromeRuntime() || /Chrome\/|Chromium\/|Edg\//.test(ua)) return 'chromium';
+    return 'other';
+  } catch {
+    return 'other';
+  }
+}
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+function failureOf(error: unknown, transport: DetectFailure['transport'], extensionId?: string): DetectFailure {
+  const code = error instanceof BridgeCallError ? error.code : 'error';
+  const mapped: DetectFailureCode =
+    code === 'unavailable'
+      ? 'no-answer'
+      : code === 'timeout' || code === 'forbidden' || code === 'protocol'
+        ? code
+        : 'error';
+  return {
+    transport,
+    ...(extensionId ? { extensionId } : {}),
+    code: mapped,
+    message: error instanceof Error ? error.message : String(error),
+  };
 }
 
 /**
- * Pings every external candidate at once and returns the first that answers.
- * Running them together keeps a missing extension's detection at one timeout
+ * One round: ping every candidate id at once and return the first that answers.
+ * Running them together keeps a missing extension's probe at one timeout
  * rather than one per id.
  */
-async function firstAnswer(
-  bridges: Bridge[],
+async function pingExternal(
+  ids: string[],
   timeoutMs: number,
-): Promise<DetectedExtension | null> {
-  if (!bridges.length) return null;
-  const outcomes = await Promise.allSettled(bridges.map((bridge) => bridge.call('ping', {}, { timeoutMs })));
+): Promise<{ detected: DetectedExtension | null; failures: DetectFailure[] }> {
+  const candidates = ids.flatMap((id) => {
+    const bridge = externalBridge(id);
+    return bridge ? [{ id, bridge }] : [];
+  });
+  if (!candidates.length) return { detected: null, failures: [] };
+  const outcomes = await Promise.allSettled(candidates.map(({ bridge }) => bridge.call('ping', {}, { timeoutMs })));
   for (const [index, outcome] of outcomes.entries()) {
-    if (outcome.status === 'fulfilled') return { bridge: bridges[index]!, info: outcome.value };
+    if (outcome.status === 'fulfilled') {
+      return { detected: { bridge: candidates[index]!.bridge, info: outcome.value }, failures: [] };
+    }
   }
-  return null;
+  return {
+    detected: null,
+    failures: outcomes.map((outcome, index) =>
+      failureOf(outcome.status === 'rejected' ? outcome.reason : new Error('no answer'), 'external', candidates[index]!.id),
+    ),
+  };
+}
+
+function hintFor(diagnostics: Omit<DetectDiagnostics, 'hint'>): string {
+  if (!diagnostics.secureContext) {
+    return 'Extension messaging needs HTTPS or localhost. Open the site on its https:// address.';
+  }
+  if (!diagnostics.runtimeExposed && diagnostics.browser !== 'firefox') {
+    return `No extension answered ${diagnostics.origin}. Install MusoPhone for Chrome, then reload it and this page — Chrome only exposes extension messaging to origins the installed extension lists.`;
+  }
+  if (diagnostics.failures.some((f) => f.code === 'forbidden')) {
+    return `${diagnostics.origin} is not in the installed extension's allowlist. Update the extension to a build that includes this address, then reload it.`;
+  }
+  if (diagnostics.failures.some((f) => f.code === 'protocol')) {
+    return 'The extension answered in an older protocol. Update the extension and the site so both speak the same version.';
+  }
+  if (diagnostics.failures.some((f) => f.code === 'timeout')) {
+    return 'The extension did not answer in time. Its service worker may still be starting; retry in a moment.';
+  }
+  return `No extension answered ${diagnostics.origin}. Install or reload the MusoPhone extension, then retry.`;
 }
 
 /**
- * Finds the extension by pinging it: the external transport first when Chrome
- * exposes one, then the relay. Resolves `null` when nothing answers.
+ * Finds the extension with a real handshake: a `ping` the extension must
+ * answer. The external transport is tried first (Chromium); the relay content
+ * script is the Firefox transport.
+ *
+ * The shape of the failure decides how patient to be. When Chromium exposes no
+ * `chrome.runtime` at all, no id can ever answer here, so the probe returns at
+ * once; when a runtime is exposed (an extension does trust this origin), a
+ * sleeping MV3 worker is likely, so it retries with a longer deadline each
+ * time.
  */
-export async function detectExtension(options: DetectOptions = {}): Promise<DetectedExtension | null> {
-  const timeoutMs = options.timeoutMs ?? 1500;
+export async function handshake(options: DetectOptions = {}): Promise<HandshakeResult> {
+  const started = Date.now();
+  const timeoutMs = options.timeoutMs ?? 2000;
   const ids = [
     ...new Set(
       [...(options.chromiumExtensionIds ?? []), ...(options.chromiumExtensionId ? [options.chromiumExtensionId] : [])]
@@ -279,19 +409,56 @@ export async function detectExtension(options: DetectOptions = {}): Promise<Dete
         .filter(Boolean),
     ),
   ];
-  const external = await firstAnswer(
-    ids.map((id) => externalBridge(id)).filter((bridge): bridge is Bridge => bridge !== null),
-    timeoutMs,
-  );
-  if (external) return external;
-  if (typeof window !== 'undefined') {
-    const relay = relayBridge(window);
-    try {
-      const info = await relay.call('ping', {}, { timeoutMs });
-      return { bridge: relay, info };
-    } catch {
-      // No relay content script on this page either.
+  const runtimeExposed = chromeRuntime() !== null;
+  const family = browserFamily();
+  const failures: DetectFailure[] = [];
+  let attempts = 0;
+  let detected: DetectedExtension | null = null;
+
+  if (ids.length && (runtimeExposed || family !== 'firefox')) {
+    const rounds = runtimeExposed ? Math.max(1, options.attempts ?? 3) : 1;
+    for (let round = 0; round < rounds && !detected; round++) {
+      attempts += 1;
+      const result = await pingExternal(ids, timeoutMs + round * 1200);
+      detected = result.detected;
+      failures.push(...result.failures);
+      if (!detected && round < rounds - 1) await delay(250 * (round + 1));
     }
   }
-  return null;
+
+  // Firefox's relay content script, and the only transport there is when no
+  // Chromium runtime exists. One short probe is enough: a missing relay never
+  // answers, and a present one answers at once.
+  if (!detected && typeof window !== 'undefined') {
+    attempts += 1;
+    const relay = relayBridge(window);
+    try {
+      const info = await relay.call('ping', {}, { timeoutMs: family === 'firefox' ? timeoutMs : 1200 });
+      detected = { bridge: relay, info };
+    } catch (error) {
+      failures.push(failureOf(error, 'relay'));
+    }
+  }
+
+  const base = {
+    origin: pageOrigin(),
+    secureContext: isSecure(),
+    runtimeExposed,
+    browser: family,
+    ids,
+    attempts,
+    elapsedMs: Date.now() - started,
+    failures,
+  };
+  return { detected, diagnostics: { ...base, hint: detected ? 'Connected.' : hintFor(base) } };
+}
+
+/** The detected extension, or null. `handshake` carries the diagnostics. */
+export async function detectExtension(options: DetectOptions = {}): Promise<DetectedExtension | null> {
+  return (await handshake(options)).detected;
+}
+
+/** True when Chromium exposes extension messaging to this page at all. */
+export function hasExtensionRuntime(): boolean {
+  return chromeRuntime() !== null;
 }

@@ -46,14 +46,14 @@ const link = 'text-inherit hover:underline group-data-current/row:text-primary';
  * a fill on hover, a stronger one for the playing row.
  */
 const row = [
-  'group/row relative grid items-center bg-transparent hover:bg-tracklist-hover data-unavailable:cursor-default',
-  'data-current:bg-[color-mix(in_srgb,var(--systemPrimary)_12%,transparent)]',
+  'group/row relative grid items-center bg-transparent transition-colors duration-150 hover:bg-tracklist-hover data-unavailable:cursor-default',
+  'data-current:bg-[color-mix(in_srgb,var(--keyColor)_13%,transparent)]',
   'before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:border-t-[0.5px] before:border-t-divider',
   'hover:before:border-t-transparent data-current:before:border-t-transparent [&:hover+&]:before:border-t-transparent [&[data-current]+&]:before:border-t-transparent',
 ].join(' ');
 
 const rowVariant: Record<Variant, string> = {
-  album: 'h-[46px] grid-cols-[minmax(0,1fr)_auto] rounded-row',
+  album: 'h-[46px] grid-cols-[minmax(0,1fr)_auto] rounded-[12px]',
   playlist: `h-[54px] ${playlistColumns} rounded-[12px] max-md:grid-cols-[minmax(0,1fr)_auto]`,
 };
 

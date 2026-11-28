@@ -77,7 +77,7 @@ export function Menu({ anchor, placement = 'below-end', onClose, label, matchWid
       <div
         ref={panel}
         // Apple's amp-contextual-menu (report §8).
-        className="glass-dialog fixed z-(--z-contextual-menus) max-w-[300px] min-w-[185px] animate-menu-in overflow-y-auto rounded-[10px] p-[5px]"
+        className="glass-dialog fixed z-(--z-contextual-menus) max-w-[320px] min-w-[196px] animate-menu-in overflow-y-auto rounded-[16px] p-1.5"
         style={position}
         role="menu"
         aria-label={label}
@@ -104,7 +104,7 @@ interface MenuItemProps {
 export function MenuItem({ onSelect, icon, checked, destructive, disabled, trailing, children }: MenuItemProps) {
   return (
     <button
-      className="flex min-h-7 w-full items-center gap-2 rounded-[5px] px-2 py-1 text-start type-body text-primary enabled:hover:bg-quinary focus-visible:bg-quinary disabled:text-tertiary data-destructive:text-destructive"
+      className="flex min-h-8 w-full items-center gap-2 rounded-[10px] px-2.5 py-1.5 text-start type-[400_13px/18px] text-primary transition-colors enabled:hover:bg-quinary focus-visible:bg-quinary disabled:text-tertiary data-destructive:text-destructive"
       role={checked === undefined ? 'menuitem' : 'menuitemradio'}
       aria-checked={checked === undefined ? undefined : !!checked}
       data-destructive={destructive || undefined}
@@ -120,10 +120,10 @@ export function MenuItem({ onSelect, icon, checked, destructive, disabled, trail
 }
 
 export function MenuSeparator() {
-  return <div className="mx-2 my-[5px] border-t-[0.5px] border-t-vibrant-divider" role="separator" />;
+  return <div className="glass-rule mx-2.5 my-2" role="separator" />;
 }
 
 /** A non-interactive heading inside a menu. */
 export function MenuHeader({ children }: { children: ReactNode }) {
-  return <div className="px-2 pt-1.5 pb-1 type-subhead-emphasized text-secondary">{children}</div>;
+  return <div className="px-2.5 pt-1.5 pb-1 type-[600_10px/13px] uppercase tracking-[0.14em] text-tertiary">{children}</div>;
 }

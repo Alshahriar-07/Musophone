@@ -87,7 +87,8 @@ export default function SettingsPage() {
   return (
     <div className={settingsUi.centered}>
       <PageHeader title="Settings" />
-      <div className={settingsUi.body}>
+      <div className={`${settingsUi.body} ${settingsUi.split}`}>
+        <div className={settingsUi.column}>
         <h2 className={settingsUi.sectionHeader}>Appearance</h2>
         <section className={settingsUi.group}>
           <div className={`${settingsUi.row} gap-4`}>
@@ -198,6 +199,8 @@ export default function SettingsPage() {
         </section>
         <p className={settingsUi.footer}>From Apple Music’s public pages. No Apple Music account or sign-in needed.</p>
 
+        </div>
+        <div className={settingsUi.column}>
         <h2 className={settingsUi.sectionHeader}>Listen Together</h2>
         <section className={settingsUi.group}>
           <LinkRow
@@ -294,6 +297,7 @@ export default function SettingsPage() {
           open-source software under the GPL-3.0; the third-party libraries, APIs and artwork sources it uses are credited
           in the project’s documentation.
         </p>
+        </div>
       </div>
       {lyrics && (
         <Suspense fallback={null}>

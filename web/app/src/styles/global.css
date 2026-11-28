@@ -3,6 +3,11 @@
  * utilities; this file holds the theme they draw on, the design tokens and
  * the element defaults.
  *
+ * The visual language is Liquid Glass on an animated light field. Glass is
+ * built from five parts everywhere: a translucent gradient body, a lit top
+ * edge, a darker bottom rim, a hairline outline, and a shadow that floats the
+ * pane above the field. Nothing is a flat rectangle.
+ *
  * No preflight: the element defaults below are the app's own reset. Tokens
  * and defaults live in the base layer, so any utility outranks them.
  */
@@ -28,35 +33,44 @@
   --default-transition-duration: 0.15s;
 
   --breakpoint-*: initial;
-  --breakpoint-sm: 484px; /* below: phone, the sidebar becomes a drawer */
+  --breakpoint-sm: 484px; /* below: phone, the rail becomes a drawer */
   --breakpoint-md: 768px;
   --breakpoint-lg: 1000px;
 
-  /* Film grain over the 2D mesh fallback (MeshBackdrop). */
+  /* Film grain over the ambient field, and inside the fallback backdrop. */
   --background-image-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* On very large screens the page is one column of this width, centred. */
+  --container-stage: 1560px;
 
   --animate-*: initial;
-  --animate-menu-in: menu-in 0.12s ease-out;
-  --animate-slide-in: slide-in var(--duration-panel) var(--ease-out-panel) forwards;
-  --animate-fade: fade 0.15s ease-out;
-  --animate-zoom: zoom 0.2s ease-out;
-  --animate-fade-in: fade-in 0.4s ease;
-  --animate-enter: enter 0.3s var(--ease-out-panel);
-  --animate-page: page-in 420ms var(--ease-standard);
+  --animate-menu-in: menu-in 0.18s var(--ease-spring);
+  --animate-slide-in: slide-in 0.44s var(--ease-glide) forwards;
+  --animate-fade: fade 0.2s ease-out;
+  --animate-zoom: zoom 0.24s var(--ease-spring);
+  --animate-fade-in: fade-in 0.5s ease;
+  --animate-enter: enter 0.42s var(--ease-glide);
+  --animate-page: page-in 480ms var(--ease-glide);
+  --animate-rise: rise 620ms var(--ease-glide) both;
   --animate-morph: morph 0.32s var(--ease-out-panel);
   --animate-spin: spin 1s linear infinite;
-  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.8s ease-in-out infinite;
   --animate-matching: matching 1.4s ease-in-out infinite alternate;
+  --animate-drift-one: drift-one var(--duration-drift) ease-in-out infinite alternate;
+  --animate-drift-two: drift-two calc(var(--duration-drift) * 1.4) ease-in-out infinite alternate;
+  --animate-drift-three: drift-three calc(var(--duration-drift) * 1.7) ease-in-out infinite alternate;
+  --animate-breath: breath 9s ease-in-out infinite;
+  --animate-dock-in: dock-in 700ms var(--ease-glide) both;
 
   @keyframes menu-in {
     from {
       opacity: 0;
-      transform: scale(0.97);
+      transform: scale(0.96) translateY(4px);
     }
   }
   @keyframes slide-in {
     from {
-      transform: translateX(100%);
+      opacity: 0.4;
+      transform: translateX(calc(100% + 24px));
     }
   }
   @keyframes fade {
@@ -66,7 +80,8 @@
   }
   @keyframes zoom {
     from {
-      transform: scale(0.97);
+      opacity: 0;
+      transform: scale(0.96);
     }
   }
   @keyframes fade-in {
@@ -77,16 +92,30 @@
   @keyframes enter {
     from {
       opacity: 0;
-      transform: scale(1.02);
+      transform: scale(1.015);
     }
   }
-  /* A pushed page arrives a few pixels low and settles: orientation, not a
-   * carousel. The phone uses the same idea for a pushed route. */
+  /* A pushed page arrives a few pixels low, soft, and settles: orientation,
+   * not a carousel. */
   @keyframes page-in {
     from {
       opacity: 0;
-      filter: blur(5px);
-      transform: translateY(9px) scale(0.995);
+      filter: blur(7px);
+      transform: translateY(12px) scale(0.994);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      filter: blur(6px);
+      transform: translateY(18px) scale(0.985);
+    }
+  }
+  @keyframes dock-in {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+      transform: translateY(calc(100% + 24px));
     }
   }
   /* One label melting into the next, as the quality switcher's text changes. */
@@ -110,6 +139,40 @@
   @keyframes matching {
     to {
       opacity: 0.7;
+    }
+  }
+  /* The ambient field's slow choreography: three lights, never in step. */
+  @keyframes drift-one {
+    from {
+      transform: translate3d(-6%, -4%, 0) scale(1) rotate(-4deg);
+    }
+    to {
+      transform: translate3d(10%, 8%, 0) scale(1.18) rotate(6deg);
+    }
+  }
+  @keyframes drift-two {
+    from {
+      transform: translate3d(8%, 6%, 0) scale(1.12) rotate(5deg);
+    }
+    to {
+      transform: translate3d(-10%, -6%, 0) scale(1) rotate(-6deg);
+    }
+  }
+  @keyframes drift-three {
+    from {
+      transform: translate3d(0, 8%, 0) scale(1.06);
+    }
+    to {
+      transform: translate3d(-6%, -8%, 0) scale(1.2);
+    }
+  }
+  @keyframes breath {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 0.85;
     }
   }
 }
@@ -140,6 +203,7 @@
   --color-key-rollover: var(--keyColor-rollover);
   --color-key-pressed: var(--keyColor-pressed);
   --color-key-bg: var(--keyColorBG);
+  --color-key-glass: var(--keyGlass);
 
   --color-red: var(--systemRed);
   --color-green: var(--systemGreen);
@@ -182,13 +246,22 @@
   --radius-artwork-lg: var(--radius-artwork-large);
   --radius-nav: var(--radius-nav-item);
   --radius-row: var(--radius-track-row);
+  --radius-tile: var(--radius-tile);
+  --radius-field: var(--radius-field);
+  --radius-rail: var(--radius-rail);
+  --radius-sheet: var(--radius-sheet);
+  --radius-dock: var(--radius-dock);
   --radius-pill: 1000px;
   --radius-full: 50%;
 
   --ease-panel: var(--ease-out-panel);
+  --ease-spring: var(--ease-spring);
+  --ease-glide: var(--ease-glide);
 
   --shadow-*: initial;
   --shadow-glass: 0 10px 40px var(--glassMaterialShadowColor);
+  --shadow-float: 0 24px 70px -28px var(--sheetShadow);
+  --shadow-tile: 0 16px 40px -26px var(--tileShadow);
 
   --type-header-emphasized: var(--header-emphasized);
   --type-large-title: var(--large-title);
@@ -222,73 +295,163 @@
   font: --value([*]) var(--font-family);
 }
 
+/* ---- Glass ------------------------------------------------------------------ */
+
 /*
- * Liquid Glass. The translucent fill lets the ambient light field through;
- * the upper sheen and bright rim read as a lit edge, and the darker lower rim
- * gives the pane thickness. Blur is only one part of the material, not the
- * whole effect: without the light and edge layers it looked like flat CSS.
+ * The chrome's material: the sidebar rail, the top bar and the side panel.
+ * A gradient body (thick at the top, thin at the foot), a blurred backdrop the
+ * ambient field shows through, a lit top rim, a shaded bottom rim and a
+ * hairline all round. `::before` carries a soft diagonal specular streak, so
+ * the pane reads as a sheet of glass rather than a blurred rectangle.
  */
 @utility glass-material {
+  position: relative;
   isolation: isolate;
   background-color: var(--glassFill);
   background-image:
-    linear-gradient(180deg, var(--glassSheen) 0%, var(--glassSheenSoft) 14%, transparent 38%),
-    radial-gradient(115% 90% at 4% 0%, var(--glassSheen) 0%, transparent 58%);
-  backdrop-filter: var(--glassMaterialBackdropFilter);
+    linear-gradient(152deg, var(--glassSpecular) 0%, transparent 30%),
+    radial-gradient(120% 92% at 0% 0%, var(--glassSheenSoft) 0%, transparent 62%),
+    linear-gradient(180deg, transparent 58%, var(--glassSpecularSoft) 100%);
+  backdrop-filter: var(--glassBlurPanel);
   box-shadow:
     inset 0 1px 0 var(--glassRim),
-    inset 0 -1px 0 var(--glassRimBottom),
-    inset 1px 0 0 var(--glassHairline),
-    inset -1px 0 0 var(--glassHairline),
-    0 22px 60px var(--glassDrop);
+    inset 0 0 30px var(--glassSpecularSoft),
+    0 34px 90px -46px var(--glassDrop);
 
-  /* A soft diagonal specular streak: the reflection that turns a blurred
-   * rectangle into a sheet of glass. It sits below the content. */
+  /* The illuminated rim: a masked 1px gradient that is brightest at the top
+   * left and fades around the pane, like light caught in the edge. */
   &::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: -1;
     border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      150deg,
+      var(--glassEdge) 0%,
+      var(--glassEdgeDim) 24%,
+      rgb(255 255 255 / 0.06) 54%,
+      var(--glassEdge) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
     pointer-events: none;
-    background: linear-gradient(124deg, transparent 30%, var(--glassSheenSoft) 45%, transparent 60%);
-    opacity: 0.72;
+  }
+
+  /* The specular pass: a soft highlight across the top and a fainter one in
+   * the opposite corner, so the pane has a light source. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      radial-gradient(70% 42% at 24% 0%, var(--glassSpecular) 0%, transparent 72%),
+      radial-gradient(44% 32% at 94% 104%, var(--glassSpecularSoft) 0%, transparent 74%);
   }
 }
 
-/* Settings, lyric dialogs and feature cards: a lighter pane than the chrome. */
+/*
+ * Settings groups, dialogs' lists and feature cards: a lighter pane than the
+ * chrome, readable over any page colour.
+ */
 @utility glass-card {
+  position: relative;
+  isolation: isolate;
   background-color: var(--glassCardFill);
-  background-image: linear-gradient(180deg, var(--glassSheen) 0%, transparent 30%);
-  backdrop-filter: saturate(170%) blur(22px);
+  background-image:
+    linear-gradient(150deg, var(--glassSpecular) 0%, transparent 34%),
+    radial-gradient(110% 80% at 0% 0%, var(--glassSpecularSoft) 0%, transparent 64%);
+  backdrop-filter: var(--glassBlurCard);
   box-shadow:
     inset 0 1px 0 var(--glassRim),
-    inset 0 0 0 1px var(--glassHairline),
-    0 10px 32px var(--glassDrop);
+    inset 0 0 26px var(--glassSpecularSoft),
+    0 22px 54px -34px var(--tileShadow);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(150deg, var(--glassEdge) 0%, var(--glassEdgeDim) 20%, rgb(255 255 255 / 0.05) 58%, var(--glassEdgeDim) 100%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
 }
 
 /* Menus and modal cards: more opaque, so text stays crisp over any page. */
 @utility glass-dialog {
+  position: relative;
+  isolation: isolate;
   background-color: var(--glassDialogFill);
-  background-image: linear-gradient(180deg, var(--glassSheen) 0%, transparent 26%);
-  backdrop-filter: saturate(190%) blur(36px);
+  background-image:
+    linear-gradient(155deg, var(--glassSpecular) 0%, transparent 26%),
+    radial-gradient(130% 100% at 0% 0%, var(--glassSpecularSoft) 0%, transparent 56%);
+  backdrop-filter: var(--glassBlurDialog);
   box-shadow:
     inset 0 1px 0 var(--glassRim),
     inset 0 0 0 1px var(--glassHairline),
-    0 28px 80px var(--glassDrop);
+    inset 0 0 40px var(--glassSpecularSoft),
+    0 40px 110px -30px var(--glassDrop),
+    0 10px 30px -10px var(--glassDrop);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(150deg, var(--glassEdge) 0%, var(--glassEdgeDim) 26%, rgb(255 255 255 / 0.05) 60%, var(--glassEdgeDim) 100%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
 }
 
 @utility glass-field {
+  position: relative;
+  isolation: isolate;
   background-color: var(--glassFieldFill);
-  backdrop-filter: saturate(170%) blur(18px);
+  background-image: linear-gradient(155deg, var(--glassSpecular) 0%, transparent 46%);
+  backdrop-filter: var(--glassBlurField);
   box-shadow:
     inset 0 1px 0 var(--glassRim),
     inset 0 0 0 1px var(--glassHairline),
-    0 2px 10px var(--glassDrop);
+    inset 0 0 18px var(--glassSpecularSoft),
+    0 2px 10px -4px var(--glassDrop);
 }
 
-/* The player pill's glass: layered fill and drop shadow (::before), lit rim (::after). */
-@utility glass-pill {
+/*
+ * The player dock: the most reflective pane in the app. `::before` is the glass
+ * body, `::after` the lit rim, so the dock can carry its own backdrop-filter
+ * without blurring its children.
+ */
+@utility glass-dock {
   isolation: isolate;
 
   &::before,
@@ -304,22 +467,147 @@
     z-index: -1;
     background-color: var(--glassFillStrong);
     background-image:
-      linear-gradient(180deg, var(--glassSheen) 0%, var(--glassSheenSoft) 16%, transparent 42%),
-      radial-gradient(120% 120% at 8% 0%, var(--glassSheen) 0%, transparent 55%);
-    backdrop-filter: saturate(190%) blur(36px);
-    box-shadow: 0 18px 52px var(--glassDrop);
+      linear-gradient(152deg, var(--glassSpecular) 0%, transparent 34%),
+      radial-gradient(120% 120% at 4% 0%, var(--glassSpecularSoft) 0%, transparent 56%),
+      linear-gradient(160deg, transparent 62%, color-mix(in srgb, var(--keyColor) 8%, transparent) 100%);
+    backdrop-filter: var(--glassBlurDock);
+    box-shadow:
+      inset 0 0 34px var(--glassSpecularSoft),
+      0 34px 90px -34px var(--glassDrop),
+      0 8px 24px -14px var(--glassDrop);
   }
 
+  /* The dock's rim: lit along the top and sides where the light hits it. */
   &::after {
+    background: linear-gradient(150deg, var(--glassEdge) 0%, var(--glassEdgeDim) 30%, transparent 58%, var(--glassEdgeDim) 100%);
+    padding: 1px;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
     box-shadow:
       inset 0 1px 0 var(--glassRim),
-      inset 0 -1px 0 var(--glassRimBottom),
-      inset 1px 0 0 var(--glassHairline),
-      inset -1px 0 0 var(--glassHairline);
+      inset 0 0 0 1px var(--glassHairline);
   }
 }
 
-/* A fixed neutral light field: the glass needs something to refract. */
+/*
+ * The scrolling page: a frost sheet on the ambient field. A light fill rather
+ * than a heavy backdrop blur — the content inside it must stay crisp and the
+ * sheet never moves, so the blur would only cost paint.
+ */
+@utility glass-sheet {
+  background-color: var(--sheetFillBottom);
+  background-image:
+    linear-gradient(180deg, var(--sheetFillTop) 0%, transparent 42%),
+    radial-gradient(120% 100% at 50% 0%, var(--glassSheenSoft) 0%, transparent 58%);
+  box-shadow:
+    inset 0 1px 0 var(--sheetRim),
+    inset 0 0 0 1px var(--sheetHairline),
+    0 40px 120px -50px var(--sheetShadow);
+}
+
+/*
+ * Cards: artwork on a slab. The slab has its own light, a rim, and lifts on
+ * hover with the specular sweep below. No backdrop-filter — there are dozens
+ * of these, and the sheet behind them is already a frosted surface.
+ */
+@utility glass-tile {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--tileBottom);
+  background-image:
+    linear-gradient(155deg, var(--tileTop) 0%, transparent 58%),
+    radial-gradient(110% 70% at 0% 0%, var(--glassSpecularSoft) 0%, transparent 62%);
+  backdrop-filter: var(--glassBlurCard);
+  box-shadow:
+    inset 0 1px 0 var(--tileRim),
+    inset 0 0 20px var(--glassSpecularSoft),
+    0 18px 44px -30px var(--tileShadow);
+  transition:
+    transform 320ms var(--ease-spring),
+    box-shadow 320ms var(--ease-out-panel),
+    background-color 320ms ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(152deg, var(--tileRim) 0%, var(--glassEdgeDim) 22%, rgb(255 255 255 / 0.05) 56%, var(--glassEdgeDim) 100%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(115deg, transparent 30%, var(--glassSheen) 48%, transparent 64%);
+    transition: opacity 420ms ease;
+  }
+
+  &:hover,
+  &:focus-within {
+    transform: translateY(-4px);
+    background-color: color-mix(in srgb, var(--tileBottom) 82%, white 6%);
+    backdrop-filter: saturate(165%) blur(10px) brightness(1.08);
+    box-shadow:
+      inset 0 1px 0 var(--tileRim),
+      inset 0 0 24px var(--glassSpecularSoft),
+      0 30px 60px -30px var(--tileHoverShadow);
+  }
+
+  &:hover::after,
+  &:focus-within::after {
+    opacity: 0.5;
+  }
+}
+
+/* The active rail row: a pane inside the pane. */
+@utility glass-inset {
+  background-color: var(--navSidebarSelectedState);
+  box-shadow:
+    inset 0 1px 0 var(--glassRim),
+    inset 0 0 0 1px var(--glassHairline),
+    0 8px 20px -14px var(--tileShadow);
+}
+
+/* A press: the element sinks toward the glass. */
+@utility press {
+  transition:
+    transform 160ms var(--ease-spring),
+    opacity 160ms ease;
+
+  &:active {
+    transform: scale(0.965);
+  }
+}
+
+/* ---- The stage --------------------------------------------------------------- */
+
+/*
+ * A fixed light field that never scrolls: the aurora the glass refracts. Three
+ * soft lights drift against each other for a slow, ambient movement, over a
+ * pearl (or near-black) field with a grain film to break up banding.
+ */
 .app-ambient {
   position: absolute;
   inset: 0;
@@ -329,26 +617,77 @@
   background: var(--ambientBackground);
 }
 
-.app-ambient::before {
-  content: '';
-  position: absolute;
-  top: -28%;
-  left: 2%;
-  width: 62%;
-  height: 92%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, var(--ambientBeam) 0%, transparent 68%);
-  filter: blur(70px);
-  transform: rotate(-16deg);
-}
-
 .app-ambient::after {
   content: '';
   position: absolute;
   inset: 0;
   background-image: var(--background-image-grain);
-  opacity: 0.035;
+  opacity: 0.032;
   mix-blend-mode: soft-light;
+}
+
+.app-ambient__light {
+  position: absolute;
+  border-radius: 50%;
+  opacity: var(--auroraOpacity);
+  will-change: transform;
+}
+
+.app-ambient__light--one {
+  top: -34%;
+  left: -8%;
+  width: 76%;
+  height: 104%;
+  background: radial-gradient(closest-side, var(--auroraOne) 0%, transparent 72%);
+  filter: blur(80px);
+  animation: var(--animate-drift-one);
+}
+
+.app-ambient__light--two {
+  top: -20%;
+  right: -18%;
+  width: 68%;
+  height: 88%;
+  background: radial-gradient(closest-side, var(--auroraTwo) 0%, transparent 70%);
+  filter: blur(90px);
+  opacity: calc(var(--auroraOpacity) * 0.7);
+  animation: var(--animate-drift-two);
+}
+
+.app-ambient__light--three {
+  bottom: -34%;
+  left: 22%;
+  width: 72%;
+  height: 76%;
+  background: radial-gradient(closest-side, var(--auroraThree) 0%, transparent 70%);
+  filter: blur(100px);
+  opacity: calc(var(--auroraOpacity) * 0.55);
+  animation: var(--animate-drift-three);
+}
+
+/* A narrow beam of light from the top edge: the glow on the glass's rim. */
+.app-ambient__beam {
+  position: absolute;
+  top: -18%;
+  left: 50%;
+  width: 62%;
+  height: 58%;
+  translate: -50% 0;
+  rotate: -12deg;
+  background: radial-gradient(closest-side, var(--ambientBeam) 0%, transparent 70%);
+  filter: blur(60px);
+  animation: var(--animate-breath);
+}
+
+/* The field's own vignette: keeps the edges quiet under the floating chrome. */
+.app-ambient__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 100% at 50% 40%, transparent 40%, rgb(0 0 0 / 0.12) 100%);
+}
+
+:root[data-appearance='dark'] .app-ambient__vignette {
+  background: radial-gradient(125% 105% at 50% 28%, transparent 38%, rgb(0 0 0 / 0.42) 100%);
 }
 
 /* Artwork's 0.5px inner stroke (report §1, "Inner stroke"), Apple's "has-borders". */
@@ -366,6 +705,12 @@
       inset -0.5px -0.5px 0 var(--containerInnerStroke);
     opacity: var(--containerInnerStrokeAlpha);
   }
+}
+
+/* A hairline of light along the top of a section, instead of a hard border. */
+@utility glass-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glassHairline) 18%, var(--glassHairline) 82%, transparent);
 }
 
 /*
@@ -530,5 +875,31 @@
       scroll-behavior: auto !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+/* A stage narrower than the window: the sheet keeps a readable measure. */
+@media (min-width: 1180px) {
+  .app-stage {
+    padding-inline: max(var(--app-frame-padding), calc((100vw - var(--container-stage)) / 2));
+  }
+}
+
+/* More contrast: the panes turn solid, as Apple's _IC tokens do. */
+@media (prefers-contrast: more) {
+  :root {
+    --sheetFillTop: #ffffff;
+    --sheetFillBottom: #ffffff;
+    --tileTop: #ffffff;
+    --tileBottom: #ffffff;
+    --glassSheen: transparent;
+  }
+
+  :root[data-appearance='dark'] {
+    --sheetFillTop: #0a0a0c;
+    --sheetFillBottom: #0a0a0c;
+    --tileTop: #17171c;
+    --tileBottom: #17171c;
+    --glassSheen: transparent;
   }
 }

@@ -6,7 +6,7 @@ import type { Capability } from '@musophone/shared/bridge';
 import { LogoMark } from '@/components/icons/LogoMark';
 import { PageHeader } from '@/components/PageHeader';
 import { config } from '@/config';
-import { useExtension, type ExtensionStatus } from '@/extension/useExtension';
+import { recheckExtension, useExtension, type ExtensionStatus } from '@/extension/useExtension';
 import { downloadUrl, useExtensionUpdate, usePublishedExtension, type PublishedExtension } from '@/extension/useExtensionUpdate';
 import { useYtAuth, type YtAuthStatus } from '@/extension/useYtAuth';
 import { PrefetchLink } from '@/components/PrefetchLink';
@@ -99,6 +99,96 @@ function youtubeStatus(auth: YtAuthStatus): string | null {
   return active ? `Signed in as ${active.name}` : 'Signed in · no account could be read';
 }
 
+/**
+ * The handshake, made visible: which address was probed, which ids were
+ * called, what Chromium exposed, how many times it was tried and what the last
+ * failure said. This is the panel that turns "not detected" into a cause.
+ */
+function ConnectionCard({ status }: { status: ExtensionStatus }) {
+  const [checking, setChecking] = useState(false);
+  const diagnostics = status.diagnostics;
+  const connected = status.state === 'present';
+  const badge = connected
+    ? 'bg-green shadow-[0_0_10px_color-mix(in_srgb,var(--systemGreen)_60%,transparent)]'
+    : status.state === 'checking'
+      ? 'animate-pulse bg-key/60'
+      : 'bg-tertiary';
+
+  const check = () => {
+    setChecking(true);
+    void recheckExtension().finally(() => setChecking(false));
+  };
+
+  return (
+    <aside className="glass-card rounded-[22px] p-5 lg:sticky lg:top-4" aria-live="polite">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="type-[600_13px/17px]">Connection</h2>
+        <span className="inline-flex items-center gap-2 rounded-pill bg-quinary px-2.5 py-1 type-[600_10px/12px] uppercase tracking-[0.12em] text-secondary">
+          <span className={`size-1.5 rounded-full ${badge}`} aria-hidden="true" />
+          {connected ? 'Connected' : status.state === 'checking' ? 'Checking' : 'Not detected'}
+        </span>
+      </div>
+
+      <dl className="mt-4 flex flex-col gap-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="type-callout text-tertiary">Website</dt>
+          <dd className="min-w-0 truncate text-right type-callout text-secondary" title={diagnostics.origin || undefined}>
+            {diagnostics.origin || 'unknown'}
+          </dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="type-callout text-tertiary">Browser</dt>
+          <dd className="type-callout text-secondary">
+            {diagnostics.browser === 'chromium' ? 'Chromium' : diagnostics.browser === 'firefox' ? 'Firefox' : 'Unknown'}
+          </dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="type-callout text-tertiary">Extension runtime</dt>
+          <dd className="type-callout text-secondary">{diagnostics.runtimeExposed ? 'Exposed' : 'Not exposed'}</dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="type-callout text-tertiary">Handshake</dt>
+          <dd className="type-callout text-secondary">
+            {diagnostics.attempts} probe{diagnostics.attempts === 1 ? '' : 's'} · {diagnostics.elapsedMs} ms
+          </dd>
+        </div>
+        {connected && (
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="type-callout text-tertiary">Transport</dt>
+            <dd className="type-callout text-secondary">
+              {status.extension.bridge.transport === 'external' ? 'Direct page → extension' : 'Page relay'}
+            </dd>
+          </div>
+        )}
+        {diagnostics.ids.length > 0 && (
+          <div className="mt-1 flex flex-col gap-1">
+            <dt className="type-callout text-tertiary">Extension ids probed</dt>
+            {diagnostics.ids.map((id) => (
+              <dd key={id} className="break-all rounded-[8px] bg-quinary px-2 py-1 font-mono type-[10px/14px] text-secondary">
+                {id}
+              </dd>
+            ))}
+          </div>
+        )}
+      </dl>
+
+      <p className="mt-4 type-callout text-secondary">{diagnostics.hint}</p>
+      <button
+        className="press mt-3 inline-flex h-8 items-center gap-2 rounded-pill bg-quinary px-3.5 type-[600_11px/14px] text-primary shadow-[inset_0_1px_0_var(--tileRim),inset_0_0_0_1px_var(--tileHairline)] hover:bg-quaternary disabled:opacity-50"
+        onClick={check}
+        disabled={checking}
+      >
+        {checking && <span className="size-2 animate-pulse rounded-full bg-key" aria-hidden="true" />}
+        {checking ? 'Checking…' : 'Check again'}
+      </button>
+      <p className="mt-3 type-caption-2 text-tertiary">
+        This page only claims a connection after the extension answers its own ping. Nothing is assumed from the
+        browser.
+      </p>
+    </aside>
+  );
+}
+
 /** One integration's state, honest about what this extension version can do. */
 function integrationStatus(status: ExtensionStatus, integration: Integration, auth: YtAuthStatus): string {
   if (status.state === 'checking') return 'Checking…';
@@ -124,10 +214,12 @@ export default function ExtensionPage() {
     <div className={settingsUi.centered}>
       <PageHeader title="MusoPhone Extension" />
       <div className={settingsUi.body}>
-        <section className="glass-card flex items-center gap-4 rounded-[16px] px-5 py-4">
-          <LogoMark size={52} />
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)]">
+          <div className="flex min-w-0 flex-col">
+        <section className="glass-card flex items-center gap-5 rounded-[20px] px-5 py-4">
+          <LogoMark size={48} />
           <div className="min-w-0">
-            <p className="type-title-2-emphasized">MusoPhone for your browser</p>
+            <p className="type-[600_14px/19px]">MusoPhone for your browser</p>
             <p className="mt-0.5 type-callout text-secondary">
               Playback, sign-in, Spotify and Discord support in Chrome, Edge, Brave and Firefox.
             </p>
@@ -267,6 +359,9 @@ export default function ExtensionPage() {
             About &amp; Credits
           </PrefetchLink>
         </p>
+          </div>
+          <ConnectionCard status={status} />
+        </div>
       </div>
     </div>
   );
