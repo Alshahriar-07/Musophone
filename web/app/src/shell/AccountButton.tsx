@@ -1,4 +1,4 @@
-import { ArrowUpRight, ChevronsUpDown } from 'lucide-react';
+import { ArrowUpRight, ChevronsUpDown, LogIn, UserRound } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { Menu, MenuHeader, MenuItem, MenuSeparator } from '@/components/Menu';
 import { useRefreshYtAuth, useSelectChannel, useSetConnected, useYtAuth } from '@/extension/useYtAuth';
@@ -9,6 +9,8 @@ const SIGN_IN_URL = 'https://accounts.google.com/ServiceLogin?service=youtube&co
 const pill =
   'self-start rounded-[16px] bg-key-bg px-3.5 py-[5px] type-[600_13px/18px] text-white hover:brightness-[1.08] disabled:opacity-60';
 const avatar = 'inline-grid flex-none place-items-center rounded-full bg-quinary object-cover type-[600_11px/1] text-secondary';
+const compactAccountButton =
+  'press grid size-9 place-items-center rounded-full bg-quinary text-secondary hover:text-primary';
 
 function Avatar({ src, name, size }: { src: string | null; name: string; size: number }) {
   return src ? (
@@ -28,7 +30,7 @@ function Avatar({ src, name, size }: { src: string | null; name: string; size: n
  * this browser already has, through the extension. "Sign In" opens Google's
  * own sign-in; the extension notices the new session and this updates itself.
  */
-export function AccountButton() {
+export function AccountButton({ compact = false }: { compact?: boolean }) {
   const status = useYtAuth();
   const select = useSelectChannel();
   const connect = useSetConnected();
@@ -40,7 +42,18 @@ export function AccountButton() {
   const { auth } = status;
 
   if (!auth.browserSignedIn) {
-    return (
+    return compact ? (
+      <a
+        className="press grid size-9 place-items-center rounded-full bg-key-bg text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_10px_22px_-12px_var(--keyColor)]"
+        href={SIGN_IN_URL}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Sign In"
+        title="Sign In"
+      >
+        <LogIn size={15} strokeWidth={2.2} />
+      </a>
+    ) : (
       <a className={pill} href={SIGN_IN_URL} target="_blank" rel="noreferrer">
         Sign In
       </a>
@@ -48,8 +61,14 @@ export function AccountButton() {
   }
   if (!auth.connected) {
     return (
-      <button className={pill} onClick={() => connect.mutate(true)} disabled={connect.isPending}>
-        Connect YouTube Music
+      <button
+        className={compact ? compactAccountButton : pill}
+        onClick={() => connect.mutate(true)}
+        disabled={connect.isPending}
+        aria-label="Connect YouTube Music"
+        title="Connect YouTube Music"
+      >
+        {compact ? <UserRound size={15} strokeWidth={2.2} /> : 'Connect YouTube Music'}
       </button>
     );
   }
@@ -57,12 +76,13 @@ export function AccountButton() {
     // Signed in to the browser, but the account couldn't be read (the reason is on the Extension page).
     return (
       <button
-        className={pill}
+        className={compact ? compactAccountButton : pill}
         title={auth.problem ?? undefined}
         onClick={() => refresh.mutate()}
         disabled={refresh.isPending}
+        aria-label="Retry YouTube Sign-In"
       >
-        {refresh.isPending ? 'Reading account…' : 'Retry YouTube Sign-In'}
+        {compact ? <UserRound size={15} strokeWidth={2.2} /> : refresh.isPending ? 'Reading account…' : 'Retry YouTube Sign-In'}
       </button>
     );
   }
@@ -73,14 +93,24 @@ export function AccountButton() {
     <>
       <button
         // Signed in: a 24px avatar and the name, opening the account menu.
-        className="flex w-full min-w-0 items-center gap-2 rounded-nav px-1 py-1.5 text-start type-body-reduced text-primary hover:bg-quinary aria-expanded:bg-quinary"
+        className={
+          compact
+            ? 'press grid size-9 place-items-center rounded-full hover:bg-quinary aria-expanded:bg-quinary'
+            : 'flex w-full min-w-0 items-center gap-2 rounded-nav px-1 py-1.5 text-start type-body-reduced text-primary hover:bg-quinary aria-expanded:bg-quinary'
+        }
         aria-haspopup="menu"
         aria-expanded={anchor !== null}
+        aria-label={compact ? active.name : undefined}
+        title={compact ? active.name : undefined}
         onClick={(event) => setAnchor(anchor ? null : event.currentTarget)}
       >
-        <Avatar src={active.avatarUrl} name={active.name} size={24} />
-        <span className="min-w-0 flex-1 truncate">{active.name}</span>
-        {multiple && <ChevronsUpDown size={14} strokeWidth={2} className="flex-none text-secondary" />}
+        <Avatar src={active.avatarUrl} name={active.name} size={compact ? 28 : 24} />
+        {!compact && (
+          <>
+            <span className="min-w-0 flex-1 truncate">{active.name}</span>
+            {multiple && <ChevronsUpDown size={14} strokeWidth={2} className="flex-none text-secondary" />}
+          </>
+        )}
       </button>
       {anchor && (
         <Menu anchor={anchor} placement="above-start" onClose={close} label="Account">

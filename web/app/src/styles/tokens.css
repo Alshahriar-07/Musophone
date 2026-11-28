@@ -141,11 +141,11 @@
   --glassMaterialBackdropFilter: saturate(155%) blur(11px) brightness(1.04);
   /* Regular Glass: one shared recipe, scaled per pane. Low blur so the field
    * stays legible through the pane; a masked 1px lit rim; a specular sweep. */
-  --glassBlurPanel: saturate(158%) blur(11px) brightness(1.05);
-  --glassBlurCard: saturate(145%) blur(7px) brightness(1.04);
-  --glassBlurField: saturate(150%) blur(8px) brightness(1.06);
-  --glassBlurDock: saturate(165%) blur(14px) brightness(1.06);
-  --glassBlurDialog: saturate(160%) blur(22px) brightness(1.03);
+  --glassBlurPanel: saturate(165%) blur(12px) brightness(1.12);
+  --glassBlurCard: saturate(150%) blur(7px) brightness(1.08);
+  --glassBlurField: saturate(155%) blur(9px) brightness(1.12);
+  --glassBlurDock: saturate(175%) blur(15px) brightness(1.14);
+  --glassBlurDialog: saturate(160%) blur(22px) brightness(1.05);
   --glassEdge: rgb(255 255 255 / 0.98);
   --glassEdgeDim: rgb(255 255 255 / 0.5);
   --glassSpecular: rgb(255 255 255 / 0.34);
@@ -291,24 +291,24 @@
     --glassMaterialInnerStrokeAlpha: 0.12;
 
     /* High transparency: the wave behind the pane must stay recognisable. */
-    --glassFill: rgb(255 255 255 / 0.055);
-    --glassFillStrong: rgb(255 255 255 / 0.1);
-    --glassCardFill: rgb(255 255 255 / 0.05);
-    --glassDialogFill: rgb(24 25 31 / 0.72);
-    --glassFieldFill: rgb(255 255 255 / 0.07);
-    --glassSheen: rgb(255 255 255 / 0.34);
-    --glassSheenSoft: rgb(255 255 255 / 0.1);
-    --glassRim: rgb(255 255 255 / 0.6);
-    --glassRimBottom: rgb(255 255 255 / 0.08);
-    --glassHairline: rgb(255 255 255 / 0.18);
-    --glassDrop: rgb(0 0 0 / 0.62);
-    --glassEdge: rgb(255 255 255 / 0.72);
-    --glassEdgeDim: rgb(255 255 255 / 0.28);
-    --glassSpecular: rgb(255 255 255 / 0.26);
-    --glassSpecularSoft: rgb(255 255 255 / 0.07);
+    --glassFill: rgb(255 255 255 / 0.08);
+    --glassFillStrong: rgb(255 255 255 / 0.14);
+    --glassCardFill: rgb(255 255 255 / 0.07);
+    --glassDialogFill: rgb(24 25 31 / 0.7);
+    --glassFieldFill: rgb(255 255 255 / 0.09);
+    --glassSheen: rgb(255 255 255 / 0.55);
+    --glassSheenSoft: rgb(255 255 255 / 0.16);
+    --glassRim: rgb(255 255 255 / 0.78);
+    --glassRimBottom: rgb(255 255 255 / 0.1);
+    --glassHairline: rgb(255 255 255 / 0.22);
+    --glassDrop: rgb(0 0 0 / 0.6);
+    --glassEdge: rgb(255 255 255 / 0.92);
+    --glassEdgeDim: rgb(255 255 255 / 0.4);
+    --glassSpecular: rgb(255 255 255 / 0.5);
+    --glassSpecularSoft: rgb(255 255 255 / 0.12);
     --ambientBeam: rgb(206 210 224 / 0.11);
-    --appScrim: linear-gradient(180deg, rgb(6 7 10 / 0.5) 0%, rgb(6 7 10 / 0.26) 42%, rgb(6 7 10 / 0.64) 100%);
-    --contentVeil: linear-gradient(180deg, rgb(7 8 11 / 0.42), rgb(7 8 11 / 0.24));
+    --appScrim: linear-gradient(180deg, rgb(6 7 10 / 0.46) 0%, rgb(6 7 10 / 0.2) 42%, rgb(6 7 10 / 0.58) 100%);
+    --contentVeil: linear-gradient(180deg, rgb(7 8 11 / 0.24), rgb(7 8 11 / 0.1));
 
     /* Soft grey light over deep charcoal: radial shading, no colour wash. The
      * accent is a whisper inside the grey, enough to make the light belong to
@@ -317,11 +317,11 @@
       radial-gradient(96% 68% at 50% -18%, #212329 0%, rgb(17 18 21 / 0) 64%),
       radial-gradient(72% 58% at 10% 104%, #17181d 0%, rgb(17 18 21 / 0) 72%),
       linear-gradient(172deg, #14151a 0%, #0e0f12 54%, #0a0b0d 100%);
-    --auroraOne: color-mix(in srgb, var(--keyColor) 20%, #4b5260);
-    --auroraTwo: #2e3138;
-    --auroraThree: color-mix(in srgb, var(--keyColor) 12%, #2a2b30);
+    --auroraOne: color-mix(in srgb, var(--keyColor) 16%, #9aa3b4);
+    --auroraTwo: #4a4f5a;
+    --auroraThree: color-mix(in srgb, var(--keyColor) 10%, #3a3d46);
     --auroraVeil: rgb(255 255 255 / 0.05);
-    --auroraOpacity: 0.22;
+    --auroraOpacity: 0.34;
 
     --sheetFillTop: rgb(62 65 77 / 0.6);
     --sheetFillBottom: rgb(34 36 44 / 0.74);
@@ -329,8 +329,8 @@
     --sheetHairline: rgb(255 255 255 / 0.075);
     --sheetShadow: rgb(0 0 0 / 0.55);
 
-    --tileTop: rgb(255 255 255 / 0.14);
-    --tileBottom: rgb(255 255 255 / 0.045);
+    --tileTop: rgb(255 255 255 / 0.17);
+    --tileBottom: rgb(255 255 255 / 0.055);
     --tileHairline: rgb(255 255 255 / 0.16);
     --tileRim: rgb(255 255 255 / 0.52);
     --tileShadow: rgb(0 0 0 / 0.55);

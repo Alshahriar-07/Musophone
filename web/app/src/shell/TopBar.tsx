@@ -79,7 +79,7 @@ export function TopBar() {
   const { pathname } = useLocation();
 
   return (
-    <header className="flex h-(--mobile-top-bar-height) shrink-0 items-center gap-3 px-1 max-sm:px-0">
+    <header className="flex h-(--mobile-top-bar-height) shrink-0 items-center gap-3 px-4 max-sm:px-3">
       <button
         className="glass-material press grid size-10 shrink-0 place-items-center rounded-[14px] text-primary sm:hidden"
         aria-label="Open menu"

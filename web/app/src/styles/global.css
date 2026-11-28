@@ -355,8 +355,12 @@
     border-radius: inherit;
     pointer-events: none;
     background:
-      radial-gradient(70% 42% at 24% 0%, var(--glassSpecular) 0%, transparent 72%),
-      radial-gradient(44% 32% at 94% 104%, var(--glassSpecularSoft) 0%, transparent 74%);
+      linear-gradient(112deg, transparent 16%, rgb(255 255 255 / 0.14) 34%, rgb(255 255 255 / 0.02) 49%, transparent 62%),
+      radial-gradient(64% 40% at 22% 0%, var(--glassSpecular) 0%, transparent 74%),
+      radial-gradient(44% 30% at 96% 102%, var(--glassSpecularSoft) 0%, transparent 76%);
+    box-shadow:
+      inset 0 0 0 5px rgb(255 255 255 / 0.025),
+      inset 0 -18px 30px -24px rgb(255 255 255 / 0.35);
   }
 }
 
@@ -609,12 +613,17 @@
  * pearl (or near-black) field with a grain film to break up banding.
  */
 .app-ambient {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  background: var(--ambientBackground);
+  /* The full-bleed artwork is the field the glass refracts; the scrim only
+   * darkens it enough for text, never hides it. */
+  background-image: var(--appScrim), var(--appBackgroundImage);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
 }
 
 .app-ambient::after {
@@ -878,11 +887,79 @@
   }
 }
 
-/* A stage narrower than the window: the sheet keeps a readable measure. */
-@media (min-width: 1180px) {
-  .app-stage {
-    padding-inline: max(var(--app-frame-padding), calc((100vw - var(--container-stage)) / 2));
+/*
+ * The rail: attached to the window's left edge, its width animating between the
+ * expanded and collapsed measures. The content column is a flex sibling, so it
+ * takes back the space on its own.
+ */
+.rail {
+  transition: width 320ms var(--ease-glide);
+}
+
+.rail-label {
+  display: block;
+  max-width: 240px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 300ms var(--ease-glide),
+    opacity 180ms ease;
+}
+
+@media (min-width: 640px) {
+  .rail {
+    width: var(--web-navigation-width);
   }
+
+  .rail[data-collapsed='true'] {
+    width: var(--web-navigation-collapsed);
+  }
+
+  .rail[data-collapsed='true'] .rail-label {
+    max-width: 0;
+    opacity: 0;
+  }
+
+  .rail[data-collapsed='true'] .rail-extra {
+    display: none;
+  }
+
+  .rail[data-collapsed='true'] .rail-item {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .rail[data-collapsed='true'] .rail-head {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  .rail[data-collapsed='true'] .rail-brand {
+    justify-content: center;
+  }
+
+  .rail[data-collapsed='true'] .rail-toggle {
+    margin-inline-start: 0;
+  }
+
+  .rail[data-collapsed='true'] .rail-account {
+    display: flex;
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .rail[data-collapsed='true'] .rail-footer {
+    justify-content: center;
+    padding-inline: 0;
+  }
+}
+
+/* The page's own veil: enough contrast for text over the artwork, thin enough
+ * that the wave still reads through it. */
+@utility content-veil {
+  background-image: var(--contentVeil);
 }
 
 /* More contrast: the panes turn solid, as Apple's _IC tokens do. */

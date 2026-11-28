@@ -36,9 +36,10 @@ function useDocumentTitle() {
 }
 
 /**
- * The app frame: a fixed ambient light field, a floating glass rail, the
- * command bar, and the page as a frost sheet that scrolls between them. The
- * player dock floats over the sheet's foot; Up Next / Lyrics slide in over it.
+ * The app frame: full-bleed artwork behind a glass rail attached to the left
+ * edge, the command bar, and the page filling the rest of the window. The
+ * content column takes back whatever the rail's collapsed state frees; the
+ * player dock floats over the page's foot and Up Next / Lyrics over its edge.
  */
 export function AppShell() {
   useDocumentTitle();
@@ -98,19 +99,19 @@ export function AppShell() {
         <span className="app-ambient__vignette" />
       </div>
 
-      <div className="app-stage flex h-full min-h-0 gap-(--app-frame-gap) p-(--app-frame-padding)">
+      <div className="flex h-full min-h-0 w-full">
         <Sidebar />
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
           <TopBar />
-          <div className="relative mt-(--app-frame-gap) min-h-0 flex-1">
+          <div className="relative min-h-0 flex-1">
             <main
               id="scrollable-page"
-              className="glass-sheet absolute inset-0 overflow-x-hidden overflow-y-auto rounded-sheet [scrollbar-gutter:stable]"
+              className="content-veil absolute inset-0 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]"
             >
               {/* Clears the floating dock: its height, its offset, and some air. */}
               <div
                 key={pathname}
-                className="animate-page min-h-full pb-[calc(var(--player-pill-height)+var(--player-bottom-offset)+96px)]"
+                className="animate-page min-h-full pb-[calc(var(--player-pill-height)+var(--player-bottom-offset)+88px)]"
               >
                 <Outlet />
               </div>

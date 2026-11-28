@@ -93,11 +93,11 @@ export function PlayerBar() {
 
   return (
     <div
-      className="pointer-events-none absolute inset-x-0 bottom-(--player-bottom-offset) z-[calc(var(--z-web-chrome)-1)] flex justify-center px-4 transition-[padding-inline-end] duration-(--duration-panel) ease-glide data-[panel-open=true]:pe-[calc(var(--side-panel-width)+28px)]"
+      className="pointer-events-none absolute inset-x-0 bottom-(--shell-inset) z-[calc(var(--z-web-chrome)-1)] flex px-(--shell-inset) transition-[padding-inline-end] duration-(--duration-panel) ease-glide data-[panel-open=true]:pe-[calc(var(--side-panel-width)+28px)]"
       data-panel-open={sidePanel !== null}
     >
       <div
-        className="glass-dock pointer-events-auto relative grid h-(--player-pill-height) w-full max-w-[1040px] animate-dock-in grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-dock px-4 max-sm:h-[70px] max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:gap-2 max-sm:px-3"
+        className="glass-dock pointer-events-auto relative grid h-(--player-pill-height) w-full animate-dock-in grid-cols-[minmax(0,1.15fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-dock px-4 max-sm:h-[70px] max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:gap-2 max-sm:px-3"
         role="region"
         aria-label="Player"
       >
