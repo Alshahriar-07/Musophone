@@ -62,7 +62,7 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
       onPointerDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="glass-dialog flex max-h-[min(720px,calc(100vh-48px))] w-[min(520px,calc(100vw-32px))] animate-zoom flex-col rounded-[24px]"
+        className="glass-dialog flex max-h-[min(720px,calc(100vh-48px))] w-[min(520px,calc(100vw-32px))] animate-zoom flex-col rounded-[8px] border border-white/[0.08]"
         role="dialog"
         aria-modal="true"
         aria-label="Lyric settings"
@@ -70,7 +70,7 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
         <header className="flex items-center justify-between px-5 pt-4 pb-2">
           <h2 className="type-[700_20px/26px] tracking-[-0.02em]">Lyrics</h2>
           <button
-            className="press grid size-8 place-items-center rounded-full bg-quinary text-secondary shadow-[inset_0_1px_0_var(--tileRim),inset_0_0_0_1px_var(--tileHairline)] hover:text-primary"
+            className="press grid size-8 place-items-center rounded-[6px] bg-quinary text-secondary shadow-[inset_0_1px_0_var(--tileRim),inset_0_0_0_1px_var(--tileHairline)] hover:text-primary"
             aria-label="Close"
             onClick={onClose}
           >

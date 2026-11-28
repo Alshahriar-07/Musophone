@@ -11,7 +11,7 @@ import { useParty } from '@/party/useParty';
 import { useHistorySettings } from '@/playback/historyReporting';
 import { Select } from '@/components/Select';
 import { AUTOMIX_BARS } from '@/playback/automix/choices';
-import { ACCENTS, APPEARANCES, useAppearance } from '@/state/appearance';
+import { ACCENTS, useAppearance } from '@/state/appearance';
 import { CROSSFADE_CHOICES, usePlayer } from '@/state/player';
 import { AppleMusicIntegration, AppleMusicToggles, CanvasToggle, DiscordIntegration, LyricSourcesAccess, SpotifyIntegration, Toggle } from './IntegrationSettings';
 import { settingsUi } from './settingsStyles';
@@ -91,33 +91,12 @@ export default function SettingsPage() {
         <div className={settingsUi.column}>
         <h2 className={settingsUi.sectionHeader}>Appearance</h2>
         <section className={settingsUi.group}>
-          <div className={`${settingsUi.row} gap-4`}>
-            <span>Theme</span>
-            <div role="radiogroup" aria-label="Theme" className="inline-flex rounded-[9px] bg-segmented p-0.5">
-              {APPEARANCES.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={appearance === option.id}
-                  onClick={() => setAppearance(option.id)}
-                  className={`rounded-[7px] px-2.5 py-[3px] type-callout-emphasized transition-colors duration-150 ease-standard ${
-                    appearance === option.id
-                      ? 'bg-segmented-selected text-primary shadow-[0_1px_2px_rgb(0_0_0/0.12)]'
-                      : 'text-secondary hover:text-primary'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="relative px-4 py-[13px] hairline-[16px]">
+          <div className="relative px-4 py-[13px]">
             <div className="flex items-center justify-between gap-4">
-              <span className="type-title-3">Accent colour</span>
-              <span className="type-body-reduced text-secondary">{activeAccent.name}</span>
+              <span className="type-title-3 font-semibold text-white">Accent colour</span>
+              <span className="type-body-reduced text-[#b3b3b3]">{activeAccent.name}</span>
             </div>
-            <div className="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-9" role="radiogroup" aria-label="Accent colour">
+            <div className="mt-3 grid grid-cols-5 gap-2.5 sm:grid-cols-9" role="radiogroup" aria-label="Accent colour">
               {ACCENTS.map((option) => {
                 const selected = accent === option.id;
                 return (
@@ -129,20 +108,20 @@ export default function SettingsPage() {
                     aria-label={option.name}
                     title={option.name}
                     onClick={() => setAccent(option.id)}
-                    className={`relative grid size-7 place-items-center justify-self-center rounded-full transition-[transform,box-shadow] duration-150 ease-standard hover:scale-105 focus-visible:scale-105 ${
-                      selected ? 'ring-2 ring-key ring-offset-2 ring-offset-(--glassCardFill)' : 'ring-1 ring-divider'
+                    className={`relative grid size-8 place-items-center justify-self-center rounded-full transition-transform hover:scale-110 focus-visible:scale-110 active:scale-95 ${
+                      selected ? 'ring-2 ring-key ring-offset-2 ring-offset-[#181818]' : 'ring-1 ring-white/10 hover:ring-white/30'
                     }`}
                   >
                     <span
-                      className="size-5 rounded-full"
-                      style={{ backgroundColor: dark ? option.dark : option.light }}
+                      className="size-5.5 rounded-full shadow-inner"
+                      style={{ backgroundColor: option.dark }}
                     />
                     {selected && (
                       <Check
-                        size={12}
+                        size={13}
                         strokeWidth={3}
                         aria-hidden="true"
-                        className="absolute text-white drop-shadow-[0_1px_1px_rgb(0_0_0/0.5)]"
+                        className="absolute text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.8)]"
                       />
                     )}
                   </button>

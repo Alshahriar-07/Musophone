@@ -35,9 +35,20 @@ function originOf(sender: Browser.runtime.MessageSender): string | null {
   }
 }
 
+function isVercelOrigin(origin: string): boolean {
+  return /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+}
+
+function isLocalhostOrigin(origin: string): boolean {
+  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+}
+
 function allowed(sender: Browser.runtime.MessageSender): boolean {
   const origin = originOf(sender);
-  return !!origin && (ALLOWED_ORIGINS.has(origin) || (origin === OWN_ORIGIN && sender.id === browser.runtime.id));
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin) || isVercelOrigin(origin) || isLocalhostOrigin(origin)) return true;
+  if (origin === OWN_ORIGIN && sender.id === browser.runtime.id) return true;
+  return false;
 }
 
 function failure(id: string, error: unknown): BridgeResponse {

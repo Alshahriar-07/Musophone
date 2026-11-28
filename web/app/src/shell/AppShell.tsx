@@ -13,6 +13,7 @@ import { useUi } from '@/state/ui';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { Banner, bannerButtonClass } from './Banner';
 import { pageTitleFor } from './TopBar';
+import { MiniPlayerWindow } from './MiniPlayerWindow';
 import { PlayerBar } from './PlayerBar';
 import { SidePanel } from './SidePanel';
 import { Sidebar } from './Sidebar';
@@ -89,8 +90,8 @@ export function AppShell() {
   }
 
   return (
-    <div className="relative isolate flex h-full h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden">
-      {/* The light field the glass refracts: three drifting lights and a beam. */}
+    <div className="relative isolate flex h-full h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-[#000000]">
+      {/* Spotify Desktop dark stage backdrop */}
       <div className="app-ambient" aria-hidden="true">
         <span className="app-ambient__light app-ambient__light--one" />
         <span className="app-ambient__light app-ambient__light--two" />
@@ -99,29 +100,34 @@ export function AppShell() {
         <span className="app-ambient__vignette" />
       </div>
 
-      <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
+      {/* Main Desktop Grid: Sidebar + Scrollable View + Persistent Bottom Player Bar */}
+      <div className="flex h-[calc(100%-84px)] min-h-0 w-full flex-1 overflow-hidden p-2 gap-2 max-sm:p-0 max-sm:gap-0 max-sm:h-[calc(100%-72px)]">
         <Sidebar />
-        <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[8px] bg-[#121212] shadow-sm max-sm:rounded-none">
           <TopBar />
           <div className="relative min-h-0 flex-1 overflow-hidden">
             <main
               id="scrollable-page"
               className="content-veil absolute inset-0 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]"
             >
-              {/* Clears the floating dock: its height, its offset, and safe margin. */}
               <div
                 key={pathname}
-                className="animate-page min-h-full pb-[calc(var(--player-pill-height)+max(var(--shell-inset),env(safe-area-inset-bottom,12px))+96px)]"
+                className="animate-page min-h-full pb-8"
               >
                 <Outlet />
               </div>
             </main>
-            <PlayerBar />
             <SidePanel />
             {banner}
           </div>
         </div>
       </div>
+
+      {/* Spotify-style persistent bottom playback bar */}
+      <div className="relative z-(--z-web-chrome) h-[84px] w-full shrink-0 bg-[#000000] px-4 max-sm:h-[72px] max-sm:px-2">
+        <PlayerBar />
+      </div>
+      <MiniPlayerWindow />
       {fullScreen && (
         <Suspense fallback={null}>
           <FullScreenPlayer />

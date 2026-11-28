@@ -16,7 +16,7 @@ interface BannerProps {
 export function Banner({ title, detail, action, onDismiss }: BannerProps) {
   return (
     <div
-      className="glass-dialog pointer-events-auto absolute bottom-[calc(var(--player-bottom-offset)+var(--player-pill-height)+14px)] left-4 z-(--z-web-chrome) flex w-[min(430px,calc(100%-2rem))] animate-rise items-center gap-3 rounded-[18px] px-4 py-2.5 max-sm:bottom-[calc(var(--player-bottom-offset)+70px+10px)] max-sm:left-3"
+      className="pointer-events-auto absolute bottom-4 left-4 z-(--z-web-chrome) flex w-[min(430px,calc(100%-2rem))] animate-rise items-center gap-3 rounded-[8px] bg-[#1a1b22]/95 border border-white/[0.08] px-4 py-2.5 shadow-xl backdrop-blur-md max-sm:bottom-3 max-sm:left-3"
       role="region"
       aria-label={title}
     >
@@ -39,4 +39,4 @@ export function Banner({ title, detail, action, onDismiss }: BannerProps) {
 }
 
 export const bannerButtonClass =
-  'inline-flex h-8 items-center whitespace-nowrap rounded-pill bg-key-bg px-4 type-[600_12px/15px] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.28)] transition-[filter,transform] duration-(--duration-fast) hover:brightness-[1.12] active:scale-95';
+  'inline-flex h-8 items-center whitespace-nowrap rounded-[6px] bg-key-bg px-3.5 text-[12.5px] font-semibold text-white shadow-sm transition-transform hover:scale-102 active:scale-98';

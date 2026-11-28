@@ -1,4 +1,9 @@
-import { handshake, type DetectedExtension, type DetectDiagnostics } from '@musophone/shared/bridge';
+import {
+  handshake,
+  BRIDGE_CHANNEL,
+  type DetectedExtension,
+  type DetectDiagnostics,
+} from '@musophone/shared/bridge';
 import { useQuery } from '@tanstack/react-query';
 import { config } from '@/config';
 import { queryClient } from '@/lib/queryClient';
@@ -67,6 +72,18 @@ lastDiagnostics = IDLE_DIAGNOSTICS;
 /** Re-runs the handshake now (the Extension page's "Check again", and the debug page). */
 export function recheckExtension(): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: extensionQueryKey, exact: true });
+}
+
+// Automatically re-check when extension content script announces itself
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', (event: MessageEvent) => {
+    if (
+      (event.data?.channel === BRIDGE_CHANNEL || event.data?.channel === 'musophone:bridge') &&
+      event.data?.direction === 'announce'
+    ) {
+      void recheckExtension();
+    }
+  });
 }
 
 /**

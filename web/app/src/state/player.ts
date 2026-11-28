@@ -104,9 +104,11 @@ interface PlayerState extends Settings {
   setShowNerdStats: (on: boolean) => void;
 }
 
-// ---- Settings, kept across visits ---------------------------------------------------
+// ---- Settings & Playback Session Persistence ---------------------------------
 
 const SETTINGS_KEY = 'bitchord:player';
+const SESSION_KEY = 'musophone:playback-session';
+
 const DEFAULT_SETTINGS: Settings = {
   shuffle: false,
   repeat: 'off',
@@ -119,6 +121,13 @@ const DEFAULT_SETTINGS: Settings = {
   showNerdStats: false,
 };
 
+interface SavedPlaybackSession {
+  queue: QueueEntry[];
+  index: number;
+  nowPlaying: NowPlaying | null;
+  positionSec: number;
+}
+
 function loadSettings(): Settings {
   try {
     return { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>) };
@@ -129,10 +138,43 @@ function loadSettings(): Settings {
 
 function saveSettings(state: Settings) {
   const { shuffle, repeat, autoplay, volume, muted, crossfadeSec, automix, automixBars, showNerdStats } = state;
-  localStorage.setItem(
-    SETTINGS_KEY,
-    JSON.stringify({ shuffle, repeat, autoplay, volume, muted, crossfadeSec, automix, automixBars, showNerdStats }),
-  );
+  try {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ shuffle, repeat, autoplay, volume, muted, crossfadeSec, automix, automixBars, showNerdStats }),
+    );
+  } catch {}
+}
+
+export function savePlaybackSession(): void {
+  try {
+    const { queue, index, nowPlaying } = usePlayer.getState();
+    if (!nowPlaying || index < 0) {
+      localStorage.removeItem(SESSION_KEY);
+      return;
+    }
+    const audio = getAudio();
+    const positionSec = audio ? audio.currentTime : 0;
+    const session: SavedPlaybackSession = {
+      queue,
+      index,
+      nowPlaying,
+      positionSec,
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } catch {}
+}
+
+function loadSavedSession(): SavedPlaybackSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SavedPlaybackSession;
+    if (parsed && Array.isArray(parsed.queue) && parsed.index >= 0 && parsed.nowPlaying) {
+      return parsed;
+    }
+  } catch {}
+  return null;
 }
 
 // ---- Decks: two engines, so a crossfade can play the next track under this one ------------
@@ -417,12 +459,14 @@ let loadToken = 0;
 /** Canonical positions of the queue before shuffle, for turning it off again. */
 let canonical: Map<string, number> | null = null;
 
+const savedInitialSession = typeof window !== 'undefined' ? loadSavedSession() : null;
+
 export const usePlayer = create<PlayerState>()((set, get) => ({
   ...loadSettings(),
-  queue: [],
-  index: -1,
-  nowPlaying: null,
-  status: 'idle',
+  queue: savedInitialSession?.queue ?? [],
+  index: savedInitialSession?.index ?? -1,
+  nowPlaying: savedInitialSession?.nowPlaying ?? null,
+  status: savedInitialSession?.nowPlaying ? 'paused' : 'idle',
   error: null,
   deck: 0,
   automixState: null,
@@ -540,8 +584,9 @@ export const usePlayer = create<PlayerState>()((set, get) => ({
     // A listener in a party the host has locked: the press moves this device alone.
     if (partyHooks?.onLockedTransport(resuming)) return;
     if (!audio || status === 'error') {
-      // A stopped or failed track starts again from where it was.
-      void startAt(index, { startSec: audio?.currentTime ?? 0 });
+      // A stopped, failed track, or session-restored track starts from where it was.
+      const initialPos = savedInitialSession && index === savedInitialSession.index ? savedInitialSession.positionSec : (audio?.currentTime ?? 0);
+      void startAt(index, { startSec: initialPos });
     } else if (audio.paused) {
       // In a party, a resume waits for the instant the server schedules for everyone.
       if (!partyHooks?.shouldDeferPlay()) void audio.play().catch((e: unknown) => trackLog.w(`play() refused: ${String(e)}`));
@@ -1020,6 +1065,7 @@ function bindElement(deck: Deck, n: number) {
     if (!inFront()) return;
     maybeCrossfade();
     ensureAutoplay();
+    savePlaybackSession();
   });
   for (const event of ['durationchange', 'ratechange', 'seeked'] as const) {
     element.addEventListener(event, () => {

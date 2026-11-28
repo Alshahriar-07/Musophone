@@ -44,7 +44,7 @@ function ExtensionChip({ status }: { status: ExtensionStatus }) {
   return (
     <PrefetchLink
       to="/extension"
-      className="press group flex h-8 shrink-0 items-center gap-2 rounded-pill bg-thin-material px-3 text-secondary hover:text-primary"
+      className="press group flex h-8 shrink-0 items-center gap-2 rounded-[6px] bg-[#1f1f1f] border border-white/[0.06] px-3 text-[#b3b3b3] hover:text-white hover:bg-[#282828] transition-colors"
       title={hint}
       aria-live="polite"
     >

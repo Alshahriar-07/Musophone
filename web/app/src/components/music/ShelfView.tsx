@@ -26,8 +26,8 @@ function renderItem(shelf: Shelf, item: MusicItem): ReactNode {
 }
 
 /**
- * A shelf's scrolling row with Apple's hover arrows (report §2), around any
- * list items: the shelves below, and the artist page's Top Songs.
+ * A shelf's scrolling row with hover arrow pucks, around any list items.
+ * Includes right scroll padding so the final card is never clipped.
  */
 export function ShelfScroller({ kind, children }: { kind: ShelfKind; children: ReactNode }) {
   const list = useRef<HTMLUListElement>(null);
@@ -36,7 +36,7 @@ export function ShelfScroller({ kind, children }: { kind: ShelfKind; children: R
   const measure = useCallback(() => {
     const el = list.current;
     if (!el) return;
-    setEdges({ start: el.scrollLeft <= 2, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
+    setEdges({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 6 });
   }, []);
 
   useEffect(() => {
@@ -66,7 +66,11 @@ export function ShelfScroller({ kind, children }: { kind: ShelfKind; children: R
       >
         <ChevronLeft size={18} strokeWidth={2.4} />
       </button>
-      <ul ref={list} className={`${shelfList} ${shelfKinds[kind]}`} onScroll={measure}>
+      <ul
+        ref={list}
+        className={`${shelfList} ${shelfKinds[kind]} pe-[calc(var(--body-gutter)+24px)]`}
+        onScroll={measure}
+      >
         {children}
       </ul>
       <button
@@ -81,24 +85,27 @@ export function ShelfScroller({ kind, children }: { kind: ShelfKind; children: R
   );
 }
 
-/** A shelf's title, a link with a chevron when there's a page behind it. */
-function ShelfTitle({ title, to }: { title: string; to?: string | null }) {
+/** A shelf's title: prominent headline with link and optional strapline/subtitle. */
+function ShelfTitle({ title, strapline, to }: { title: string; strapline?: string | null; to?: string | null }) {
   return (
-    <div className={shelfHeader}>
-      <h2 className="type-[700_19px/24px] tracking-[-0.02em]">
-        {to ? (
-          <PrefetchLink to={to} className="group/title inline-flex items-center gap-1">
-            {title}
-            <ChevronRight
-              size={16}
-              strokeWidth={2.6}
-              className="text-tertiary transition-transform duration-300 ease-spring group-hover/title:translate-x-0.5 group-hover/title:text-primary"
-            />
-          </PrefetchLink>
-        ) : (
-          title
-        )}
-      </h2>
+    <div className="mx-(--body-gutter) mb-3 flex flex-col gap-0.5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-[clamp(18px,1.6vw,22px)] font-bold tracking-[-0.025em] text-primary">
+          {to ? (
+            <PrefetchLink to={to} className="group/title inline-flex items-center gap-1.5 hover:text-key transition-colors">
+              <span>{title}</span>
+              <ChevronRight
+                size={17}
+                strokeWidth={2.4}
+                className="text-tertiary transition-transform duration-200 group-hover/title:translate-x-0.5 group-hover/title:text-key"
+              />
+            </PrefetchLink>
+          ) : (
+            title
+          )}
+        </h2>
+      </div>
+      {strapline && <p className="text-[12px] text-secondary font-medium">{strapline}</p>}
     </div>
   );
 }
@@ -139,7 +146,7 @@ export function TrackShelf({ title, to, tracks, source }: { title: string; to?: 
 export function ShelfView({ shelf }: { shelf: Shelf }) {
   return (
     <section className={shelfSection} aria-label={shelf.title}>
-      <ShelfTitle title={shelf.title} to={shelf.seeAll ? browseHref(shelf.seeAll) : null} />
+      <ShelfTitle title={shelf.title} strapline={shelf.strapline} to={shelf.seeAll ? browseHref(shelf.seeAll) : null} />
       <ShelfScroller key={shelf.items.length} kind={shelf.layout}>
         {shelf.items.map((item, i) => (
           <li key={`${item.id}-${i}`}>{renderItem(shelf, item)}</li>

@@ -11,9 +11,11 @@ import { TrackMenu } from './TrackMenu';
 type Option = { kind: 'query'; text: string; typed: string; rest: string } | { kind: 'item'; item: MusicItem };
 
 /**
- * The interactive music search field with live suggestions:
- * real-time typeahead, keyboard navigation, artwork, title, subtitle,
- * loading, error, and empty states.
+ * Spotify-Inspired Desktop Search Field:
+ * - Subtle dark Regular Glass surface with a thin, soft border
+ * - Smooth focus expansion with subtle accent-colored border
+ * - Clean icon, clear (X) button, and shortcut badge
+ * - Polished dropdown results with artwork and artist byline
  */
 export function SearchField({
   initial = '',
@@ -28,6 +30,7 @@ export function SearchField({
 }) {
   const [value, setValue] = useState(initial);
   const [open, setOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [active, setActive] = useState(-1);
   const input = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -35,6 +38,7 @@ export function SearchField({
   const navigate = useNavigate();
   const suggestions = useSuggestions(open ? value : '');
   const menuOpen = useRef(false);
+
   const onMenuOpenChange = useCallback((isOpen: boolean) => {
     const wasOpen = menuOpen.current;
     menuOpen.current = isOpen;
@@ -49,6 +53,7 @@ export function SearchField({
       if (menuOpen.current) return;
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
+        setIsFocused(false);
       }
     };
     window.addEventListener('pointerdown', onPointerDown);
@@ -85,7 +90,16 @@ export function SearchField({
   };
 
   return (
-    <div ref={containerRef} className={`relative ${compact ? 'w-full' : 'w-[min(492px,100%)]'}`}>
+    <div
+      ref={containerRef}
+      className={`relative transition-[width] duration-200 ease-out ${
+        compact
+          ? isFocused
+            ? 'w-[min(380px,38vw)]'
+            : 'w-[min(300px,30vw)]'
+          : 'w-[min(520px,100%)]'
+      }`}
+    >
       <form
         className="relative flex items-center"
         role="search"
@@ -95,19 +109,21 @@ export function SearchField({
         }}
       >
         <Search
-          size={15}
-          strokeWidth={2.4}
-          className="pointer-events-none absolute left-3 text-secondary transition-colors"
+          size={16}
+          strokeWidth={2.2}
+          className={`pointer-events-none absolute left-3.5 transition-colors ${
+            isFocused ? 'text-white' : 'text-[#888888]'
+          }`}
           aria-hidden="true"
         />
         <input
           ref={input}
-          className={`glass-field w-full rounded-pill pl-8 pr-8 type-body text-primary placeholder:text-tertiary transition-[box-shadow,border-color] duration-150 focus-visible:outline-none focus:ring-1 focus:ring-key/40 [&::-webkit-search-cancel-button]:hidden ${
-            compact ? 'h-9 text-[13px]' : 'h-10 text-[14px]'
+          className={`w-full rounded-[6px] bg-[#242424]/90 pl-9.5 pr-8 text-white placeholder:text-[#a0a0a0] border border-white/[0.08] shadow-sm backdrop-blur-md transition-all duration-200 hover:bg-[#2a2a2a] hover:border-white/[0.15] focus:outline-none focus:bg-[#1f1f1f] focus:border-key/60 focus:ring-1 focus:ring-key/40 [&::-webkit-search-cancel-button]:hidden ${
+            compact ? 'h-9 text-[13.5px]' : 'h-10 text-[14px]'
           }`}
           type="search"
           value={value}
-          placeholder={placeholder ?? (compact ? 'Search music…' : 'Artists, Songs, Lyrics, and More')}
+          placeholder={placeholder ?? 'Search music…'}
           aria-label="Search music"
           role="combobox"
           aria-expanded={showDropdown}
@@ -120,7 +136,11 @@ export function SearchField({
             setOpen(true);
             setActive(-1);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true);
+            setIsFocused(true);
+          }}
+          onBlur={() => setIsFocused(false)}
           onKeyDown={(e) => {
             if (e.key === 'ArrowDown') {
               e.preventDefault();
@@ -137,14 +157,14 @@ export function SearchField({
 
         {suggestions.isFetching && (
           <div className="pointer-events-none absolute right-3 grid size-4 place-items-center text-tertiary">
-            <Loader2 size={13} className="animate-spin text-key" />
+            <Loader2 size={14} className="animate-spin text-key" />
           </div>
         )}
 
         {value && !suggestions.isFetching && (
           <button
             type="button"
-            className="press absolute right-3 grid size-4 place-items-center rounded-full bg-quaternary text-secondary hover:bg-quinary hover:text-primary transition-colors"
+            className="absolute right-2.5 grid size-5 place-items-center rounded-full bg-[#383838] text-[#b3b3b3] hover:text-white hover:bg-[#4a4a4a] transition-colors"
             aria-label="Clear search"
             onClick={() => {
               setValue('');
@@ -152,40 +172,41 @@ export function SearchField({
               if (onSearch) onSearch('');
             }}
           >
-            <X size={11} strokeWidth={2.5} />
+            <X size={12} strokeWidth={2.4} />
           </button>
         )}
 
         {compact && !value && !suggestions.isFetching && (
-          <kbd className="pointer-events-none absolute right-3 rounded-[6px] bg-quinary px-1.5 py-0.5 type-caption-2 text-tertiary">
+          <kbd className="pointer-events-none absolute right-3 rounded-[4px] bg-[#333333] px-1.5 py-0.5 text-[10px] font-semibold text-[#888888]">
             /
           </kbd>
         )}
       </form>
 
+      {/* Floating Suggestions Dropdown */}
       {showDropdown && (
         <ul
           id={listId}
-          className={`glass-dialog absolute top-[calc(100%+6px)] left-0 z-(--z-contextual-menus) max-h-[min(540px,70vh)] ${
-            compact ? 'w-[min(380px,92vw)]' : 'w-full'
-          } animate-menu-in overflow-y-auto rounded-[18px] p-1.5 shadow-[0_24px_50px_-16px_rgba(0,0,0,0.65)]`}
+          className={`absolute top-[calc(100%+8px)] left-0 z-(--z-contextual-menus) max-h-[min(500px,65vh)] ${
+            compact ? 'w-[min(400px,94vw)]' : 'w-full'
+          } overflow-y-auto rounded-[8px] bg-[#181818]/95 p-1.5 shadow-[0_20px_48px_-12px_rgba(0,0,0,0.85)] border border-white/[0.08] backdrop-blur-xl animate-in fade-in duration-150`}
           role="listbox"
         >
           {suggestions.isFetching && options.length === 0 && (
-            <li className="flex items-center gap-2.5 px-3 py-3 type-body text-secondary">
-              <Loader2 size={15} className="animate-spin text-key" />
+            <li className="flex items-center gap-3 px-3 py-3 text-[13px] text-[#b3b3b3]">
+              <Loader2 size={16} className="animate-spin text-key" />
               <span>Searching YouTube Music…</span>
             </li>
           )}
           {suggestions.isError && options.length === 0 && (
-            <li className="px-3 py-3 type-body text-secondary">
-              <p className="text-key font-medium">Search encountered an issue.</p>
-              <p className="type-caption-2 text-tertiary mt-0.5">Press Enter to search anyway.</p>
+            <li className="px-3 py-3 text-[13px] text-[#b3b3b3]">
+              <p className="text-key font-semibold">Search encountered an issue.</p>
+              <p className="text-[11.5px] text-[#727272] mt-0.5">Press Enter to search anyway.</p>
             </li>
           )}
           {!suggestions.isFetching && !suggestions.isError && options.length === 0 && (
-            <li className="px-3 py-3 type-body text-secondary">
-              No matching results for <span className="text-primary font-medium">“{value.trim()}”</span>
+            <li className="px-3 py-3 text-[13px] text-[#b3b3b3]">
+              No matching results for <span className="text-white font-semibold">“{value.trim()}”</span>
             </li>
           )}
           {options.map((option, i) => {
@@ -197,7 +218,9 @@ export function SearchField({
                 id={`${listId}-${i}`}
                 role="option"
                 aria-selected={i === active}
-                className={`${option.kind === 'query' ? hint : `${lockup} ${playable ? lockupMenuCols : lockupCols}`} cursor-pointer`}
+                className={`${
+                  option.kind === 'query' ? hint : `${lockup} ${playable ? lockupMenuCols : lockupCols}`
+                } cursor-pointer`}
                 data-active={i === active || undefined}
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setActive(i)}
@@ -209,24 +232,24 @@ export function SearchField({
               >
                 {option.kind === 'query' ? (
                   <>
-                    <Search size={13} strokeWidth={2.4} className="text-tertiary" aria-hidden="true" />
-                    <span className="truncate">
-                      <span className="font-semibold text-primary">{option.typed}</span>
-                      <span>{option.rest}</span>
+                    <Search size={14} strokeWidth={2.2} className="text-[#727272]" aria-hidden="true" />
+                    <span className="truncate text-[13.5px]">
+                      <span className="font-bold text-white">{option.typed}</span>
+                      <span className="text-[#b3b3b3]">{option.rest}</span>
                     </span>
                   </>
                 ) : (
                   <>
-                    <div className="w-[44px] shrink-0">
+                    <div className="w-[42px] shrink-0">
                       <Artwork
                         src={option.item.thumbnail}
-                        displayWidth={44}
-                        radius={option.item.kind === 'artist' ? '50%' : 'var(--radius-artwork-small)'}
+                        displayWidth={42}
+                        radius={option.item.kind === 'artist' ? '50%' : '6px'}
                       />
                     </div>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate type-body text-primary">{option.item.title}</span>
-                      <span className="mt-px truncate type-callout text-secondary">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-[13.5px] font-semibold text-white">{option.item.title}</span>
+                      <span className="truncate text-[12px] text-[#b3b3b3]">
                         {option.item.subtitle || kindLabel(option.item.kind)}
                       </span>
                     </div>
@@ -234,7 +257,7 @@ export function SearchField({
                       <TrackMenu
                         track={toTrack(item)}
                         onOpenChange={onMenuOpenChange}
-                        className="grid size-7 place-items-center rounded-full text-secondary opacity-0 transition-opacity duration-100 ease-in group-hover/option:opacity-100 focus-visible:opacity-100 hover:bg-quinary hover:text-primary data-open:opacity-100"
+                        className="grid size-7 place-items-center rounded-full text-[#b3b3b3] opacity-0 transition-opacity group-hover/option:opacity-100 hover:text-white hover:bg-white/10"
                       />
                     )}
                   </>
@@ -248,13 +271,12 @@ export function SearchField({
   );
 }
 
-// A suggestion row; hover or keyboard selection paints it in the key colour, white text.
 const optionRow =
-  'group/option cursor-pointer rounded-[11px] transition-colors data-active:bg-key-glass data-active:text-primary data-active:shadow-[inset_0_0_0_1px_var(--tileHairline)] select-none';
-const hint = `${optionRow} grid grid-cols-[16px_minmax(0,1fr)] items-center gap-2.5 px-3 py-2 type-body text-secondary hover:bg-quinary`;
-const lockup = `${optionRow} mt-0.5 grid items-center gap-x-2.5 p-1.5 hover:bg-quinary`;
-const lockupCols = 'grid-cols-[44px_minmax(0,1fr)]';
-const lockupMenuCols = 'grid-cols-[44px_minmax(0,1fr)_auto]';
+  'group/option cursor-pointer rounded-[6px] transition-colors data-active:bg-[#282828] data-active:text-white select-none';
+const hint = `${optionRow} grid grid-cols-[16px_minmax(0,1fr)] items-center gap-3 px-3 py-2 text-[#b3b3b3] hover:bg-[#282828] hover:text-white`;
+const lockup = `${optionRow} mt-0.5 grid items-center gap-x-3 p-1.5 hover:bg-[#282828]`;
+const lockupCols = 'grid-cols-[42px_minmax(0,1fr)]';
+const lockupMenuCols = 'grid-cols-[42px_minmax(0,1fr)_auto]';
 
 function kindLabel(kind: MusicItem['kind']): string {
   return (

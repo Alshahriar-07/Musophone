@@ -5,12 +5,12 @@ import { useRefreshYtAuth, useSelectChannel, useSetConnected, useYtAuth } from '
 
 const SIGN_IN_URL = 'https://accounts.google.com/ServiceLogin?service=youtube&continue=https://music.youtube.com/';
 
-// The signed-out pill: Apple's red "Sign In" (report §1, .navigation__native-cta).
+// The signed-out button: clean Spotify-style rectangular with subtle rounding
 const pill =
-  'self-start rounded-[16px] bg-key-bg px-3.5 py-[5px] type-[600_13px/18px] text-white hover:brightness-[1.08] disabled:opacity-60';
-const avatar = 'inline-grid flex-none place-items-center rounded-full bg-quinary object-cover type-[600_11px/1] text-secondary';
+  'self-start rounded-[6px] bg-key px-3.5 py-1.5 text-[12.5px] font-semibold text-white hover:brightness-110 disabled:opacity-60 transition-transform active:scale-95';
+const avatar = 'inline-grid flex-none place-items-center rounded-[6px] bg-[#242424] object-cover text-[11px] font-bold text-white';
 const compactAccountButton =
-  'press grid size-9 place-items-center rounded-full bg-quinary text-secondary hover:text-primary';
+  'grid size-8 place-items-center rounded-[6px] bg-[#242424] text-[#b3b3b3] hover:text-white transition-colors';
 
 function Avatar({ src, name, size }: { src: string | null; name: string; size: number }) {
   return src ? (
@@ -44,7 +44,7 @@ export function AccountButton({ compact = false }: { compact?: boolean }) {
   if (!auth.browserSignedIn) {
     return compact ? (
       <a
-        className="press grid size-9 place-items-center rounded-full bg-key-bg text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_10px_22px_-12px_var(--keyColor)]"
+        className="grid size-8 place-items-center rounded-[6px] bg-key text-white shadow-sm hover:scale-105 active:scale-95 transition-transform"
         href={SIGN_IN_URL}
         target="_blank"
         rel="noreferrer"

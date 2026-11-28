@@ -54,6 +54,7 @@ function readableItrans(text: string): string {
     .replace(/U/g, 'u')
     .replace(/\.a/g, "'")
     .replace(/[~^.]/g, '')
+    .replace(/[\u09BC\u093C]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -92,6 +93,21 @@ export function romanizeText(text: string): string {
 
 export function hasIndicLyrics(lines: LyricLine[]): boolean {
   return lines.some((line) => INDIC.test(line.text) || (line.background ? INDIC.test(line.background.text) : false));
+}
+
+export type DetectedScript = 'bengali' | 'devanagari' | 'indic';
+
+export function detectScriptType(lines: LyricLine[]): DetectedScript | null {
+  let hasBen = false;
+  let hasDev = false;
+  for (const line of lines) {
+    if (BENGALI.test(line.text) || (line.background && BENGALI.test(line.background.text))) hasBen = true;
+    if (DEVANAGARI.test(line.text) || (line.background && DEVANAGARI.test(line.background.text))) hasDev = true;
+    if (hasBen && hasDev) return 'indic';
+  }
+  if (hasBen) return 'bengali';
+  if (hasDev) return 'devanagari';
+  return null;
 }
 
 function romanizeWord(word: LyricWord): LyricWord {

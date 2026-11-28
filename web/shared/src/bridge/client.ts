@@ -154,7 +154,10 @@ function keepPortOpen(open: () => ChromePortLike | null, listener: (event: Bridg
 }
 
 function chromeRuntime(): ChromeRuntimeLike | null {
-  const runtime = (globalThis as { chrome?: { runtime?: Partial<ChromeRuntimeLike> } }).chrome?.runtime;
+  const runtime =
+    (typeof window !== 'undefined' &&
+      (window as unknown as { chrome?: { runtime?: Partial<ChromeRuntimeLike> } }).chrome?.runtime) ||
+    (globalThis as { chrome?: { runtime?: Partial<ChromeRuntimeLike> } }).chrome?.runtime;
   return typeof runtime?.sendMessage === 'function' ? (runtime as ChromeRuntimeLike) : null;
 }
 
@@ -197,14 +200,16 @@ export function externalBridge(extensionId: string): Bridge | null {
 // ---- Firefox: content-script relay over window.postMessage --------------------
 
 export function relayBridge(target: Window = window): Bridge {
+  const targetOrigin =
+    target.location?.origin && target.location.origin !== 'null' ? target.location.origin : '*';
   return {
     transport: 'relay',
     call(method, params, options) {
       const request = envelope(method, params);
       return withDeadline(options, (settle) => {
         const onMessage = (event: MessageEvent) => {
-          // Only our own window, and only replies addressed to this request.
-          if (event.source !== target || event.origin !== target.location.origin) return;
+          // Only replies addressed to this request.
+          if (targetOrigin !== '*' && event.origin && event.origin !== targetOrigin) return;
           if (!isBridgeResponse(event.data) || event.data.id !== request.id) return;
           try {
             settle({ value: unwrap(event.data as BridgeResponse<typeof method>) });
@@ -213,14 +218,14 @@ export function relayBridge(target: Window = window): Bridge {
           }
         };
         target.addEventListener('message', onMessage);
-        target.postMessage(request, target.location.origin);
+        target.postMessage(request, targetOrigin);
         return () => target.removeEventListener('message', onMessage);
       });
     },
     subscribe(listener) {
       // The relay content script holds the port and forwards each push.
       const onMessage = (event: MessageEvent) => {
-        if (event.source !== target || event.origin !== target.location.origin) return;
+        if (targetOrigin !== '*' && event.origin && event.origin !== targetOrigin) return;
         if (isBridgeEventMessage(event.data)) listener(event.data.payload);
       };
       target.addEventListener('message', onMessage);
@@ -390,18 +395,13 @@ function hintFor(diagnostics: Omit<DetectDiagnostics, 'hint'>): string {
 
 /**
  * Finds the extension with a real handshake: a `ping` the extension must
- * answer. The external transport is tried first (Chromium); the relay content
- * script is the Firefox transport.
- *
- * The shape of the failure decides how patient to be. When Chromium exposes no
- * `chrome.runtime` at all, no id can ever answer here, so the probe returns at
- * once; when a runtime is exposed (an extension does trust this origin), a
- * sleeping MV3 worker is likely, so it retries with a longer deadline each
- * time.
+ * answer. Probes both transports (relay content-script and direct external)
+ * concurrently to handle cold service-worker start-ups, custom extension IDs,
+ * and cross-browser environments (Chrome, Edge, Brave, Firefox).
  */
 export async function handshake(options: DetectOptions = {}): Promise<HandshakeResult> {
   const started = Date.now();
-  const timeoutMs = options.timeoutMs ?? 2000;
+  const timeoutMs = options.timeoutMs ?? 2500;
   const ids = [
     ...new Set(
       [...(options.chromiumExtensionIds ?? []), ...(options.chromiumExtensionId ? [options.chromiumExtensionId] : [])]
@@ -415,35 +415,55 @@ export async function handshake(options: DetectOptions = {}): Promise<HandshakeR
   let attempts = 0;
   let detected: DetectedExtension | null = null;
 
-  if (ids.length && (runtimeExposed || family !== 'firefox')) {
-    const rounds = runtimeExposed ? Math.max(1, options.attempts ?? 3) : 1;
+  const domMarker =
+    typeof document !== 'undefined' ? document.documentElement?.dataset?.musophoneExtension : undefined;
+
+  // 1. Parallel probing: try both relay and external transports
+  const rounds = Math.max(1, options.attempts ?? 3);
+
+  // Relay probe: works in all browsers (Chromium and Firefox) where our content script is injected
+  const probeRelay = async (): Promise<DetectedExtension | null> => {
+    if (typeof window === 'undefined') return null;
+    const relay = relayBridge(window);
     for (let round = 0; round < rounds && !detected; round++) {
       attempts += 1;
-      const result = await pingExternal(ids, timeoutMs + round * 1200);
-      detected = result.detected;
-      failures.push(...result.failures);
-      if (!detected && round < rounds - 1) await delay(250 * (round + 1));
+      try {
+        const info = await relay.call('ping', {}, { timeoutMs: timeoutMs + round * 1000 });
+        return { bridge: relay, info };
+      } catch (error) {
+        failures.push(failureOf(error, 'relay'));
+        if (round < rounds - 1) await delay(300 * (round + 1));
+      }
     }
-  }
+    return null;
+  };
 
-  // Firefox's relay content script, and the only transport there is when no
-  // Chromium runtime exists. One short probe is enough: a missing relay never
-  // answers, and a present one answers at once.
-  if (!detected && typeof window !== 'undefined') {
-    attempts += 1;
-    const relay = relayBridge(window);
-    try {
-      const info = await relay.call('ping', {}, { timeoutMs: family === 'firefox' ? timeoutMs : 1200 });
-      detected = { bridge: relay, info };
-    } catch (error) {
-      failures.push(failureOf(error, 'relay'));
+  // External probe: Chromium direct chrome.runtime.sendMessage
+  const probeExternal = async (): Promise<DetectedExtension | null> => {
+    if (!ids.length || (!runtimeExposed && family === 'firefox')) return null;
+    for (let round = 0; round < rounds && !detected; round++) {
+      attempts += 1;
+      const result = await pingExternal(ids, timeoutMs + round * 1000);
+      if (result.detected) return result.detected;
+      failures.push(...result.failures);
+      if (round < rounds - 1) await delay(300 * (round + 1));
+    }
+    return null;
+  };
+
+  // Run probes concurrently, settling on the first positive detection
+  const probeResults = await Promise.allSettled([probeRelay(), probeExternal()]);
+  for (const res of probeResults) {
+    if (res.status === 'fulfilled' && res.value) {
+      detected = res.value;
+      break;
     }
   }
 
   const base = {
     origin: pageOrigin(),
     secureContext: isSecure(),
-    runtimeExposed,
+    runtimeExposed: runtimeExposed || !!domMarker,
     browser: family,
     ids,
     attempts,

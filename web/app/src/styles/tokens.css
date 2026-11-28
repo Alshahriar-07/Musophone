@@ -44,31 +44,32 @@
   /* ---- Layout ------------------------------------------------------------ */
   --app-frame-padding: 0px;
   --app-frame-gap: 0px;
-  --web-navigation-width: 232px;
+  --web-navigation-width: 240px;
   --web-navigation-collapsed: 72px;
+  --player-bar-height: 84px;
   --appBackgroundImage: url('/musophone-background.jpg');
   /* The app is edge-to-edge; only the floating chrome keeps an inset. */
   --shell-inset: 12px;
   --body-gutter: 25px;
   --player-pill-height: 80px;
   --player-bottom-offset: 16px;
-  --side-panel-width: 320px;
+  --side-panel-width: clamp(300px, 25vw, 360px);
   --mobile-top-bar-height: 58px;
   --mini-player-height: 52px;
 
-  /* ---- Radii ------------------------------------------------------------- */
-  --radius-artwork-small: 6px; /* 40px track rows, horizontal lockups */
-  --radius-artwork-medium: 10px; /* square lockups */
-  --radius-artwork-large: 14px; /* album header, editorial cards */
-  --radius-nav-item: 12px;
-  --radius-track-row: 10px;
-  --radius-pill: 1000px;
-  /* The Liquid Glass shapes: one step per pane size. */
-  --radius-rail: 28px;
-  --radius-sheet: 26px;
-  --radius-dock: 26px;
-  --radius-tile: 20px;
-  --radius-field: 14px;
+  /* ---- Radii (Clean Spotify Desktop language) --------------------------- */
+  --radius-artwork-small: 4px; /* 40px track rows, horizontal lockups */
+  --radius-artwork-medium: 6px; /* square lockups */
+  --radius-artwork-large: 8px; /* album header, editorial cards */
+  --radius-nav-item: 6px;
+  --radius-track-row: 6px;
+  --radius-pill: 6px; /* replaced extreme pill with clean rounded rectangle */
+  /* Pane shapes */
+  --radius-rail: 8px;
+  --radius-sheet: 8px;
+  --radius-dock: 8px;
+  --radius-tile: 8px;
+  --radius-field: 6px;
 
   /* ---- Motion ------------------------------------------------------------ */
   --ease-out-panel: cubic-bezier(0.215, 0.61, 0.355, 1);

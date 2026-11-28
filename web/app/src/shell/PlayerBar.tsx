@@ -21,57 +21,47 @@ import { MixWindowHighlight } from './NerdStats';
 import { useScrubber } from './useScrubber';
 import { fadeForVolume, VolumeControl } from './VolumeControl';
 
-const control =
-  'grid place-items-center rounded-[11px] text-secondary transition-[color,background-color,transform] duration-(--duration-fast) hover:bg-quinary hover:text-primary active:scale-95 disabled:opacity-35 disabled:hover:bg-transparent';
-// Shuffle and repeat: secondary, and the key colour when on, as Apple's toggles.
-const toggle = `${control} size-8 aria-pressed:text-key`;
-const transport = `${control} size-9 text-primary`;
-const action = `${control} size-8 aria-pressed:text-key`;
-// The actions the volume level slides in over: they fade out while it's open.
-const fading = `${action} ${fadeForVolume}`;
-
-// Elapsed and remaining, floating above the line's two ends while it's hovered.
-const time =
-  'pointer-events-none absolute -top-5 type-[600_10px/12px] tabular-nums text-secondary opacity-0 transition-opacity duration-200 group-hover/scrub:opacity-100 group-data-dragging/scrub:opacity-100';
+const buttonBase =
+  'grid place-items-center rounded-full text-[#b3b3b3] transition-colors hover:text-white active:scale-95 disabled:opacity-30 disabled:hover:text-[#b3b3b3]';
+const toggleButton = `${buttonBase} size-8 aria-pressed:text-key`;
+const transportButton = `${buttonBase} size-8`;
 
 /**
- * The seek line along the dock's bottom edge: a hairline of glass that fills
- * with the accent as the track plays. Hovering shows the times; pressing or
- * dragging seeks.
+ * Spotify-style seek bar in the center under playback buttons
  */
-function DockProgress() {
+function SpotifySeekBar() {
   const { bar, elapsed, remaining, dragging, handlers } = useScrubber();
   return (
-    <div
-      className="group/scrub absolute inset-x-6 bottom-[7px] h-3.5 cursor-pointer touch-none max-sm:inset-x-3 max-sm:bottom-[5px]"
-      data-scrubber
-      data-dragging={dragging || undefined}
-      {...handlers}
-    >
-      <span ref={elapsed} className={`${time} left-0`}>
-        0:00
-      </span>
-      <span ref={remaining} className={`${time} right-0`}>
+    <div className="group/scrub flex w-full max-w-[500px] items-center gap-2 max-sm:hidden">
+      <span ref={elapsed} className="w-9 text-right text-[11px] tabular-nums text-[#b3b3b3]">
         0:00
       </span>
       <div
-        className="absolute inset-x-0 bottom-1 h-[3px] overflow-hidden rounded-full bg-quaternary transition-[height,opacity] duration-200 ease-out group-hover/scrub:h-[5px] group-data-dragging/scrub:h-[5px]"
-        aria-hidden="true"
+        className="relative flex h-3 flex-1 cursor-pointer touch-none items-center"
+        data-scrubber
+        data-dragging={dragging || undefined}
+        {...handlers}
       >
-        <MixWindowHighlight />
-        <div
-          ref={bar}
-          className="relative size-full origin-left scale-x-(--progress) rounded-full bg-[linear-gradient(90deg,color-mix(in_srgb,var(--keyColor)_55%,transparent),var(--keyColor))] shadow-[0_0_12px_-2px_var(--keyColor)] [--progress:0]"
-        />
+        <div className="relative h-1 w-full overflow-hidden rounded-full bg-[#4d4d4d] transition-all group-hover/scrub:h-1.5">
+          <MixWindowHighlight />
+          <div
+            ref={bar}
+            className="relative size-full origin-left scale-x-(--progress) rounded-full bg-white group-hover/scrub:bg-key transition-colors [--progress:0]"
+          />
+        </div>
       </div>
+      <span ref={remaining} className="w-9 text-left text-[11px] tabular-nums text-[#b3b3b3]">
+        0:00
+      </span>
     </div>
   );
 }
 
 /**
- * The floating glass dock: now playing on the left, transport in the middle,
- * the actions and the seek line on the right. It re-centres in what the side
- * panel leaves, and on a phone it folds down to artwork, names and play.
+ * Spotify Desktop Persistent Playback Bar:
+ * - Left: Track artwork, title, artists, favorite button, track menu
+ * - Center: Shuffle, Prev, Play/Pause, Next, Repeat + Seek Bar
+ * - Right: Lyrics, Queue, Volume Slider, Fullscreen
  */
 export function PlayerBar() {
   const sidePanel = useUi((s) => s.sidePanel);
@@ -79,7 +69,6 @@ export function PlayerBar() {
   const openFullScreen = useUi((s) => s.setFullScreen);
   const hasTrack = usePlayer((s) => s.nowPlaying !== null);
   const videoId = usePlayer((s) => s.nowPlaying?.videoId ?? null);
-  // The queue's entry for what's playing: the track menu needs the full track.
   const track = usePlayer((s) => {
     const entry = s.queue[s.index]?.track;
     return entry && entry.videoId === s.nowPlaying?.videoId ? entry : null;
@@ -89,99 +78,106 @@ export function PlayerBar() {
   const shuffle = usePlayer((s) => s.shuffle);
   const repeat = usePlayer((s) => s.repeat);
   const { togglePlay, next, previous, toggleShuffle, cycleRepeat } = usePlayer.getState();
-  const [volumeOpen, setVolumeOpen] = useState(false);
 
   return (
     <div
-      className="pointer-events-none absolute inset-x-0 bottom-[max(var(--shell-inset),env(safe-area-inset-bottom,12px))] z-[calc(var(--z-web-chrome)-1)] flex px-[max(var(--shell-inset),env(safe-area-inset-left,12px))] transition-[padding-inline-end] duration-(--duration-panel) ease-glide data-[panel-open=true]:pe-[calc(var(--side-panel-width)+24px)]"
-      data-panel-open={sidePanel !== null}
+      className="flex h-full w-full items-center justify-between text-white"
+      role="region"
+      aria-label="Player"
     >
-      <div
-        className="glass-dock pointer-events-auto relative grid h-(--player-pill-height) w-full animate-dock-in grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] items-center gap-2.5 rounded-dock px-4 shadow-[0_22px_60px_-20px_rgba(0,0,0,0.65)] sm:gap-3 max-sm:h-[68px] max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:px-3"
-        role="region"
-        aria-label="Player"
-      >
+      {/* Left: Now Playing Song Info */}
+      <div className="flex min-w-[190px] max-w-[30%] items-center gap-3.5">
         <Lcd />
+        {hasTrack && (
+          <div className="flex items-center gap-2 max-md:hidden">
+            <FavoriteButton videoId={videoId} className="grid size-8 place-items-center text-[#b3b3b3] hover:text-white transition-colors" />
+            {track && <TrackMenu track={track} className="grid size-8 place-items-center text-[#b3b3b3] hover:text-white transition-colors" placement="above-start" />}
+          </div>
+        )}
+      </div>
 
-        <div className="flex items-center gap-0.5 sm:gap-1">
+      {/* Center: Playback Controls & Progress Bar */}
+      <div className="flex max-w-[45%] flex-1 flex-col items-center justify-center gap-1.5 max-sm:max-w-none max-sm:flex-none">
+        <div className="flex items-center gap-4">
           <button
-            className={`${toggle} max-md:hidden`}
+            className={`${toggleButton} max-sm:hidden`}
             aria-label="Shuffle"
             aria-pressed={shuffle}
+            title="Shuffle"
             onClick={toggleShuffle}
           >
-            <ShuffleIcon size={18} />
+            <ShuffleIcon size={16} />
           </button>
-          <button className={`${transport} max-sm:size-8`} disabled={!hasTrack} aria-label="Previous" onClick={previous}>
-            <BackwardIcon size={20} />
-          </button>
-          {/* The one solid accent surface in the chrome: the play control. */}
           <button
-            className="mx-0.5 grid size-12 place-items-center rounded-full bg-[var(--playFill)] text-[var(--playInk)] shadow-[inset_0_1px_0_rgb(255_255_255/0.45),inset_0_-1px_0_rgb(0_0_0/0.15),0_12px_28px_-10px_var(--keyColor)] transition-[filter,transform] duration-(--duration-fast) hover:brightness-110 active:scale-95 disabled:opacity-35 disabled:hover:brightness-100 max-sm:size-10"
+            className={transportButton}
+            disabled={!hasTrack}
+            aria-label="Previous"
+            title="Previous"
+            onClick={previous}
+          >
+            <BackwardIcon size={18} />
+          </button>
+          <button
+            className="grid size-9.5 place-items-center rounded-full bg-white text-black transition-transform hover:scale-105 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 shadow-md"
             disabled={!hasTrack}
             aria-label={playing ? 'Pause' : 'Play'}
+            title={playing ? 'Pause' : 'Play'}
             onClick={togglePlay}
           >
-            <span className="flex items-center justify-center transition-transform duration-150 active:scale-90">
-              {playing ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
-            </span>
+            {playing ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
           </button>
           <button
-            className={`${transport} max-sm:size-8`}
+            className={transportButton}
             disabled={!hasTrack || !hasNext}
             aria-label="Next"
+            title="Next"
             onClick={next}
           >
-            <ForwardIcon size={20} />
+            <ForwardIcon size={18} />
           </button>
           <button
-            className={`${toggle} max-md:hidden`}
+            className={`${toggleButton} max-sm:hidden`}
             aria-label={repeat === 'one' ? 'Repeat one' : repeat === 'all' ? 'Repeat all' : 'Repeat'}
             aria-pressed={repeat !== 'off'}
+            title="Repeat"
             onClick={cycleRepeat}
           >
-            {repeat === 'one' ? <RepeatOneIcon size={18} /> : <RepeatIcon size={18} />}
+            {repeat === 'one' ? <RepeatOneIcon size={16} /> : <RepeatIcon size={16} />}
           </button>
         </div>
 
-        <div
-          className="group/actions relative flex items-center justify-end gap-0.5 sm:gap-1"
-          data-volume-open={volumeOpen || undefined}
-          onPointerLeave={() => setVolumeOpen(false)}
-          onBlur={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setVolumeOpen(false);
-          }}
+        <SpotifySeekBar />
+      </div>
+
+      {/* Right: Lyrics, Queue, Volume, Fullscreen with comfortable spacing */}
+      <div className="flex min-w-[190px] max-w-[30%] items-center justify-end gap-2.5 text-[#b3b3b3]">
+        <button
+          className="grid size-8 place-items-center rounded-full hover:text-white aria-pressed:text-key transition-colors active:scale-95"
+          aria-label="Lyrics"
+          title="Lyrics"
+          aria-pressed={sidePanel === 'lyrics'}
+          onClick={() => toggleSidePanel('lyrics')}
         >
-          <FavoriteButton videoId={videoId} className={`${fading} ${action} max-lg:hidden`} />
-          {track && <TrackMenu track={track} className={`${fading} ${action} max-md:hidden`} placement="above-end" />}
-          {/* Always accessible: Lyrics and Queue (Up Next) */}
-          <button
-            className={`${fading} ${action}`}
-            aria-label="Lyrics"
-            aria-pressed={sidePanel === 'lyrics'}
-            onClick={() => toggleSidePanel('lyrics')}
-          >
-            {sidePanel === 'lyrics' ? <LyricsActiveIcon size={18} /> : <LyricsIcon size={18} />}
-          </button>
-          <button
-            className={`${fading} ${action}`}
-            aria-label="Up Next"
-            aria-pressed={sidePanel === 'up-next'}
-            onClick={() => toggleSidePanel('up-next')}
-          >
-            <UpNextIcon size={18} />
-          </button>
-          <VolumeControl open={volumeOpen} onOpen={() => setVolumeOpen(true)} className={`${action} max-sm:hidden`} />
-          <button
-            className={`${action} max-sm:hidden`}
-            aria-label="Open full screen player"
-            onClick={() => openFullScreen(true)}
-          >
-            <Maximize2 size={16} strokeWidth={2.1} />
-          </button>
-        </div>
-
-        <DockProgress />
+          {sidePanel === 'lyrics' ? <LyricsActiveIcon size={18} /> : <LyricsIcon size={18} />}
+        </button>
+        <button
+          className="grid size-8 place-items-center rounded-full hover:text-white aria-pressed:text-key transition-colors active:scale-95"
+          aria-label="Up Next"
+          title="Up Next"
+          aria-pressed={sidePanel === 'up-next'}
+          onClick={() => toggleSidePanel('up-next')}
+        >
+          <UpNextIcon size={18} />
+        </button>
+        <VolumeControl className="hover:text-white max-sm:hidden" />
+        <button
+          className="grid size-8 place-items-center rounded-full hover:text-white transition-colors active:scale-95 max-sm:hidden"
+          aria-label="Open full screen player"
+          title="Full screen player"
+          onClick={() => openFullScreen(true)}
+        >
+          <Maximize2 size={16} />
+        </button>
       </div>
     </div>
   );

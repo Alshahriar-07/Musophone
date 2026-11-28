@@ -1,22 +1,26 @@
-import { ArrowUpRight, Info, ListMusic, PanelLeftClose, PanelLeftOpen, Puzzle, Settings } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Compass,
+  Heart,
+  History,
+  Info,
+  Library,
+  ListMusic,
+  Music2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Puzzle,
+  Radio,
+  Search,
+  Settings,
+  Sparkles,
+  User,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { PrefetchLink, PrefetchNavLink } from '@/components/PrefetchLink';
 import { LogoMark } from '@/components/icons/LogoMark';
-import {
-  AlbumsIcon,
-  AllPlaylistsIcon,
-  ArtistsIcon,
-  HomeIcon,
-  MadeForYouIcon,
-  NewIcon,
-  RecentlyAddedIcon,
-  SearchIcon,
-  SongsIcon,
-  type NavIconProps,
-} from '@/components/icons/NavIcons';
 import { hrefFor } from '@/components/music/links';
 import { config } from '@/config';
-import { LIBRARY_SECTIONS, type LibrarySection } from '@/data/music/library';
 import { useLibraryPlaylists, useSignedIn } from '@/data/music/queries';
 import { useSpotifyPlaylists } from '@/data/spotify/queries';
 import { useExtensionUpdate } from '@/extension/useExtensionUpdate';
@@ -24,168 +28,71 @@ import { useSpotifySignedIn } from '@/extension/useSpotifyAuth';
 import { useUi } from '@/state/ui';
 import { AccountButton } from './AccountButton';
 
-interface NavItem {
+interface SpotifyNavItem {
   to: string;
   label: string;
-  Icon?: (props: NavIconProps) => ReactNode;
-  iconEl?: ReactNode;
+  icon: ReactNode;
+  end?: boolean;
 }
 
-const PRIMARY: NavItem[] = [
-  { to: '/home', label: 'Home', Icon: HomeIcon },
-  { to: '/search', label: 'Search', Icon: SearchIcon },
-  { to: '/new', label: 'New', Icon: NewIcon },
+const PRIMARY_NAV: SpotifyNavItem[] = [
+  { to: '/home', label: 'Home', icon: <Compass size={22} strokeWidth={2} /> },
+  { to: '/search', label: 'Search', icon: <Search size={22} strokeWidth={2} /> },
+  { to: '/new', label: 'Explore', icon: <Radio size={22} strokeWidth={2} /> },
 ];
 
-const LIBRARY_ICONS: Record<Exclude<LibrarySection, 'playlists'>, (props: NavIconProps) => ReactNode> = {
-  recent: RecentlyAddedIcon,
-  artists: ArtistsIcon,
-  albums: AlbumsIcon,
-  songs: SongsIcon,
-  'made-for-you': MadeForYouIcon,
-};
+const LIBRARY_NAV: SpotifyNavItem[] = [
+  { to: '/library/recent', label: 'Recently Played', icon: <History size={20} strokeWidth={2} /> },
+  { to: '/library/made-for-you', label: 'Made for You', icon: <Sparkles size={20} strokeWidth={2} /> },
+  { to: '/library/artists', label: 'Artists', icon: <User size={20} strokeWidth={2} /> },
+  { to: '/library/albums', label: 'Albums', icon: <Music2 size={20} strokeWidth={2} /> },
+  { to: '/library/songs', label: 'Songs', icon: <Heart size={20} strokeWidth={2} /> },
+  { to: '/library/playlists', label: 'Playlists', icon: <ListMusic size={20} strokeWidth={2} /> },
+];
 
-const LIBRARY: NavItem[] = (Object.keys(LIBRARY_ICONS) as (keyof typeof LIBRARY_ICONS)[]).map((section) => ({
-  to: `/library/${section}`,
-  label: LIBRARY_SECTIONS[section].title,
-  Icon: LIBRARY_ICONS[section],
-}));
-
-const sectionHeader = 'mt-5 mb-1.5 flex items-center gap-2 px-3 type-[600_10px/13px] uppercase tracking-[0.16em] text-tertiary';
-const list = 'flex flex-col gap-0.5';
-
-function SectionMark({ children, collapsed }: { children: ReactNode; collapsed: boolean }) {
-  if (collapsed) {
-    return <div className="my-2.5 mx-auto h-px w-7 bg-divider" aria-hidden="true" />;
-  }
-  return (
-    <h2 className={sectionHeader}>
-      <span className="rail-label truncate">{children}</span>
-      <span className="h-px min-w-4 flex-1 bg-[linear-gradient(90deg,var(--labelDivider),transparent)]" aria-hidden="true" />
-    </h2>
-  );
-}
-
-function NavRow({
-  to,
-  label,
-  Icon,
-  iconEl,
+function NavItemRow({
+  item,
   collapsed,
   onNavigate,
-  end,
-  badge,
 }: {
-  to: string;
-  label: string;
-  Icon?: (props: NavIconProps) => ReactNode;
-  iconEl?: ReactNode;
+  item: SpotifyNavItem;
   collapsed: boolean;
   onNavigate: () => void;
-  end?: boolean;
-  badge?: ReactNode;
 }) {
   return (
     <li className="relative group/nav-item">
       <PrefetchNavLink
-        to={to}
-        end={end}
+        to={item.to}
+        end={item.end}
         className={
           collapsed
-            ? 'relative flex size-10 mx-auto items-center justify-center rounded-[12px] text-secondary transition-colors hover:bg-quinary hover:text-primary aria-[current=page]:glass-inset aria-[current=page]:text-key'
-            : 'relative flex h-9.5 w-full items-center gap-3 rounded-nav px-3 type-body-reduced text-secondary transition-colors hover:bg-quinary hover:text-primary aria-[current=page]:glass-inset aria-[current=page]:text-primary'
+            ? 'relative flex size-11 mx-auto items-center justify-center rounded-[8px] text-[#b3b3b3] transition-colors hover:text-white aria-[current=page]:bg-[#282828] aria-[current=page]:text-white'
+            : 'relative flex h-10 w-full items-center gap-4 rounded-[8px] px-3 text-[14px] font-semibold text-[#b3b3b3] transition-colors hover:text-white hover:bg-[#1a1a1a] aria-[current=page]:text-white aria-[current=page]:bg-[#242424]'
         }
         onClick={onNavigate}
-        title={collapsed ? label : undefined}
-        aria-label={label}
+        title={collapsed ? item.label : undefined}
+        aria-label={item.label}
       >
-        <span className="grid size-5 shrink-0 place-items-center text-tertiary transition-colors group-hover/nav-item:text-primary group-aria-[current=page]:text-key">
-          {Icon ? <Icon size={20} /> : iconEl}
+        <span className="grid size-6 shrink-0 place-items-center transition-colors">
+          {item.icon}
         </span>
-        {!collapsed && <span className="rail-label min-w-0 truncate font-medium">{label}</span>}
-        {!collapsed && badge && <span className="ms-auto">{badge}</span>}
+        {!collapsed && <span className="truncate">{item.label}</span>}
       </PrefetchNavLink>
 
-      {/* Floating glass tooltip on hover in collapsed mode */}
+      {/* Spotify tooltip in collapsed mode */}
       {collapsed && (
-        <div className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[100] hidden whitespace-nowrap rounded-[8px] bg-[var(--glassDialogFill)] px-2.5 py-1 text-[12px] font-medium text-primary shadow-[0_8px_24px_-4px_rgba(0,0,0,0.65),inset_0_1px_0_var(--glassRim),inset_0_0_0_1px_var(--glassHairline)] backdrop-blur-xl group-hover/nav-item:block max-sm:hidden">
-          {label}
+        <div className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[100] hidden whitespace-nowrap rounded-[6px] bg-[#282828] px-3 py-1.5 text-[12.5px] font-medium text-white shadow-xl group-hover/nav-item:block max-sm:hidden">
+          {item.label}
         </div>
       )}
     </li>
   );
 }
 
-function NavList({ items, collapsed, onNavigate }: { items: NavItem[]; collapsed: boolean; onNavigate: () => void }) {
-  return (
-    <ul className={list}>
-      {items.map(({ to, label, Icon, iconEl }) => (
-        <NavRow key={to} to={to} label={label} Icon={Icon} iconEl={iconEl} collapsed={collapsed} onNavigate={onNavigate} />
-      ))}
-    </ul>
-  );
-}
-
-/** Library and Playlists, once YouTube requests are made as the user. */
-function LibraryNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigate: () => void }) {
-  const playlists = useLibraryPlaylists();
-  return (
-    <>
-      <SectionMark collapsed={collapsed}>Library</SectionMark>
-      <NavList items={LIBRARY} collapsed={collapsed} onNavigate={onNavigate} />
-      <div className="rail-extra">
-        <SectionMark collapsed={collapsed}>Playlists</SectionMark>
-        <ul className={list}>
-          <NavRow
-            to="/library/playlists"
-            label={LIBRARY_SECTIONS.playlists.title}
-            Icon={AllPlaylistsIcon}
-            collapsed={collapsed}
-            onNavigate={onNavigate}
-          />
-          {playlists.data?.map((playlist) => (
-            <NavRow
-              key={playlist.id}
-              to={hrefFor(playlist) ?? '/library/playlists'}
-              label={playlist.title}
-              iconEl={<ListMusic size={16} strokeWidth={1.8} />}
-              collapsed={collapsed}
-              onNavigate={onNavigate}
-            />
-          ))}
-        </ul>
-      </div>
-    </>
-  );
-}
-
-/** Spotify's playlists, once the extension can read them as the user. */
-function SpotifyNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigate: () => void }) {
-  const playlists = useSpotifyPlaylists();
-  return (
-    <div className="rail-extra">
-      <SectionMark collapsed={collapsed}>Spotify</SectionMark>
-      <ul className={list}>
-        <NavRow to="/spotify" end label="All Spotify Playlists" Icon={AllPlaylistsIcon} collapsed={collapsed} onNavigate={onNavigate} />
-        {playlists.data?.map((playlist) => (
-          <NavRow
-            key={playlist.id}
-            to={`/spotify/playlist/${encodeURIComponent(playlist.id)}`}
-            label={playlist.name}
-            iconEl={<ListMusic size={16} strokeWidth={1.8} />}
-            collapsed={collapsed}
-            onNavigate={onNavigate}
-          />
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 /**
- * The left navigation rail:
- * - Expanded: 232px wide with clear groups, labels and dedicated collapse button.
- * - Collapsed: 72px wide with centered icons and floating glass hover tooltips.
+ * Spotify Desktop Sidebar:
+ * - Upper box: Logo, Toggle, Primary Navigation
+ * - Lower box: Your Library, Quick Library Sections, Playlists, Bottom Account & Settings
  */
 export function Sidebar() {
   const drawerOpen = useUi((s) => s.drawerOpen);
@@ -195,113 +102,194 @@ export function Sidebar() {
   const update = useExtensionUpdate();
   const signedIn = useSignedIn();
   const spotifySignedIn = useSpotifySignedIn();
+  const playlists = useLibraryPlaylists();
+  const spotifyPlaylists = useSpotifyPlaylists();
   const close = () => setDrawerOpen(false);
 
   return (
     <>
       <nav
-        className="rail group/rail glass-material relative z-(--z-web-chrome) flex h-full shrink-0 flex-col overflow-hidden shadow-[inset_-1px_0_0_var(--glassHairline)] max-sm:fixed max-sm:inset-y-0 max-sm:left-0 max-sm:z-(--z-modal) max-sm:w-[min(300px,86vw)] max-sm:-translate-x-[calc(100%+2px)] max-sm:shadow-[0_0_80px_-20px_rgb(0_0_0/0.8)] max-sm:transition-transform max-sm:duration-(--duration-panel) max-sm:ease-glide max-sm:data-[open=true]:translate-x-0"
+        className="rail group/rail relative z-(--z-web-chrome) flex h-full shrink-0 flex-col gap-2 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] max-sm:fixed max-sm:inset-y-0 max-sm:left-0 max-sm:z-(--z-modal) max-sm:w-[min(300px,86vw)] max-sm:-translate-x-[calc(100%+2px)] max-sm:bg-[#000000] max-sm:p-2 max-sm:shadow-2xl max-sm:transition-transform max-sm:duration-(--duration-panel) max-sm:data-[open=true]:translate-x-0"
         data-open={drawerOpen}
         data-collapsed={collapsed}
         aria-label="Main"
+        style={{ width: collapsed ? 'var(--web-navigation-collapsed)' : 'var(--web-navigation-width)' }}
       >
-        {/* Header: Logo, Branding & Collapse/Expand Button */}
-        <div className="rail-head flex h-(--mobile-top-bar-height) shrink-0 items-center justify-between gap-2 px-3">
-          <PrefetchLink
-            to="/home"
-            className="rail-brand press flex min-w-0 items-center gap-2.5 rounded-[14px]"
-            aria-label="MusoPhone, Home"
-            onClick={close}
-          >
-            <span className="grid size-9 flex-none place-items-center rounded-[12px] bg-key-bg text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.4),0_10px_24px_-12px_var(--keyColor)]">
-              <LogoMark size={20} />
-            </span>
-            <span className="rail-label flex min-w-0 flex-col">
-              <span className="truncate type-[700_15px/19px] tracking-[-0.02em]">MusoPhone</span>
-              <span className="type-caption-2 uppercase tracking-[0.16em] text-tertiary">Liquid listening</span>
-            </span>
-          </PrefetchLink>
-          <button
-            className="rail-toggle press grid size-8 flex-none place-items-center rounded-[10px] text-tertiary transition-colors hover:bg-quinary hover:text-primary max-sm:hidden"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            aria-expanded={!collapsed}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            onClick={toggleCollapsed}
-          >
-            {collapsed ? <PanelLeftOpen size={17} strokeWidth={1.9} /> : <PanelLeftClose size={17} strokeWidth={1.9} />}
-          </button>
-        </div>
-
-        {/* Scrollable Navigation Groups */}
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 [scrollbar-width:none] max-sm:px-3">
-          <NavList items={PRIMARY} collapsed={collapsed} onNavigate={close} />
-          {signedIn && <LibraryNav collapsed={collapsed} onNavigate={close} />}
-          {spotifySignedIn && <SpotifyNav collapsed={collapsed} onNavigate={close} />}
-        </div>
-
-        {/* Bottom Utility, Account & Settings */}
-        <div className="mt-auto shrink-0 flex flex-col gap-0.5 px-2 pt-2 pb-[max(12px,env(safe-area-inset-bottom,12px))] max-sm:px-3">
-          <div className="glass-rule mb-1.5 w-full" aria-hidden="true" />
-          <ul className={list}>
-            <NavRow
-              to="/extension"
-              label="MusoPhone Extension"
-              iconEl={<Puzzle size={17} strokeWidth={1.9} />}
-              collapsed={collapsed}
-              onNavigate={close}
-              badge={
-                update.state === 'available' ? (
-                  <span
-                    className="grid size-2 place-items-center rounded-full bg-key shadow-[0_0_10px_var(--keyColor)]"
-                    aria-label={`Version ${update.latest.version} is available`}
-                    title={`Version ${update.latest.version} is available`}
-                  />
-                ) : null
-              }
-            />
-            <NavRow
-              to="/about"
-              label="About & Credits"
-              iconEl={<Info size={17} strokeWidth={1.9} />}
-              collapsed={collapsed}
-              onNavigate={close}
-            />
-          </ul>
-
-          <div className="rail-account mt-2 w-full px-0.5">
-            <AccountButton compact={collapsed} />
-          </div>
-
-          <div className="rail-footer mt-2 flex w-full items-center justify-between px-1.5">
-            <div className="rail-extra flex min-w-0 items-center gap-2">
-              <a
-                className="inline-flex items-center gap-1 truncate type-callout text-secondary hover:text-primary transition-colors"
-                href={config.androidAppUrl}
-                target="_blank"
-                rel="noreferrer"
+        {/* Top Box: Logo & Primary Navigation */}
+        <div className="flex shrink-0 flex-col rounded-[8px] bg-[#121212] border border-white/[0.04] p-3">
+          {collapsed ? (
+            /* Collapsed Header: Whole area is clickable to expand sidebar */
+            <div className="relative group/logo-expand mb-3 flex items-center justify-center">
+              <button
+                type="button"
+                className="relative grid size-10 place-items-center rounded-[8px] text-white transition-transform hover:scale-110 active:scale-95"
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+                onClick={toggleCollapsed}
               >
-                <span>Get the Android app</span>
-                <ArrowUpRight size={13} strokeWidth={2} />
-              </a>
-              <span className="type-caption-2 text-tertiary" title={`MusoPhone Web ${config.version}`}>
-                v{config.version}
-              </span>
+                <LogoMark size={24} />
+                <span className="absolute inset-0 grid place-items-center rounded-[8px] bg-black/60 opacity-0 group-hover/logo-expand:opacity-100 transition-opacity">
+                  <PanelLeftOpen size={18} className="text-white" />
+                </span>
+              </button>
+              <div className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[100] hidden whitespace-nowrap rounded-[6px] bg-[#282828] px-3 py-1.5 text-[12.5px] font-medium text-white shadow-xl group-hover/logo-expand:block max-sm:hidden">
+                Expand sidebar
+              </div>
             </div>
-            <div className="relative group/settings">
-              <PrefetchNavLink
-                to="/settings"
-                className="press grid size-8 shrink-0 place-items-center rounded-[10px] text-tertiary hover:bg-quinary hover:text-primary aria-[current=page]:glass-inset aria-[current=page]:text-primary transition-colors"
-                aria-label="Settings"
-                title={collapsed ? 'Settings' : undefined}
+          ) : (
+            /* Expanded Header: Clean standalone logo, brand name, and dedicated collapse button */
+            <div className="mb-3.5 flex items-center justify-between px-1">
+              <PrefetchLink
+                to="/home"
+                className="flex min-w-0 items-center gap-2.5 group/logo"
+                aria-label="MusoPhone, Home"
                 onClick={close}
               >
-                <Settings size={16} strokeWidth={1.9} />
-              </PrefetchNavLink>
-              {collapsed && (
-                <div className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[100] hidden whitespace-nowrap rounded-[8px] bg-[var(--glassDialogFill)] px-2.5 py-1 text-[12px] font-medium text-primary shadow-[0_8px_24px_-4px_rgba(0,0,0,0.65),inset_0_1px_0_var(--glassRim),inset_0_0_0_1px_var(--glassHairline)] backdrop-blur-xl group-hover/settings:block max-sm:hidden">
-                  Settings
+                <LogoMark size={24} className="shrink-0 transition-transform duration-200 group-hover/logo:scale-105" />
+                <span className="truncate text-[16px] font-bold text-white tracking-tight">MusoPhone</span>
+              </PrefetchLink>
+              <button
+                type="button"
+                className="grid size-8 flex-none place-items-center rounded-full text-[#b3b3b3] transition-colors hover:text-white hover:bg-[#282828] active:scale-90 max-sm:hidden"
+                aria-label="Collapse sidebar"
+                aria-expanded={true}
+                title="Collapse sidebar"
+                onClick={toggleCollapsed}
+              >
+                <PanelLeftClose size={18} />
+              </button>
+            </div>
+          )}
+
+          <ul className="flex flex-col gap-1">
+            {PRIMARY_NAV.map((item) => (
+              <NavItemRow key={item.to} item={item} collapsed={collapsed} onNavigate={close} />
+            ))}
+          </ul>
+        </div>
+
+        {/* Bottom Box: Your Library, Sections, Playlists */}
+        <div className="flex min-h-0 flex-1 flex-col rounded-[8px] bg-[#121212] border border-white/[0.04] p-2 overflow-hidden">
+          {/* Library Header */}
+          <div className="flex items-center justify-between px-2 py-2 text-[#b3b3b3] hover:text-white transition-colors">
+            <PrefetchLink
+              to="/library/playlists"
+              className="flex items-center gap-3 text-[14px] font-bold tracking-tight"
+              onClick={close}
+            >
+              <Library size={22} strokeWidth={2} />
+              {!collapsed && <span>Your Library</span>}
+            </PrefetchLink>
+          </div>
+
+          {/* Library Sections & Playlists Scroller */}
+          <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-1 [scrollbar-width:thin] [scrollbar-color:#282828_transparent]">
+            <ul className="flex flex-col gap-0.5">
+              {LIBRARY_NAV.map((item) => (
+                <NavItemRow key={item.to} item={item} collapsed={collapsed} onNavigate={close} />
+              ))}
+            </ul>
+
+            {/* Custom Playlists Divider */}
+            {!collapsed && (
+              <div className="my-2.5 mx-2 h-px bg-[#282828]" aria-hidden="true" />
+            )}
+
+            {/* User YouTube Music Playlists */}
+            {signedIn && playlists.data && playlists.data.length > 0 && (
+              <ul className="flex flex-col gap-0.5">
+                {playlists.data.map((playlist) => (
+                  <NavItemRow
+                    key={playlist.id}
+                    item={{
+                      to: hrefFor(playlist) ?? '/library/playlists',
+                      label: playlist.title,
+                      icon: <ListMusic size={18} />,
+                    }}
+                    collapsed={collapsed}
+                    onNavigate={close}
+                  />
+                ))}
+              </ul>
+            )}
+
+            {/* Spotify Synced Playlists */}
+            {spotifySignedIn && spotifyPlaylists.data && spotifyPlaylists.data.length > 0 && (
+              <>
+                {!collapsed && (
+                  <div className="mt-3 mb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-[#727272]">
+                    Spotify Playlists
+                  </div>
+                )}
+                <ul className="flex flex-col gap-0.5">
+                  {spotifyPlaylists.data.map((p) => (
+                    <NavItemRow
+                      key={p.id}
+                      item={{
+                        to: `/spotify/playlist/${encodeURIComponent(p.id)}`,
+                        label: p.name,
+                        icon: <ListMusic size={18} />,
+                      }}
+                      collapsed={collapsed}
+                      onNavigate={close}
+                    />
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+
+          {/* Bottom Account & App Controls */}
+          <div className="mt-auto shrink-0 border-t border-[#282828] pt-2 flex flex-col gap-1">
+            <ul className="flex flex-col gap-0.5">
+              <NavItemRow
+                item={{
+                  to: '/extension',
+                  label: 'Extension',
+                  icon: <Puzzle size={18} />,
+                }}
+                collapsed={collapsed}
+                onNavigate={close}
+              />
+              <NavItemRow
+                item={{
+                  to: '/about',
+                  label: 'About MusoPhone',
+                  icon: <Info size={18} />,
+                }}
+                collapsed={collapsed}
+                onNavigate={close}
+              />
+            </ul>
+
+            <div className="mt-1 w-full px-1">
+              <AccountButton compact={collapsed} />
+            </div>
+
+            <div className="flex items-center justify-between px-2 pt-1 text-[#b3b3b3]">
+              {!collapsed && (
+                <div className="flex items-center gap-2">
+                  <a
+                    className="inline-flex items-center gap-1 text-[11px] text-[#727272] hover:text-white transition-colors"
+                    href={config.androidAppUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <span>Android app</span>
+                    <ArrowUpRight size={12} />
+                  </a>
+                  <span className="text-[10px] text-[#535353]">v{config.version}</span>
                 </div>
               )}
+              <PrefetchNavLink
+                to="/settings"
+                className="grid size-8 place-items-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#282828] aria-[current=page]:text-white transition-colors ml-auto"
+                aria-label="Settings"
+                title="Settings"
+                onClick={close}
+              >
+                <Settings size={17} />
+              </PrefetchNavLink>
             </div>
           </div>
         </div>
@@ -309,7 +297,7 @@ export function Sidebar() {
 
       {drawerOpen && (
         <div
-          className="fixed inset-0 z-[calc(var(--z-modal)-1)] hidden bg-scrim backdrop-blur-[2px] max-sm:block"
+          className="fixed inset-0 z-[calc(var(--z-modal)-1)] hidden bg-black/70 backdrop-blur-xs max-sm:block"
           onClick={close}
           aria-hidden="true"
         />

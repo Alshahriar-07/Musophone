@@ -51,7 +51,7 @@ export function useLyrics() {
     staleTime: Infinity,
     gcTime: 30 * 60_000,
     retry: false,
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const player = usePlayer.getState();
       const entry = player.queue[player.index];
       const durationSec = entry?.track.durationSec || player.nowPlaying?.durationSec || 0;
@@ -63,7 +63,11 @@ export function useLyrics() {
           durationMs: Math.round(durationSec * 1000),
           album: entry?.track.album?.name ?? null,
         },
-        { ...(only && { only }), onSource: (source, state) => reportState(videoId!, source, state) },
+        {
+          ...(only && { only }),
+          signal,
+          onSource: (source, state) => reportState(videoId!, source, state),
+        },
       );
     },
   });

@@ -17,11 +17,11 @@ export const settingsUi = {
   /** Two columns of groups on a desktop, one on anything narrower. */
   split: 'grid gap-x-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start',
   column: 'flex min-w-0 flex-col',
-  // One glass group: a slab with a lit rim, the same material as the cards.
-  group: 'glass-card overflow-hidden rounded-[20px]',
+  // Clean Spotify Desktop group: dark card with subtle border and divider
+  group: 'overflow-hidden rounded-[8px] bg-[#181818] border border-white/[0.04]',
   sectionHeader:
-    'mx-4 mt-8 mb-2 flex items-center gap-2 type-[600_10px/13px] uppercase tracking-[0.16em] text-tertiary',
-  footer: 'mx-4 mt-2 type-callout text-secondary',
+    'mx-1 mt-7 mb-2 flex items-center gap-2 text-[14px] font-bold text-white tracking-tight',
+  footer: 'mx-1 mt-2 text-[12px] text-[#727272]',
 
   row,
   /** A row holding a switch, a select or a field: the whole row is its label. */
@@ -54,7 +54,7 @@ export const settingsUi = {
   linkRow: 'w-full cursor-pointer text-start hover:bg-quaternary',
   /** A row's own action, after its status (Connect, Disconnect). */
   inlineButton:
-    'press ml-2 rounded-pill bg-quinary px-3 py-1 type-[600_11px/14px] text-primary shadow-[inset_0_1px_0_var(--tileRim),inset_0_0_0_1px_var(--tileHairline)] disabled:opacity-50',
+    'press ml-2 rounded-[6px] bg-[#242424] px-3 py-1 text-[12px] font-medium text-primary hover:bg-[#2e2e2e] border border-white/[0.08] disabled:opacity-50',
   inlineLink: 'text-key',
 
   switch: [

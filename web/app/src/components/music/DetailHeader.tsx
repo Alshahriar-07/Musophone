@@ -23,9 +23,9 @@ interface DetailHeaderProps {
 
 /** Shuffle (circle) · Play (pill), report §14; also the Spotify playlist's Import button. */
 export const detailButton = {
-  pill: 'press inline-flex h-10 min-w-[150px] items-center justify-center gap-1.5 rounded-pill bg-key-bg px-4 type-[600_13px/17px] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_14px_30px_-16px_var(--keyColor)] disabled:opacity-40 enabled:hover:brightness-110',
+  pill: 'inline-flex h-10 min-w-[140px] items-center justify-center gap-2 rounded-[6px] bg-key px-5 text-[13.5px] font-bold text-white shadow-sm transition-transform hover:scale-102 active:scale-98 disabled:opacity-40',
   circle:
-    'press glass-field grid size-10 place-items-center rounded-full text-primary disabled:opacity-40 enabled:hover:text-key',
+    'grid size-10 place-items-center rounded-[6px] bg-[#282828] border border-white/[0.08] text-white hover:bg-[#333333] transition-colors disabled:opacity-40',
 };
 
 /**

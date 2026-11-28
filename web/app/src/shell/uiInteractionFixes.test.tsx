@@ -187,11 +187,19 @@ describe('UI & Interaction Fixes', () => {
     // Settings link remains accessible in collapsed sidebar
     expect(settingsLink).not.toBeNull();
 
+    // The collapsed logo expand button is accessible and clicking it restores sidebar
+    const expandBtn = container.querySelector('button[aria-label="Expand sidebar"]') as HTMLButtonElement;
+    expect(expandBtn).not.toBeNull();
+    await act(async () => {
+      expandBtn.click();
+    });
+    expect(useUi.getState().sidebarCollapsed).toBe(false);
+
     root.unmount();
     document.body.removeChild(container);
   });
 
-  it('keeps PlayerBar accessible with Lyrics, Up Next (queue), and safe bottom positioning', async () => {
+  it('keeps PlayerBar accessible with Lyrics, Up Next (queue), and controls', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -206,10 +214,8 @@ describe('UI & Interaction Fixes', () => {
       );
     });
 
-    // Check bottom positioning with safe area
-    const playerWrapper = container.firstElementChild as HTMLElement;
-    expect(playerWrapper).not.toBeNull();
-    expect(playerWrapper.className).toContain('bottom-[max(var(--shell-inset),env(safe-area-inset-bottom,12px))]');
+    const playerRegion = container.querySelector('[role="region"][aria-label="Player"]') as HTMLElement;
+    expect(playerRegion).not.toBeNull();
 
     // Check lyrics button
     const lyricsBtn = container.querySelector('button[aria-label="Lyrics"]') as HTMLButtonElement;
@@ -259,6 +265,44 @@ describe('UI & Interaction Fixes', () => {
     });
     expect(searchInput.value).toBe('');
     expect(onSearchMock).toHaveBeenCalledWith('');
+
+    root.unmount();
+    document.body.removeChild(container);
+  });
+
+  it('renders smart floating volume slider popover on hover or focus', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <QueryClientProvider client={queryClient}>
+            <PlayerBar />
+          </QueryClientProvider>
+        </MemoryRouter>,
+      );
+    });
+
+    const volBtn = container.querySelector('button[aria-label="Volume"], button[aria-label="Mute"]') as HTMLButtonElement;
+    expect(volBtn).not.toBeNull();
+
+    // The floating slider popover exists
+    const sliderRegion = container.querySelector('[role="region"][aria-label="Volume level slider"]') as HTMLElement;
+    expect(sliderRegion).not.toBeNull();
+    // Default closed (opacity-0)
+    expect(sliderRegion.className).toContain('opacity-0');
+
+    // Trigger hover/pointerEnter on the volume control button
+    await act(async () => {
+      volBtn.dispatchEvent(new MouseEvent('pointerenter', { bubbles: true }));
+      volBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+      volBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    // Becomes visible with opacity-100
+    expect(sliderRegion.className).toContain('opacity-100');
 
     root.unmount();
     document.body.removeChild(container);

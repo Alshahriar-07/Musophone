@@ -5,16 +5,16 @@ import { recheckExtension, useExtension } from '@/extension/useExtension';
 /** A page-sized message: a glass scene rather than a small card in a large void. */
 export const stateStyles = {
   state:
-    'glass-card relative mx-auto my-10 flex w-[min(560px,100%)] flex-col items-center gap-3 overflow-hidden rounded-[28px] px-10 py-12 text-center',
-  glow: 'pointer-events-none absolute -top-24 left-1/2 -z-1 size-64 -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--keyColor)_22%,transparent),transparent)] blur-2xl',
-  mark: 'relative grid size-[76px] place-items-center rounded-[24px] bg-quinary shadow-[inset_0_1px_0_var(--tileRim),inset_0_0_0_1px_var(--tileHairline),0_20px_40px_-24px_var(--tileShadow)]',
-  title: 'type-[700_21px/27px] tracking-[-0.02em]',
-  detail: 'max-w-[380px] type-[400_13px/19px] text-secondary',
-  footnote: 'mt-1 max-w-[400px] type-callout text-tertiary',
-  actions: 'mt-4 flex items-center gap-4',
+    'relative mx-auto my-10 flex w-[min(560px,100%)] flex-col items-center gap-3 overflow-hidden rounded-[8px] bg-[#181818] border border-white/[0.04] px-8 py-10 text-center shadow-lg',
+  glow: 'pointer-events-none absolute -top-24 left-1/2 -z-1 size-64 -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--keyColor)_18%,transparent),transparent)] blur-2xl',
+  mark: 'relative grid size-14 place-items-center rounded-[8px] bg-[#242424] text-white shadow-sm',
+  title: 'text-[20px] font-bold text-white tracking-tight',
+  detail: 'max-w-[420px] text-[13.5px] text-[#b3b3b3] leading-relaxed',
+  footnote: 'mt-1 max-w-[400px] text-[12px] text-[#727272]',
+  actions: 'mt-4 flex items-center gap-3',
   button:
-    'press inline-flex h-10 items-center rounded-pill bg-key-bg px-5 type-[600_12px/15px] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.28),0_14px_30px_-16px_var(--keyColor)]',
-  quietButton: 'press type-callout-emphasized text-key hover:underline',
+    'inline-flex h-9.5 items-center rounded-[6px] bg-white px-5 text-[13px] font-bold text-black transition-transform hover:scale-102 active:scale-98 shadow-sm',
+  quietButton: 'text-[13px] font-semibold text-[#b3b3b3] hover:text-white transition-colors',
 };
 
 /**

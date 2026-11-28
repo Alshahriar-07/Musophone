@@ -4,11 +4,13 @@ export const PRODUCTION_ORIGIN = 'https://musophone.vercel.app';
 /**
  * Every production address the site answers on. Vercel serves the project at
  * `musophone-web.vercel.app` as well as the canonical `musophone.vercel.app`,
- * and both are live; an install has to work on whichever one the user opens.
- * Leaving one out is not a degraded state — Chrome refuses to expose
- * `chrome.runtime` to the page at all, so the site reads "not installed".
+ * and preview branches at `*.vercel.app`.
  */
-export const PRODUCTION_ORIGINS = ['https://musophone-web.vercel.app', PRODUCTION_ORIGIN] as const;
+export const PRODUCTION_ORIGINS = [
+  'https://musophone-web.vercel.app',
+  PRODUCTION_ORIGIN,
+  'https://*.vercel.app',
+] as const;
 
 /**
  * The site's previous addresses. They stay trusted so extensions already
@@ -26,8 +28,10 @@ const PAGES_ORIGIN = 'https://bitchord-8bw.pages.dev';
  */
 const DEV_ORIGINS = [
   'http://localhost:5173',
+  'http://localhost:4173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
+  'http://127.0.0.1:4173',
   'http://127.0.0.1:3000',
 ];
 
@@ -64,8 +68,17 @@ export const SITE_ORIGINS: string[] = (
  * runtime against SITE_ORIGINS.
  */
 export function matchPatternsFor(origins: string[]): string[] {
-  return [...new Set(origins.map((o) => {
-    const url = new URL(o);
-    return `${url.protocol}//${url.hostname}/*`;
-  }))];
+  return [
+    ...new Set(
+      origins.map((o) => {
+        if (o.includes('*')) return o.endsWith('/*') ? o : `${o.replace(/\/+$/, '')}/*`;
+        try {
+          const url = new URL(o);
+          return `${url.protocol}//${url.hostname}/*`;
+        } catch {
+          return o;
+        }
+      }),
+    ),
+  ];
 }

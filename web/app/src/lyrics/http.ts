@@ -27,8 +27,8 @@ export const LYRIC_EXTENSION_ORIGINS = [
   'https://unison.boidu.dev',
 ];
 
-const DIRECT_TIMEOUT_MS = 6000;
-const EXTENSION_TIMEOUT_MS = 15_000;
+const DIRECT_TIMEOUT_MS = 4500;
+const EXTENSION_TIMEOUT_MS = 10_000;
 
 /** Lyric hosts the extension was refused for: the panel offers to allow them. */
 export const ungrantedOrigins = new Set<string>();
@@ -70,9 +70,11 @@ export interface GetOptions {
   headers?: Record<string, string>;
   /** Longer deadline for authenticated routes that look things up upstream (PaxSenix). */
   patient?: boolean;
+  signal?: AbortSignal;
 }
 
-async function viaExtension(url: string, headers: Record<string, string> | undefined): Promise<string | null> {
+async function viaExtension(url: string, headers: Record<string, string> | undefined, signal?: AbortSignal): Promise<string | null> {
+  if (signal?.aborted) return null;
   const bridge = getBridge();
   if (!bridge) return null;
   try {
@@ -81,6 +83,7 @@ async function viaExtension(url: string, headers: Record<string, string> | undef
       { url, ...(headers && { headers }) },
       { timeoutMs: EXTENSION_TIMEOUT_MS },
     );
+    if (signal?.aborted) return null;
     if (response.status < 200 || response.status >= 300) return null;
     return response.bodyEncoding === 'base64' ? new TextDecoder().decode(Uint8Array.from(atob(response.body), (c) => c.charCodeAt(0))) : response.body;
   } catch (error) {
@@ -95,18 +98,28 @@ async function viaExtension(url: string, headers: Record<string, string> | undef
   }
 }
 
-export async function lyricsGet(url: string, { route = 'direct', headers, patient }: GetOptions = {}): Promise<string | null> {
-  if (route === 'extension') return viaExtension(url, headers);
+export async function lyricsGet(url: string, { route = 'direct', headers, patient, signal }: GetOptions = {}): Promise<string | null> {
+  if (signal?.aborted) return null;
+  if (route === 'extension') return viaExtension(url, headers, signal);
   try {
+    const timeoutSignal = AbortSignal.timeout(patient ? EXTENSION_TIMEOUT_MS : DIRECT_TIMEOUT_MS);
+    const combinedSignal = signal
+      ? typeof AbortSignal.any === 'function'
+        ? AbortSignal.any([signal, timeoutSignal])
+        : signal
+      : timeoutSignal;
+
     const response = await fetch(url, {
       headers: { Accept: 'application/json, text/plain, */*', ...headers },
-      signal: AbortSignal.timeout(patient ? EXTENSION_TIMEOUT_MS : DIRECT_TIMEOUT_MS),
+      signal: combinedSignal,
       referrerPolicy: 'no-referrer',
     });
+    if (signal?.aborted) return null;
     return response.ok ? await response.text() : null;
   } catch (error) {
+    if (signal?.aborted) return null;
     // A CORS refusal looks like a network error from here; the extension isn't bound by it.
-    if (error instanceof TypeError) return viaExtension(url, headers);
+    if (error instanceof TypeError) return viaExtension(url, headers, signal);
     return null;
   }
 }

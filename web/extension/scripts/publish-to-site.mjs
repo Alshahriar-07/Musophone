@@ -72,12 +72,17 @@ for (const [browser, folder] of Object.entries(builds)) {
     const release = fileURLToPath(new URL('../../release/', import.meta.url));
     mkdirSync(release, { recursive: true });
     writeFileSync(join(release, 'MusoPhoneextension.zip'), rootZip);
-    // The repository-level release archive: one current ZIP, ready to hand out.
-    const exRelease = fileURLToPath(new URL('../../../EX-release/', import.meta.url));
-    mkdirSync(exRelease, { recursive: true });
-    writeFileSync(join(exRelease, 'Musophone-extension.zip'), rootZip);
+    // The repository-level release archive (optional when running inside web workspace)
+    try {
+      const exRelease = fileURLToPath(new URL('../../../EX-release/', import.meta.url));
+      mkdirSync(exRelease, { recursive: true });
+      writeFileSync(join(exRelease, 'Musophone-extension.zip'), rootZip);
+      console.log('EX-release/Musophone-extension.zip updated');
+    } catch {
+      // Ignore if outside sandbox
+    }
     console.log(
-      `extension.zip, release/MusoPhoneextension.zip and EX-release/Musophone-extension.zip (manifest at the archive root, v${version})`,
+      `extension.zip and release/MusoPhoneextension.zip (manifest at the archive root, v${version})`,
     );
   }
 }

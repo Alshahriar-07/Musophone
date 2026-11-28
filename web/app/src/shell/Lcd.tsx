@@ -165,6 +165,13 @@ export function Lcd() {
               {title}
             </PageLink>
             {track?.explicit && <ExplicitBadge size={10} />}
+            {status === 'playing' && (
+              <span className="flex items-end gap-[2px] h-3 px-0.5 ml-0.5" aria-label="Playing" title="Playing">
+                <span className="w-[2.5px] rounded-full bg-key animate-[equalize_0.8s_ease-in-out_infinite]" style={{ height: '60%' }} />
+                <span className="w-[2.5px] rounded-full bg-key animate-[equalize_0.8s_ease-in-out_0.2s_infinite]" style={{ height: '100%' }} />
+                <span className="w-[2.5px] rounded-full bg-key animate-[equalize_0.8s_ease-in-out_0.4s_infinite]" style={{ height: '40%' }} />
+              </span>
+            )}
           </div>
         ) : (
           <span className={titleClass}>{status === 'loading' ? 'Loading…' : ''}</span>
