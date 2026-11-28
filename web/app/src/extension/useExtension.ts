@@ -26,9 +26,12 @@ const SLOW_RECHECK_MS = 5000;
  */
 async function detect(): Promise<DetectedExtension | null> {
   const known = queryClient.getQueryData<DetectedExtension | null>(extensionQueryKey) ?? null;
-  const found = await detectExtension({ chromiumExtensionId: config.chromiumExtensionId });
+  // The configured id (a store build) and the unpacked build's pinned id,
+  // so an install of either is found. `detectExtension` pings them together.
+  const chromiumExtensionIds = [config.chromiumExtensionId, config.devChromiumExtensionId];
+  const found = await detectExtension({ chromiumExtensionIds });
   if (found || !known) return found;
-  return (await detectExtension({ chromiumExtensionId: config.chromiumExtensionId, timeoutMs: 4000 })) ?? known;
+  return (await detectExtension({ chromiumExtensionIds, timeoutMs: 4000 })) ?? known;
 }
 
 /**

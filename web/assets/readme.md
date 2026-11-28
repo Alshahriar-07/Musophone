@@ -15,8 +15,9 @@ promotional banners.
 | `Musophone Dark Audio Wave Banner.png` | PNG | 1672 × 941 | Promotional banner with the audio-wave treatment |
 
 The web app's derived, optimised copies live with the site so they ship with
-it: `web/app/public/favicon.svg` (the waveform-M tile), `icon-192.png`,
-`icon-512.png`, `apple-touch-icon.png`, and the 1200 × 630 social card
+it: `web/app/public/favicon.ico` (the official `.ico`), `icon-192.png`,
+`icon-512.png`, `apple-touch-icon.png`, the About lockup at
+`web/app/public/brand/musophone-logo.webp`, and the 1200 × 630 social card
 `og-image.png`. Regenerate the raster icons with
 `corepack pnpm --dir web/extension icons` and the social card from
 `web/scripts/brand/og-image.html`.
@@ -29,7 +30,7 @@ MusoPhone is minimal, premium and AMOLED-first.
 - **Foreground:** near-white (`#f7f7f9`)
 - **Accent:** crimson (`#ff4d67` dark, `#c2173a` light)
 - **Type:** DM Sans
-- **Symbol:** an M drawn as one continuous waveform stroke
+- **Symbol:** the official M-shaped mark with a musical note and audio waveform
 - **Style:** flat, quiet and high-contrast; no gradients on the mark, no
   decorative effects beyond the accent light
 

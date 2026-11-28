@@ -1,4 +1,5 @@
-import { Compass, House, Search } from 'lucide-react';
+import { House, Search } from 'lucide-react';
+import { LogoMark } from '@/components/icons/LogoMark';
 import { PageHeader } from '@/components/PageHeader';
 import { PrefetchLink } from '@/components/PrefetchLink';
 import { stateStyles } from '@/components/music/States';
@@ -17,8 +18,8 @@ export default function NotFoundPage() {
     <>
       <PageHeader title="Page not found" />
       <div className={stateStyles.state}>
-        <div className="mb-2 grid size-16 place-items-center rounded-[18px] bg-quinary">
-          <Compass size={26} strokeWidth={1.6} className="text-secondary" aria-hidden="true" />
+        <div className="mb-2">
+          <LogoMark size={64} />
         </div>
         <p className={stateStyles.title}>We couldn’t find that page</p>
         <p className={stateStyles.detail}>

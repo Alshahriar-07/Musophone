@@ -1,4 +1,4 @@
-import { ArrowUpRight, ChevronRight, Puzzle, Users } from 'lucide-react';
+import { ArrowUpRight, Check, ChevronRight, Puzzle, Users } from 'lucide-react';
 import { lazy, Suspense, useState, type ComponentType, type ReactNode } from 'react';
 import { SiApplemusic, SiDiscord, SiSpotify, SiYoutubemusic } from 'react-icons/si';
 import { PageHeader } from '@/components/PageHeader';
@@ -11,6 +11,7 @@ import { useParty } from '@/party/useParty';
 import { useHistorySettings } from '@/playback/historyReporting';
 import { Select } from '@/components/Select';
 import { AUTOMIX_BARS } from '@/playback/automix/choices';
+import { ACCENTS, APPEARANCES, useAppearance } from '@/state/appearance';
 import { CROSSFADE_CHOICES, usePlayer } from '@/state/player';
 import { AppleMusicIntegration, AppleMusicToggles, CanvasToggle, DiscordIntegration, LyricSourcesAccess, SpotifyIntegration, Toggle } from './IntegrationSettings';
 import { settingsUi } from './settingsStyles';
@@ -63,10 +64,16 @@ export default function SettingsPage() {
   const automix = usePlayer((s) => s.automix);
   const automixBars = usePlayer((s) => s.automixBars);
   const showNerdStats = usePlayer((s) => s.showNerdStats);
+  const appearance = useAppearance((s) => s.appearance);
+  const accent = useAppearance((s) => s.accent);
+  const setAppearance = useAppearance((s) => s.setAppearance);
+  const setAccent = useAppearance((s) => s.setAccent);
   const shareHistory = useHistorySettings((s) => s.share);
   const setShareHistory = useHistorySettings((s) => s.setShare);
   const { setAutoplay, setCrossfade, setAutomix, setAutomixBars, setShowNerdStats } = usePlayer.getState();
   const [lyrics, setLyrics] = useState(false);
+  const dark = document.documentElement.dataset.appearance === 'dark';
+  const activeAccent = ACCENTS.find((option) => option.id === accent) ?? ACCENTS[0];
   const present = extension.state === 'present';
   const discordText =
     discord.state === 'ready' && discord.discord.connected
@@ -81,17 +88,80 @@ export default function SettingsPage() {
     <div className={settingsUi.centered}>
       <PageHeader title="Settings" />
       <div className={settingsUi.body}>
+        <h2 className={settingsUi.sectionHeader}>Appearance</h2>
+        <section className={settingsUi.group}>
+          <div className={`${settingsUi.row} gap-4`}>
+            <span>Theme</span>
+            <div role="radiogroup" aria-label="Theme" className="inline-flex rounded-[9px] bg-segmented p-0.5">
+              {APPEARANCES.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={appearance === option.id}
+                  onClick={() => setAppearance(option.id)}
+                  className={`rounded-[7px] px-2.5 py-[3px] type-callout-emphasized transition-colors duration-150 ease-standard ${
+                    appearance === option.id
+                      ? 'bg-segmented-selected text-primary shadow-[0_1px_2px_rgb(0_0_0/0.12)]'
+                      : 'text-secondary hover:text-primary'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="relative px-4 py-[13px] hairline-[16px]">
+            <div className="flex items-center justify-between gap-4">
+              <span className="type-title-3">Accent colour</span>
+              <span className="type-body-reduced text-secondary">{activeAccent.name}</span>
+            </div>
+            <div className="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-9" role="radiogroup" aria-label="Accent colour">
+              {ACCENTS.map((option) => {
+                const selected = accent === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    aria-label={option.name}
+                    title={option.name}
+                    onClick={() => setAccent(option.id)}
+                    className={`relative grid size-7 place-items-center justify-self-center rounded-full transition-[transform,box-shadow] duration-150 ease-standard hover:scale-105 focus-visible:scale-105 ${
+                      selected ? 'ring-2 ring-key ring-offset-2 ring-offset-(--glassCardFill)' : 'ring-1 ring-divider'
+                    }`}
+                  >
+                    <span
+                      className="size-5 rounded-full"
+                      style={{ backgroundColor: dark ? option.dark : option.light }}
+                    />
+                    {selected && (
+                      <Check
+                        size={12}
+                        strokeWidth={3}
+                        aria-hidden="true"
+                        className="absolute text-white drop-shadow-[0_1px_1px_rgb(0_0_0/0.5)]"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         <h2 className={settingsUi.sectionHeader}>Account & Integrations</h2>
         <section className={settingsUi.group}>
           <div className={settingsUi.integration}>
             <Glyph Icon={SiYoutubemusic} color="#ffffff" ink="#ff0033" />
             <span className={settingsUi.integrationName}>YouTube Music</span>
-            <span className={settingsUi.value}>{youtubeText(yt)}</span>
+            <span className={settingsUi.integrationValue}>{youtubeText(yt)}</span>
           </div>
           <div className={settingsUi.integration}>
             <Glyph Icon={SiSpotify} color="#1ed760" />
             <span className={settingsUi.integrationName}>Spotify</span>
-            {present ? <SpotifyIntegration /> : <span className={settingsUi.value}>Needs the extension</span>}
+            {present ? <SpotifyIntegration /> : <span className={settingsUi.integrationValue}>Needs the extension</span>}
           </div>
           {present && discord.state === 'ready' && discord.discord.available && (
             <LinkRow to="/settings/discord" icon={<Glyph Icon={SiDiscord} color="#5865f2" />} title="Discord" value={discordText} />
@@ -217,6 +287,7 @@ export default function SettingsPage() {
               <ArrowUpRight size={15} strokeWidth={1.9} />
             </span>
           </a>
+          <LinkRow to="/about" title="About & Credits" value="Creator, studio & licences" />
         </section>
         <p className={settingsUi.footer}>
           MusoPhone is an independently developed music player with its own interface and design system. It is built on

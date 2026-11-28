@@ -1,17 +1,22 @@
-import markSvg from '@/assets/logo-mark.svg?raw';
+import iconUrl from '@/assets/musophone-icon.png';
 
-// MusoPhone's mark: the waveform-M from assets/logo-mark.svg, recoloured to
-// currentColor so it follows the text colour it sits in. One weight, one
-// shape, shared with the favicon, the PWA icons and the Android app's icons.
-const markup = markSvg.replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"');
-
+/**
+ * MusoPhone's official app mark, at the size the chrome needs. The artwork is
+ * the project's own icon (assets/icon.png, copied at 256px), never a redrawn
+ * substitute, so the header, the PWA tile, the extension toolbar and the
+ * Android launcher all show the same symbol.
+ */
 export function LogoMark({ size = 20, className }: { size?: number; className?: string }) {
   return (
-    <span
+    <img
+      src={iconUrl}
+      alt=""
       aria-hidden="true"
-      className={className}
-      style={{ display: 'inline-flex', width: size, height: (size * 484) / 730 }}
-      dangerouslySetInnerHTML={{ __html: markup }}
+      width={size}
+      height={size}
+      draggable={false}
+      className={`shrink-0 rounded-[22%] object-contain ${className ?? ''}`}
+      style={{ width: size, height: size }}
     />
   );
 }

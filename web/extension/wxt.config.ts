@@ -27,7 +27,9 @@ export default defineConfig({
   }),
   manifest: ({ browser }) => ({
     name: 'MusoPhone',
+    short_name: 'MusoPhone',
     description: 'Connects the MusoPhone web player to YouTube Music, Spotify and Discord.',
+    author: 'Al Shahriar Sowan · Eagox Studio',
     homepage_url: SITE_ORIGINS[0],
     // `cookies` reads the YouTube session for signed-in requests (phase 5);
     // the cookies themselves never leave the extension (lib/ytAuth.ts).

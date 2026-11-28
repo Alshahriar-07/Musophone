@@ -4,6 +4,7 @@
 //   web/app/public/downloads/musophone-extension-chrome (<version>).zip
 //   web/app/public/downloads/musophone-extension-firefox (<version>).zip
 //   web/app/public/downloads/extension.json    { version, builtAt, files }
+//   EX-release/Musophone-extension.zip         (Chromium, manifest at the root)
 //
 // Each zip holds a single folder (musophone-extension-<browser> (<version>)/) rather than
 // loose files, so "Extract here" leaves one tidy folder to load unpacked.
@@ -44,11 +45,15 @@ for (const [browser, folder] of Object.entries(builds)) {
   }
   version = manifest.version;
 
-  // The version in brackets, on the zip and the folder inside it: "musophone-extension-chrome (0.4.3)".
+  // The version in brackets, on the zip and the folder inside it: "musophone-extension-chrome (0.5.1)".
   const parent = `musophone-extension-${browser} (${manifest.version})`;
   const entries = {};
+  const rootEntries = {};
   for (const file of filesUnder(root)) {
-    entries[`${parent}/${relative(root, file).split(sep).join('/')}`] = readFileSync(file);
+    const relativePath = relative(root, file).split(sep).join('/');
+    const data = readFileSync(file);
+    entries[`${parent}/${relativePath}`] = data;
+    rootEntries[relativePath] = data;
   }
   const name = `${parent}.zip`;
   const zip = zipSync(entries, { level: 9 });
@@ -58,6 +63,23 @@ for (const [browser, folder] of Object.entries(builds)) {
   writeFileSync(join(target, `musophone-extension-${browser}.zip`), zip);
   files[browser] = name;
   console.log(`${folder} -> app/public/downloads/${name} (${parent}/, v${version})`);
+
+  // The Chromium build also as one archive with manifest.json at its root,
+  // for anyone who unzips it or uploads it as a packaged build.
+  if (browser === 'chrome') {
+    const rootZip = zipSync(rootEntries, { level: 9 });
+    writeFileSync(fileURLToPath(new URL('../../extension.zip', import.meta.url)), rootZip);
+    const release = fileURLToPath(new URL('../../release/', import.meta.url));
+    mkdirSync(release, { recursive: true });
+    writeFileSync(join(release, 'MusoPhoneextension.zip'), rootZip);
+    // The repository-level release archive: one current ZIP, ready to hand out.
+    const exRelease = fileURLToPath(new URL('../../../EX-release/', import.meta.url));
+    mkdirSync(exRelease, { recursive: true });
+    writeFileSync(join(exRelease, 'Musophone-extension.zip'), rootZip);
+    console.log(
+      `extension.zip, release/MusoPhoneextension.zip and EX-release/Musophone-extension.zip (manifest at the archive root, v${version})`,
+    );
+  }
 }
 
 writeFileSync(

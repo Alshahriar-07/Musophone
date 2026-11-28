@@ -3,6 +3,7 @@ import { useState, type ComponentType } from 'react';
 import { FaChrome, FaFirefoxBrowser } from 'react-icons/fa';
 import { SiDiscord, SiSpotify, SiYoutubemusic } from 'react-icons/si';
 import type { Capability } from '@musophone/shared/bridge';
+import { LogoMark } from '@/components/icons/LogoMark';
 import { PageHeader } from '@/components/PageHeader';
 import { config } from '@/config';
 import { useExtension, type ExtensionStatus } from '@/extension/useExtension';
@@ -123,7 +124,16 @@ export default function ExtensionPage() {
     <div className={settingsUi.centered}>
       <PageHeader title="MusoPhone Extension" />
       <div className={settingsUi.body}>
-        <section className={settingsUi.group} aria-live="polite">
+        <section className="glass-card flex items-center gap-4 rounded-[16px] px-5 py-4">
+          <LogoMark size={52} />
+          <div className="min-w-0">
+            <p className="type-title-2-emphasized">MusoPhone for your browser</p>
+            <p className="mt-0.5 type-callout text-secondary">
+              Playback, sign-in, Spotify and Discord support in Chrome, Edge, Brave and Firefox.
+            </p>
+          </div>
+        </section>
+        <section className={`${settingsUi.group} mt-3`} aria-live="polite">
           <div className={settingsUi.row}>
             <span>Status</span>
             <span className={settingsUi.value}>
@@ -161,7 +171,7 @@ export default function ExtensionPage() {
             <a
               className={`${settingsUi.group} ${settingsUi.download} mt-3`}
               href={forUpdate.href}
-              download
+              download={`musophone-extension-${forUpdate.browser}.zip`}
               onClick={() => setUpdating(true)}
             >
               <span className={settingsUi.updateDot} aria-hidden="true" />
@@ -195,7 +205,7 @@ export default function ExtensionPage() {
               key={browser}
               className={settingsUi.download}
               href={href}
-              download
+              download={`musophone-extension-${browser}.zip`}
               onClick={() => setChosen(browser)}
             >
               <Icon size={28} className="text-primary" />
@@ -233,7 +243,7 @@ export default function ExtensionPage() {
               ) : status.state === 'present' && integration.capability === 'discord' ? (
                 <DiscordIntegration />
               ) : (
-                <span className={settingsUi.value}>{integrationStatus(status, integration, auth)}</span>
+                <span className={settingsUi.integrationValue}>{integrationStatus(status, integration, auth)}</span>
               )}
             </div>
           ))}
@@ -250,6 +260,12 @@ export default function ExtensionPage() {
             Settings
           </PrefetchLink>
           .
+        </p>
+        <p className={settingsUi.footer}>
+          The extension is part of MusoPhone by Al Shahriar Sowan · Eagox Studio.{' '}
+          <PrefetchLink to="/about" className={settingsUi.inlineLink}>
+            About &amp; Credits
+          </PrefetchLink>
         </p>
       </div>
     </div>

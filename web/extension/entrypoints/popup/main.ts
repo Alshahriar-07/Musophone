@@ -194,6 +194,8 @@ function setDiscord(state: DiscordState): void {
 document.getElementById('version')!.textContent = `v${browser.runtime.getManifest().version}`;
 const site = document.getElementById('site') as HTMLAnchorElement;
 site.href = __SITE_ORIGINS__[0] ?? '#';
+const about = document.getElementById('about') as HTMLAnchorElement;
+about.href = `${__SITE_ORIGINS__[0] ?? 'https://musophone.vercel.app'}/about`;
 
 render();
 call('yt.authState', {})

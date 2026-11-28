@@ -1,4 +1,4 @@
-import { ArrowUpRight, ListMusic, Puzzle, Settings } from 'lucide-react';
+import { ArrowUpRight, Info, ListMusic, Puzzle, Settings } from 'lucide-react';
 import { PrefetchLink, PrefetchNavLink } from '@/components/PrefetchLink';
 import { LogoMark } from '@/components/icons/LogoMark';
 import {
@@ -145,14 +145,14 @@ export function Sidebar() {
     <>
       {/* Below 484px the sidebar is a drawer opened from the top bar's menu button. */}
       <nav
-        className="absolute inset-y-0 left-0 z-(--z-web-chrome) flex w-(--web-navigation-width) flex-col glass-material max-sm:w-[min(300px,82vw)] max-sm:-translate-x-full max-sm:shadow-glass max-sm:transition-transform max-sm:duration-(--duration-panel) max-sm:ease-panel max-sm:data-[open=true]:translate-none"
+        className="absolute inset-y-0 left-0 z-(--z-web-chrome) flex w-(--web-navigation-width) flex-col glass-material max-sm:w-[min(300px,82vw)] max-sm:-translate-x-full max-sm:transition-transform max-sm:duration-(--duration-panel) max-sm:ease-panel max-sm:data-[open=true]:translate-none"
         data-open={drawerOpen}
         aria-label="Main"
       >
         <div className="mt-2 ml-2 flex h-18 items-center px-5">
           <PrefetchLink to="/home" className="inline-flex items-center gap-2 rounded-[6px]" aria-label="MusoPhone, Home" onClick={close}>
             {/* White on dark, as Apple's own wordmark; it follows the label colour so it stays visible in light. */}
-            <LogoMark size={22} className="text-primary" />
+            <LogoMark size={24} />
             <span className="type-[700_19px/24px] tracking-[-0.01em]">MusoPhone</span>
           </PrefetchLink>
         </div>
@@ -169,10 +169,16 @@ export function Sidebar() {
             </span>
             <span className={navLabel}>MusoPhone Extension</span>
             {update.state === 'available' && (
-              <span className="ml-auto rounded-[10px] bg-key px-[7px] py-0.5 type-subhead-emphasized text-white" title={`Version ${update.latest.version} is available`}>
+              <span className="ml-auto rounded-[10px] bg-key-bg px-[7px] py-0.5 type-subhead-emphasized text-white" title={`Version ${update.latest.version} is available`}>
                 Update
               </span>
             )}
+          </PrefetchNavLink>
+          <PrefetchNavLink to="/about" className={item} onClick={close}>
+            <span className={icon}>
+              <Info size={18} strokeWidth={1.9} />
+            </span>
+            <span className={navLabel}>About &amp; Credits</span>
           </PrefetchNavLink>
           <AccountButton />
           <div className="flex items-center justify-between">

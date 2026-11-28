@@ -36,6 +36,7 @@ const TITLES: [RegExp, string][] = [
   [/^\/settings\/discord/, 'Discord'],
   [/^\/settings/, 'Settings'],
   [/^\/extension/, 'Extension'],
+  [/^\/about/, 'About'],
 ];
 
 /**
@@ -102,7 +103,8 @@ export function AppShell() {
   }
 
   return (
-    <div className="grid h-full grid-rows-[minmax(0,1fr)_auto]">
+    <div className="relative isolate grid h-full grid-rows-[minmax(0,1fr)_auto]">
+      <div className="app-ambient" aria-hidden="true" />
       {/* The side panel slides in from beyond the right edge; never let it scroll the page. */}
       <div className="relative min-h-0 overflow-hidden">
         <Sidebar />

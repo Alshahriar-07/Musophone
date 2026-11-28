@@ -17,6 +17,8 @@ export interface LyricWord {
   startMs: number;
   endMs: number;
   text: string;
+  /** A provider's own Latin reading of this word, when the TTML carries one. */
+  romanizedText?: string;
   /** Empty for a word nobody split, which is most of them. */
   syllables: LyricSyllable[];
 }
@@ -27,6 +29,8 @@ export type LyricAlignment = 'start' | 'end';
 export interface LyricLine {
   timeMs: number;
   text: string;
+  /** A provider's own Latin reading of the line, when the TTML carries one. */
+  romanizedText?: string;
   words: LyricWord[];
   /** The line's own end, where a line-synced provider states one. */
   sungUntilMs: number | null;

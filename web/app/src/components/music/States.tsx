@@ -1,3 +1,4 @@
+import { LogoMark } from '@/components/icons/LogoMark';
 import { PrefetchLink } from '@/components/PrefetchLink';
 
 /** A page-sized message, centred: also the Spotify page's sign-in invitation. */
@@ -12,6 +13,7 @@ export const stateStyles = {
 export function NeedsExtension({ what = 'YouTube Music' }: { what?: string }) {
   return (
     <div className={stateStyles.state}>
+      <LogoMark size={52} />
       <p className={stateStyles.title}>Browse {what} with the MusoPhone extension</p>
       <p className={stateStyles.detail}>
         The extension lets this page reach YouTube Music from your own browser. Addons and lyrics work without it.
@@ -26,6 +28,7 @@ export function NeedsExtension({ what = 'YouTube Music' }: { what?: string }) {
 export function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
   return (
     <div className={stateStyles.state}>
+      <LogoMark size={44} />
       <p className={stateStyles.title}>Couldn’t load this page</p>
       <p className={stateStyles.detail}>{error instanceof Error ? error.message : String(error)}</p>
       <button className={stateStyles.button} onClick={onRetry}>
@@ -38,6 +41,7 @@ export function LoadError({ error, onRetry }: { error: unknown; onRetry: () => v
 export function EmptyState({ title, detail }: { title: string; detail?: string }) {
   return (
     <div className={stateStyles.state}>
+      <LogoMark size={44} />
       <p className={stateStyles.title}>{title}</p>
       {detail && <p className={stateStyles.detail}>{detail}</p>}
     </div>

@@ -38,8 +38,9 @@ export function decodeEntities(text: string): string {
 
 // ---- TTML (TtmlLyrics.kt) ---------------------------------------------------------------------
 
-const SKIPPED_ROLES = new Set(['x-translation', 'x-roman']);
+const SKIPPED_ROLES = new Set(['x-translation']);
 const BACKGROUND_ROLE = 'x-bg';
+const ROMAN_ROLE = 'x-roman';
 
 /** TTML clock values: 27.395, 1:05.20, 1:02:03.4, or a number with s/ms. */
 export function ttmlTime(value: string | null | undefined): number | null {
@@ -72,12 +73,16 @@ function hasTimedChild(element: Element): boolean {
   return Array.from(element.children).some((child) => child.getAttribute('begin') || hasTimedChild(child));
 }
 
-function collect(node: Node, out: Piece[], backing: Piece[]): void {
+function collect(node: Node, out: Piece[], backing: Piece[], roman: Piece[] = []): void {
   for (const child of Array.from(node.childNodes)) {
     if (child.nodeType === 1) {
       const element = child as Element;
       const role = qualified(element, 'ttm:role');
       if (SKIPPED_ROLES.has(role)) continue;
+      if (role === ROMAN_ROLE) {
+        collect(element, roman, backing, roman);
+        continue;
+      }
       const sink = role === BACKGROUND_ROLE ? backing : out;
       const begin = ttmlTime(element.getAttribute('begin'));
       const end = ttmlTime(element.getAttribute('end'));
@@ -131,9 +136,16 @@ function mergeIntoWords(pieces: Piece[]): LyricWord[] {
 function lineFrom(paragraph: Element): LyricLine | null {
   const pieces: Piece[] = [];
   const backingPieces: Piece[] = [];
-  collect(paragraph, pieces, backingPieces);
+  const romanPieces: Piece[] = [];
+  collect(paragraph, pieces, backingPieces, romanPieces);
   const words = mergeIntoWords(pieces);
   const backingWords = mergeIntoWords(backingPieces);
+  const romanWords = mergeIntoWords(romanPieces);
+  const romanText = romanWords.length ? romanWords.map((w) => w.text).join(' ') : undefined;
+  const withRoman = (word: LyricWord, index: number): LyricWord => {
+    const native = romanWords[index]?.text;
+    return native ? { ...word, romanizedText: native } : word;
+  };
   const backing = backingWords.length
     ? line(backingWords[0]!.startMs, backingWords.map((w) => w.text).join(' '), { words: backingWords })
     : null;
@@ -142,10 +154,14 @@ function lineFrom(paragraph: Element): LyricLine | null {
     const begin = ttmlTime(paragraph.getAttribute('begin'));
     if (begin === null || !text) return null;
     const end = ttmlTime(paragraph.getAttribute('end'));
-    return line(begin, text, { sungUntilMs: end !== null && end > begin ? end : null });
+    return line(begin, text, { romanizedText: romanText, sungUntilMs: end !== null && end > begin ? end : null });
   }
   const begin = ttmlTime(paragraph.getAttribute('begin')) ?? words[0]!.startMs;
-  return line(Math.min(begin, words[0]!.startMs), words.map((w) => w.text).join(' '), { words, background: backing });
+  return line(Math.min(begin, words[0]!.startMs), words.map((w) => w.text).join(' '), {
+    romanizedText: romanText,
+    words: words.map(withRoman),
+    background: backing,
+  });
 }
 
 export function parseTtml(ttml: string): LyricLine[] {

@@ -4,7 +4,10 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import { queryClient } from '@/lib/queryClient';
 import { routes } from '@/routes';
+import { initAppearance } from '@/state/appearance';
 import '@/styles/global.css';
+
+initAppearance();
 
 const router = createBrowserRouter(routes);
 

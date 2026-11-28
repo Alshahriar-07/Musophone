@@ -12,7 +12,7 @@ export function MobileTopBar() {
         <Menu size={22} strokeWidth={2} />
       </button>
       <PrefetchLink to="/home" className="inline-flex items-center gap-1.5 justify-self-center type-[700_16px/20px]" aria-label="MusoPhone, Home">
-        <LogoMark size={20} className="text-primary" />
+        <LogoMark size={22} />
         <span>MusoPhone</span>
       </PrefetchLink>
       <span className="w-11" />

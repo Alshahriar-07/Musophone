@@ -21,8 +21,19 @@ const moveButton = 'grid size-[26px] place-items-center rounded-[6px] text-secon
  * page can't.
  */
 export function LyricsSettings({ onClose }: { onClose: () => void }) {
-  const { order, disabled, preferSyllables, paxsenixKey, setEnabled, move, setPreferSyllables, setPaxsenixKey, reset } =
-    useLyricsSettings();
+  const {
+    order,
+    disabled,
+    preferSyllables,
+    latinScript,
+    paxsenixKey,
+    setEnabled,
+    move,
+    setPreferSyllables,
+    setLatinScript,
+    setPaxsenixKey,
+    reset,
+  } = useLyricsSettings();
   const [granted, setGranted] = useState<string[] | null>(null);
   const [key, setKey] = useState(paxsenixKey);
 
@@ -48,7 +59,7 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
     // A modal (report §8): scrim, 14px card radius, fade with a slight zoom, 30px close circle.
     <div className="fixed inset-0 z-(--z-modal) grid animate-fade place-items-center bg-scrim" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
       <div
-        className="flex max-h-[min(720px,calc(100vh-48px))] w-[min(520px,calc(100vw-32px))] animate-zoom flex-col rounded-[14px] bg-page shadow-glass"
+        className="glass-dialog flex max-h-[min(720px,calc(100vh-48px))] w-[min(520px,calc(100vw-32px))] animate-zoom flex-col rounded-[18px]"
         role="dialog"
         aria-modal="true"
         aria-label="Lyric settings"
@@ -97,6 +108,16 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
             </span>
           </label>
 
+          <label className={`${group} ${toggle} mt-2 py-2 pr-2.5 pl-3`}>
+            <input type="checkbox" className={checkbox} checked={latinScript} onChange={(e) => setLatinScript(e.currentTarget.checked)} />
+            <span className="flex min-w-0 flex-col">
+              <span className="type-body-emphasized">Latin script</span>
+              <span className="truncate type-callout text-secondary">
+                Bengali as Banglish and Hindi as Hinglish; English stays as written.
+              </span>
+            </span>
+          </label>
+
           <h3 className={section}>Extension access</h3>
           {granted === null ? (
             <p className={note}>KuGou, Musixmatch, Genius and PaxSenix need the MusoPhone extension.</p>
@@ -106,7 +127,7 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
                 KuGou, Musixmatch, Genius and PaxSenix don’t let web pages ask them directly. Allow the extension to,
                 once.
               </p>
-              <button className="flex-none rounded-[14px] bg-key px-3.5 py-1.5 type-callout-emphasized text-white" onClick={() => void getBridge()?.call('lyrics.requestPermissions', { origins: missing })}>
+              <button className="flex-none rounded-[14px] bg-key-bg px-3.5 py-1.5 type-callout-emphasized text-white" onClick={() => void getBridge()?.call('lyrics.requestPermissions', { origins: missing })}>
                 Allow
               </button>
             </div>

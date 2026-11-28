@@ -40,4 +40,4 @@ export function Banner({ title, detail, action, onDismiss }: BannerProps) {
 }
 
 export const bannerButtonClass =
-  'inline-flex h-8 items-center whitespace-nowrap rounded-pill bg-key px-4 type-body-emphasized text-white transition-colors duration-(--duration-fast) ease-standard hover:bg-key-rollover active:bg-key-pressed';
+  'inline-flex h-8 items-center whitespace-nowrap rounded-pill bg-key-bg px-4 type-body-emphasized text-white transition-[filter] duration-(--duration-fast) ease-standard hover:brightness-[1.12] active:brightness-[0.95]';

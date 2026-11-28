@@ -10,7 +10,7 @@
     "dev": "pnpm --filter @musophone/app dev",
     "dev:ext": "pnpm --filter @musophone/extension dev",
     "dev:ext:firefox": "pnpm --filter @musophone/extension dev:firefox",
-    "build": "pnpm -r build",
+    "build": "pnpm build:site",
     "build:site": "pnpm --filter @musophone/extension package && pnpm --filter @musophone/app build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r --if-present test",

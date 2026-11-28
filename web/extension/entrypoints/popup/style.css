@@ -155,6 +155,28 @@ body {
   background: var(--divider);
 }
 
+/* The extension's About section: the project's own credit, not an advert. */
+.about {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--secondary);
+  text-align: center;
+}
+
+.about a {
+  color: var(--key);
+  text-decoration: none;
+}
+
+.about a:hover {
+  text-decoration: underline;
+}
+
 /* Why the account couldn't be read, word for word, so a screenshot says it. */
 .problem {
   display: block;

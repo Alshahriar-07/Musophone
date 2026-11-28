@@ -12,17 +12,43 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f5f8" />
+    <meta name="theme-color" content="#f7f5f8" />
+    <script>
+      // Paint the saved theme and accent before React arrives. System follows
+      // the OS; the store in state/appearance.ts takes over after boot.
+      (function () {
+        var root = document.documentElement;
+        var appearance = 'system';
+        var accent = 'crimson';
+        var accents = ['crimson', 'rose', 'ember', 'amber', 'lime', 'teal', 'blue', 'violet', 'graphite'];
+        try {
+          appearance = localStorage.getItem('musophone:appearance') || 'system';
+        } catch (error) {}
+        try {
+          accent = localStorage.getItem('musophone:accent') || 'crimson';
+        } catch (error) {}
+        if (accents.indexOf(accent) === -1) accent = 'crimson';
+        var dark = appearance === 'dark' || (appearance !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        root.dataset.appearance = dark ? 'dark' : 'light';
+        root.dataset.accent = accent;
+        root.style.colorScheme = dark ? 'dark' : 'light';
+        var theme = document.querySelector('meta[name="theme-color"]');
+        if (theme) theme.setAttribute('content', dark ? '#000000' : '#f7f5f8');
+      })();
+    </script>
 
     <title>MusoPhone — Premium music, uninterrupted</title>
     <meta
       name="description"
       content="MusoPhone is an independent, premium music player for the web, Android and your browser: your library, synced and translated lyrics, playlists and lossless playback in one quiet interface."
     />
+    <meta name="author" content="Al Shahriar Sowan · Eagox Studio" />
+    <meta name="application-name" content="MusoPhone" />
+    <meta name="apple-mobile-web-app-title" content="MusoPhone" />
     <link rel="canonical" href="https://musophone.vercel.app/" />
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- The project's official icon set: assets/icon.ico and assets/icon.png. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
@@ -56,8 +82,26 @@
         "name": "MusoPhone",
         "applicationCategory": "MultimediaApplication",
         "operatingSystem": "Android, Web",
+        "softwareVersion": "2.6",
         "url": "https://musophone.vercel.app/",
+        "downloadUrl": "https://github.com/Alshahriar-07/Musophone/releases/latest",
+        "sameAs": ["https://github.com/Alshahriar-07/Musophone"],
         "description": "An independent, premium music player for the web, Android and your browser.",
+        "author": {
+          "@type": "Person",
+          "name": "Al Shahriar Sowan",
+          "url": "https://github.com/Alshahriar-07"
+        },
+        "creator": {
+          "@type": "Organization",
+          "name": "Eagox Studio",
+          "email": "eagoxstudio@gmail.com"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Eagox Studio",
+          "email": "eagoxstudio@gmail.com"
+        },
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "license": "https://www.gnu.org/licenses/gpl-3.0.html",
         "image": "https://musophone.vercel.app/og-image.png"
@@ -71,9 +115,74 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..800&display=swap"
     />
+
+    <style>
+      /* The first paint, before React takes over: the official mark, quietly. */
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: #f7f5f8;
+        color: #16121a;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #boot img {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        box-shadow: 0 18px 50px rgb(22 18 26 / 0.18);
+      }
+      #boot .name {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      #boot .bar {
+        width: 76px;
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, transparent, var(--keyColor, #ff4d67), transparent);
+        animation: boot-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes boot-pulse {
+        0%,
+        100% {
+          opacity: 0.25;
+          transform: scaleX(0.55);
+        }
+        50% {
+          opacity: 1;
+          transform: scaleX(1);
+        }
+      }
+      :root[data-appearance='dark'] #boot {
+        background: #000000;
+        color: #f7f7f9;
+      }
+      :root[data-appearance='dark'] #boot img {
+        box-shadow: 0 18px 50px rgb(0 0 0 / 0.55);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot .bar {
+          animation: none;
+          opacity: 0.6;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot" role="status" aria-label="Loading MusoPhone">
+        <img src="/icon-192.png" alt="" width="72" height="72" />
+        <span class="name">MusoPhone</span>
+        <span class="bar" aria-hidden="true"></span>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

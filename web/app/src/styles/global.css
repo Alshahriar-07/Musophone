@@ -42,7 +42,7 @@
   --animate-zoom: zoom 0.2s ease-out;
   --animate-fade-in: fade-in 0.4s ease;
   --animate-enter: enter 0.3s var(--ease-out-panel);
-  --animate-page: page-in var(--duration-page) var(--ease-standard);
+  --animate-page: page-in 420ms var(--ease-standard);
   --animate-morph: morph 0.32s var(--ease-out-panel);
   --animate-spin: spin 1s linear infinite;
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
@@ -85,7 +85,8 @@
   @keyframes page-in {
     from {
       opacity: 0;
-      transform: translateY(6px);
+      filter: blur(5px);
+      transform: translateY(9px) scale(0.995);
     }
   }
   /* One label melting into the next, as the quality switcher's text changes. */
@@ -221,13 +222,72 @@
   font: --value([*]) var(--font-family);
 }
 
-/* Glass (report §1): the sidebar, the side panel and the phone's top bar. */
+/*
+ * Liquid Glass. The translucent fill lets the ambient light field through;
+ * the upper sheen and bright rim read as a lit edge, and the darker lower rim
+ * gives the pane thickness. Blur is only one part of the material, not the
+ * whole effect: without the light and edge layers it looked like flat CSS.
+ */
 @utility glass-material {
-  background-color: var(--glassMaterialBackground);
+  isolation: isolate;
+  background-color: var(--glassFill);
+  background-image:
+    linear-gradient(180deg, var(--glassSheen) 0%, var(--glassSheenSoft) 14%, transparent 38%),
+    radial-gradient(115% 90% at 4% 0%, var(--glassSheen) 0%, transparent 58%);
   backdrop-filter: var(--glassMaterialBackdropFilter);
+  box-shadow:
+    inset 0 1px 0 var(--glassRim),
+    inset 0 -1px 0 var(--glassRimBottom),
+    inset 1px 0 0 var(--glassHairline),
+    inset -1px 0 0 var(--glassHairline),
+    0 22px 60px var(--glassDrop);
+
+  /* A soft diagonal specular streak: the reflection that turns a blurred
+   * rectangle into a sheet of glass. It sits below the content. */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(124deg, transparent 30%, var(--glassSheenSoft) 45%, transparent 60%);
+    opacity: 0.72;
+  }
 }
 
-/* The player pill's glass: blurred fill and drop shadow (::before), 0.5px inner stroke (::after). */
+/* Settings, lyric dialogs and feature cards: a lighter pane than the chrome. */
+@utility glass-card {
+  background-color: var(--glassCardFill);
+  background-image: linear-gradient(180deg, var(--glassSheen) 0%, transparent 30%);
+  backdrop-filter: saturate(170%) blur(22px);
+  box-shadow:
+    inset 0 1px 0 var(--glassRim),
+    inset 0 0 0 1px var(--glassHairline),
+    0 10px 32px var(--glassDrop);
+}
+
+/* Menus and modal cards: more opaque, so text stays crisp over any page. */
+@utility glass-dialog {
+  background-color: var(--glassDialogFill);
+  background-image: linear-gradient(180deg, var(--glassSheen) 0%, transparent 26%);
+  backdrop-filter: saturate(190%) blur(36px);
+  box-shadow:
+    inset 0 1px 0 var(--glassRim),
+    inset 0 0 0 1px var(--glassHairline),
+    0 28px 80px var(--glassDrop);
+}
+
+@utility glass-field {
+  background-color: var(--glassFieldFill);
+  backdrop-filter: saturate(170%) blur(18px);
+  box-shadow:
+    inset 0 1px 0 var(--glassRim),
+    inset 0 0 0 1px var(--glassHairline),
+    0 2px 10px var(--glassDrop);
+}
+
+/* The player pill's glass: layered fill and drop shadow (::before), lit rim (::after). */
 @utility glass-pill {
   isolation: isolate;
 
@@ -242,19 +302,53 @@
 
   &::before {
     z-index: -1;
-    background-color: var(--glassMaterialBackground);
-    backdrop-filter: saturate(2.2) blur(16px);
-    box-shadow: 0 10px 40px var(--glassMaterialShadowColor);
+    background-color: var(--glassFillStrong);
+    background-image:
+      linear-gradient(180deg, var(--glassSheen) 0%, var(--glassSheenSoft) 16%, transparent 42%),
+      radial-gradient(120% 120% at 8% 0%, var(--glassSheen) 0%, transparent 55%);
+    backdrop-filter: saturate(190%) blur(36px);
+    box-shadow: 0 18px 52px var(--glassDrop);
   }
 
   &::after {
     box-shadow:
-      inset 0.5px 0.5px 0 var(--glassMaterialInnerStroke),
-      inset 0.5px -0.5px 0 var(--glassMaterialInnerStroke),
-      inset -0.5px 0.5px 0 var(--glassMaterialInnerStroke),
-      inset -0.5px -0.5px 0 var(--glassMaterialInnerStroke);
-    opacity: var(--glassMaterialInnerStrokeAlpha);
+      inset 0 1px 0 var(--glassRim),
+      inset 0 -1px 0 var(--glassRimBottom),
+      inset 1px 0 0 var(--glassHairline),
+      inset -1px 0 0 var(--glassHairline);
   }
+}
+
+/* A fixed neutral light field: the glass needs something to refract. */
+.app-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--ambientBackground);
+}
+
+.app-ambient::before {
+  content: '';
+  position: absolute;
+  top: -28%;
+  left: 2%;
+  width: 62%;
+  height: 92%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, var(--ambientBeam) 0%, transparent 68%);
+  filter: blur(70px);
+  transform: rotate(-16deg);
+}
+
+.app-ambient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--background-image-grain);
+  opacity: 0.035;
+  mix-blend-mode: soft-light;
 }
 
 /* Artwork's 0.5px inner stroke (report §1, "Inner stroke"), Apple's "has-borders". */
@@ -391,7 +485,7 @@
   }
 
   ::selection {
-    background-color: rgba(var(--keyColor-rgb), 0.3);
+    background-color: color-mix(in srgb, var(--keyColor) 30%, transparent);
   }
 
   /* No ring for a mouse press; a quiet accent ring for the keyboard, so the

@@ -239,8 +239,31 @@ export interface DetectedExtension {
 export interface DetectOptions {
   /** The Chromium extension id (fixed by the manifest `key` in development). */
   chromiumExtensionId?: string | undefined;
+  /**
+   * Every Chromium id worth trying. A deployment may be configured for a
+   * store build while the user has the unpacked development build loaded;
+   * pinging both means either install is found.
+   */
+  chromiumExtensionIds?: string[] | undefined;
   /** How long to wait for a `ping` answer on each transport. */
   timeoutMs?: number;
+}
+
+/**
+ * Pings every external candidate at once and returns the first that answers.
+ * Running them together keeps a missing extension's detection at one timeout
+ * rather than one per id.
+ */
+async function firstAnswer(
+  bridges: Bridge[],
+  timeoutMs: number,
+): Promise<DetectedExtension | null> {
+  if (!bridges.length) return null;
+  const outcomes = await Promise.allSettled(bridges.map((bridge) => bridge.call('ping', {}, { timeoutMs })));
+  for (const [index, outcome] of outcomes.entries()) {
+    if (outcome.status === 'fulfilled') return { bridge: bridges[index]!, info: outcome.value };
+  }
+  return null;
 }
 
 /**
@@ -249,17 +272,25 @@ export interface DetectOptions {
  */
 export async function detectExtension(options: DetectOptions = {}): Promise<DetectedExtension | null> {
   const timeoutMs = options.timeoutMs ?? 1500;
-  const candidates: Bridge[] = [];
-  const external = options.chromiumExtensionId ? externalBridge(options.chromiumExtensionId) : null;
-  if (external) candidates.push(external);
-  if (typeof window !== 'undefined') candidates.push(relayBridge(window));
-
-  for (const bridge of candidates) {
+  const ids = [
+    ...new Set(
+      [...(options.chromiumExtensionIds ?? []), ...(options.chromiumExtensionId ? [options.chromiumExtensionId] : [])]
+        .map((id) => id.trim())
+        .filter(Boolean),
+    ),
+  ];
+  const external = await firstAnswer(
+    ids.map((id) => externalBridge(id)).filter((bridge): bridge is Bridge => bridge !== null),
+    timeoutMs,
+  );
+  if (external) return external;
+  if (typeof window !== 'undefined') {
+    const relay = relayBridge(window);
     try {
-      const info = await bridge.call('ping', {}, { timeoutMs });
-      return { bridge, info };
+      const info = await relay.call('ping', {}, { timeoutMs });
+      return { bridge: relay, info };
     } catch {
-      // Not on this transport; try the next.
+      // No relay content script on this page either.
     }
   }
   return null;

@@ -77,7 +77,7 @@ export function Menu({ anchor, placement = 'below-end', onClose, label, matchWid
       <div
         ref={panel}
         // Apple's amp-contextual-menu (report §8).
-        className="fixed z-(--z-contextual-menus) max-w-[300px] min-w-[185px] animate-menu-in overflow-y-auto rounded-[10px] bg-thick-material p-[5px] shadow-[0_0_0_0.5px_var(--vibrantDivider),0_10px_40px_var(--glassMaterialShadowColor)] [backdrop-filter:saturate(2.2)_blur(32px)]"
+        className="glass-dialog fixed z-(--z-contextual-menus) max-w-[300px] min-w-[185px] animate-menu-in overflow-y-auto rounded-[10px] p-[5px]"
         style={position}
         role="menu"
         aria-label={label}

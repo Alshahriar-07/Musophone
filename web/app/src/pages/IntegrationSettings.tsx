@@ -26,7 +26,7 @@ import { Select } from '@/components/Select';
 function HostAccessValue({ access, request }: ReturnType<typeof useHostAccess>) {
   const text = { checking: 'Checking…', unavailable: 'Needs the extension', granted: 'Allowed', needed: 'Not allowed' }[access];
   return (
-    <span className={settingsUi.value}>
+    <span className={settingsUi.integrationValue}>
       <span>{text}</span>
       {access === 'needed' && (
         <button className={settingsUi.inlineButton} onClick={request}>
@@ -78,7 +78,7 @@ export function SpotifyIntegration() {
   const auth = useSpotifyAuth();
   const connect = useSetSpotifyConnected();
   const retry = useRefreshSpotifyAuth();
-  if (auth.state !== 'ready') return <span className={settingsUi.value}>{spotifyText(auth)}</span>;
+  if (auth.state !== 'ready') return <span className={settingsUi.integrationValue}>{spotifyText(auth)}</span>;
   const { browserSignedIn, connected, signedIn } = auth.auth;
   const action = !browserSignedIn
     ? { label: 'Sign In', run: openSpotifySignIn }
@@ -88,7 +88,7 @@ export function SpotifyIntegration() {
         ? { label: 'Retry', run: () => retry.mutate() }
         : { label: 'Disconnect', run: () => connect.mutate(false) };
   return (
-    <span className={settingsUi.value}>
+    <span className={settingsUi.integrationValue}>
       <span title={auth.auth.problem ?? undefined}>{spotifyText(auth)}</span>
       <button className={settingsUi.inlineButton} onClick={action.run} disabled={connect.isPending || retry.isPending}>
         {action.label}
@@ -111,10 +111,10 @@ export function DiscordIntegration() {
   const connect = useDiscordConnect();
   const disconnect = useDiscordDisconnect();
   const text = discordText(status);
-  if (status.state !== 'ready' || !status.discord.available) return <span className={settingsUi.value}>{text}</span>;
+  if (status.state !== 'ready' || !status.discord.available) return <span className={settingsUi.integrationValue}>{text}</span>;
   const connected = status.discord.connected;
   return (
-    <span className={settingsUi.value}>
+    <span className={settingsUi.integrationValue}>
       <span title={status.discord.problem ?? undefined}>{text}</span>
       <button
         className={settingsUi.inlineButton}

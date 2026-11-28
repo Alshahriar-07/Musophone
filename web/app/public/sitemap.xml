@@ -6,5 +6,6 @@
   <url><loc>https://musophone.vercel.app/library/playlists</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>https://musophone.vercel.app/spotify</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
   <url><loc>https://musophone.vercel.app/extension</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://musophone.vercel.app/about</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://musophone.vercel.app/settings</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
 </urlset>

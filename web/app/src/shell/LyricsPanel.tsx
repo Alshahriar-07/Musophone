@@ -1,14 +1,15 @@
 // Registers <am-lyrics>.
 import '@uimaxbai/am-lyrics/am-lyrics.js';
-import { Check, ChevronDown, Loader2, Minus, Settings2 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { Check, ChevronDown, Languages, Loader2, Minus, Settings2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useCanvas } from '@/data/spotify/canvas';
 import { getBridge } from '@/extension/bridge';
 import { Menu, MenuHeader, MenuItem, MenuSeparator } from '@/components/Menu';
 import { LyricClock } from '@/lyrics/clock';
 import { onUngrantedChange, ungrantedOrigins } from '@/lyrics/http';
 import type { SourceState } from '@/lyrics/repository';
-import { enabledSources } from '@/lyrics/settings';
+import { hasIndicLyrics, latinTtml } from '@/lyrics/romanize';
+import { enabledSources, useLyricsSettings } from '@/lyrics/settings';
 import { sourceById, type LyricsSourceId } from '@/lyrics/sources';
 import { useLyrics, useLyricsUi } from '@/lyrics/useLyrics';
 import { getAudio, getPlayhead, usePlayer } from '@/state/player';
@@ -237,11 +238,13 @@ function useUngranted(): string[] {
 const NO_STATES: Partial<Record<LyricsSourceId, SourceState>> = {};
 
 /** The provider picker: which provider these lyrics are from, and the others' answers for this track. */
-function ProviderPicker({ current, full }: { current: LyricsSourceId | null; full: boolean }) {
+function ProviderPicker({ current, full, canRomanize }: { current: LyricsSourceId | null; full: boolean; canRomanize: boolean }) {
   const videoId = usePlayer((s) => s.nowPlaying?.videoId ?? '');
   const states = useLyricsUi((s) => s.states[videoId]) ?? NO_STATES;
   const picked = useLyricsUi((s) => s.picked[videoId]);
   const pick = useLyricsUi((s) => s.pick);
+  const latinScript = useLyricsSettings((s) => s.latinScript);
+  const setLatinScript = useLyricsSettings((s) => s.setLatinScript);
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [settings, setSettings] = useState(false);
   const close = useCallback(() => setAnchor(null), []);
@@ -264,13 +267,29 @@ function ProviderPicker({ current, full }: { current: LyricsSourceId | null; ful
         <span>{label}</span>
         <ChevronDown size={14} />
       </button>
-      <button
-        className="grid size-7 place-items-center rounded-[8px] text-secondary hover:bg-quinary"
-        aria-label="Lyric settings"
-        onClick={() => setSettings(true)}
-      >
-        <Settings2 size={16} />
-      </button>
+      <span className="flex items-center gap-1">
+        {canRomanize && (
+          <button
+            className={`inline-flex h-7 items-center gap-1 rounded-[8px] px-2 type-callout-emphasized transition-colors duration-150 ${
+              latinScript ? 'bg-key-bg text-white' : 'text-secondary hover:bg-quinary hover:text-primary'
+            }`}
+            aria-label={latinScript ? 'Show original script' : 'Show Latin script'}
+            aria-pressed={latinScript}
+            title={latinScript ? 'Show the original Bengali or Hindi script' : 'Read Bengali and Hindi in Latin script'}
+            onClick={() => setLatinScript(!latinScript)}
+          >
+            <Languages size={13} strokeWidth={2.2} aria-hidden="true" />
+            {latinScript ? 'Latin' : 'Aa'}
+          </button>
+        )}
+        <button
+          className="grid size-7 place-items-center rounded-[8px] text-secondary hover:bg-quinary"
+          aria-label="Lyric settings"
+          onClick={() => setSettings(true)}
+        >
+          <Settings2 size={16} />
+        </button>
+      </span>
       {anchor && (
         <Menu anchor={anchor} placement="below-end" onClose={close} label="Lyrics provider">
           <MenuItem checked={!picked} onSelect={() => (close(), pick(videoId, null))}>
@@ -385,7 +404,10 @@ export function LyricsPanel({ variant = 'panel' }: { variant?: 'panel' | 'full' 
   const ungranted = useUngranted();
   const canvas = useCanvas();
   const fontReady = useLyricFont();
+  const latinScript = useLyricsSettings((s) => s.latinScript);
   const result = lyrics.data;
+  const latin = useMemo(() => (result && latinScript ? latinTtml(result.lines) : null), [result, latinScript]);
+  const canRomanize = result ? hasIndicLyrics(result.lines) : false;
   const full = variant === 'full';
   const empty = full
     ? 'flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center type-title-3 text-secondary'
@@ -395,7 +417,7 @@ export function LyricsPanel({ variant = 'panel' }: { variant?: 'panel' | 'full' 
   return (
     <div className={full ? `${panel} ${fullSizes}` : panel}>
       {canvas && variant === 'panel' && <CanvasBackdrop url={canvas} />}
-      <ProviderPicker current={result?.source ?? null} full={full} />
+      <ProviderPicker current={result?.source ?? null} full={full} canRomanize={canRomanize} />
       {/* Only worth raising when nothing was found: then the hosts behind the extension might have it. */}
       {ungranted.length > 0 && !result && !lyrics.isFetching && <PermissionNotice origins={ungranted} />}
       {!hasTrack ? (
@@ -408,7 +430,7 @@ export function LyricsPanel({ variant = 'panel' }: { variant?: 'panel' | 'full' 
           <Loader2 size={20} className="animate-spin" />
         </div>
       ) : result ? (
-        <LyricsView ttml={result.ttml} full={full} />
+        <LyricsView ttml={latin ?? result.ttml} full={full} />
       ) : picked ? (
         <div className={empty}>
           <p className={emptyTitle}>Not on {sourceById(picked)?.label ?? 'this provider'}</p>

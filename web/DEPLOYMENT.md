@@ -13,29 +13,32 @@ Create the Vercel project from the repository root and set:
 | Root Directory | `web` |
 | Framework Preset | Vite |
 | Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @musophone/app build` |
+| Build Command | `pnpm build:site` |
 | Output Directory | `app/dist` |
 | Node.js Version | 22 |
 
 `web/vercel.json` already declares the install command, build command, output
-directory and the SPA rewrite to `index.html`. The Root Directory must still be
-set in the Vercel project because Vercel does not read that setting from a
-`vercel.json` outside the selected root.
+directory, download headers and the SPA rewrite to `index.html`. The Root
+Directory must still be set in the Vercel project because Vercel does not read
+that setting from a `vercel.json` outside the selected root.
 
-The package is named `@musophone/app`, so the build filter is
-`pnpm --filter @musophone/app build`. A filter of `app` selects by package name
-and would not match this workspace.
+### Why the extension is built too
 
-### Why only the app is built
+`pnpm build:site` builds the Chromium and Firefox extension targets, writes the
+downloadable zips and `extension.json` into `app/public/downloads/`, then builds
+the Web Player. Vercel has no browser-extension runtime, but it does serve those
+static files: the Extension page's download links are real ZIPs, not the SPA's
+`index.html`.
 
-`pnpm --filter @musophone/app build` runs TypeScript and Vite for the Web Player
-only. It does not build Chrome or Firefox extension targets, and Vercel has no
-browser-extension runtime.
+Downloaded files are matched by the `headers` block in `vercel.json`:
+`Content-Type: application/zip` and `Content-Disposition: attachment` for the
+zips, and `application/json` for `extension.json`. Without these, some hosts
+serve a zip as `text/html`, and the browser saves an unopenable file. The SPA
+rewrite still serves every application route; existing files take precedence
+over it.
 
-If the Extension page must offer downloadable zips, use
-`pnpm build:site` instead (it packages the extension first and copies the zips
-into `app/public/downloads/`). That is a separate product decision; the default
-Vercel configuration intentionally deploys only the Web Player.
+The workspace package is `@musophone/app`. A filter of `app` selects by package
+name and would not match this workspace, which is why the root script is used.
 
 ## Party Server URL
 
@@ -101,7 +104,6 @@ All are optional and have working defaults:
 | Variable | Purpose | Default |
 | --- | --- | --- |
 | `VITE_EXTENSION_ID_CHROMIUM` | Chromium extension id for store builds | Pinned development id |
-| `VITE_ANDROID_APP_URL` | Mobile Android download banner target | GitHub latest release |
 | `VITE_EXTENSION_CHROME_URL` | Chrome extension download link | `/downloads/musophone-extension-chrome.zip` |
 | `VITE_EXTENSION_FIREFOX_URL` | Firefox extension download link | `/downloads/musophone-extension-firefox.zip` |
 | `VITE_EXTENSION_MANIFEST_URL` | Extension version manifest | `/downloads/extension.json` |
@@ -115,14 +117,15 @@ From `web/`:
 
 ```bash
 corepack pnpm install --frozen-lockfile
-corepack pnpm --filter @musophone/app typecheck
-corepack pnpm --filter @musophone/app test
-corepack pnpm --filter @musophone/app build
+corepack pnpm -r typecheck
+corepack pnpm -r test
+corepack pnpm build:site
 ```
 
-The output is `web/app/dist`. The build does not need
-`VITE_PARTY_SERVER_URL` on the command line because `.env.production` supplies
-the canonical value.
+The output is `web/app/dist`, including `downloads/*.zip`. The build does not
+need `VITE_PARTY_SERVER_URL` on the command line because `.env.production`
+supplies the canonical value. Run `corepack pnpm --dir web/extension icons` only
+after the official icon changes; the PNGs are committed.
 
 ## Domain, canonical URL and social sharing
 

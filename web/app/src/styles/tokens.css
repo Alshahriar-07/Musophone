@@ -2,7 +2,7 @@
  * Design tokens, taken from the measurements in web/docs/apple-music-dom.md.
  *
  * The names follow Apple's own token names, so a value can be checked against
- * the report by name. Light first, then dark under prefers-color-scheme.
+ * the report by name. Light first, then dark under [data-appearance='dark'].
  *
  * Apple serves higher-contrast text alphas and a deeper key colour to browsers
  * without the system SF font. MusoPhone renders DM Sans everywhere, so those
@@ -93,14 +93,16 @@
   --systemSecondary-onDark: #f7f7f9a3;
   --systemTertiary-onDark: #f7f7f966;
 
-  /* The accent's light-mode cut: the dark coral fails contrast on porcelain. */
-  --keyColor: #c2173a;
-  --keyColor-rgb: 194, 23, 58;
-  --keyColor-rollover: #a01230;
-  --keyColor-pressed: #b01632;
-  --keyColorBG: #c2173a;
-  --selectionColor: #c2173a;
-  --keyColor-focus-color: rgba(var(--keyColor-rgb), 0.45);
+  /* Accent palette. Each appearance picks one cut of the active hue; the
+   * accent never tints a surface, only controls, selection and focus. */
+  --accent-light: #c2173a;
+  --accent-dark: #ff4d67;
+  --keyColor: var(--accent-light);
+  --keyColor-rollover: color-mix(in srgb, var(--keyColor) 82%, #000000);
+  --keyColor-pressed: color-mix(in srgb, var(--keyColor) 90%, #000000);
+  --keyColorBG: var(--keyColor);
+  --selectionColor: var(--keyColor);
+  --keyColor-focus-color: color-mix(in srgb, var(--keyColor) 45%, transparent);
 
   --systemRed: #ff3b30;
   --systemGreen: #28cd41;
@@ -115,11 +117,32 @@
   --labelDivider: #00000026;
   --vibrantDivider: #3c3c434a;
 
-  --glassMaterialBackground: #faf8fbcc;
+  --glassMaterialBackground: #fbf9fca8;
   --glassMaterialShadowColor: #1a141a12;
   --glassMaterialInnerStroke: #000000;
   --glassMaterialInnerStrokeAlpha: 0.05;
-  --glassMaterialBackdropFilter: saturate(220%) blur(16px);
+  --glassMaterialBackdropFilter: saturate(190%) blur(30px);
+
+  /* Liquid Glass material: a translucent body, a lit upper edge, a darker
+   * lower rim, and a soft drop shadow. The ambient layer behind the app is
+   * what the body refracts; the rim is what makes the pane read as glass. */
+  --glassFill: #fbf9fcb8;
+  --glassFillStrong: #fbf9fcf0;
+  --glassCardFill: #ffffffc2;
+  --glassDialogFill: #f8f6f9f8;
+  --glassFieldFill: #ffffffb8;
+  --glassSheen: rgb(255 255 255 / 0.58);
+  --glassSheenSoft: rgb(255 255 255 / 0.18);
+  --glassRim: rgb(255 255 255 / 0.9);
+  --glassRimBottom: rgb(0 0 0 / 0.06);
+  --glassHairline: rgb(0 0 0 / 0.1);
+  --glassDrop: rgb(27 21 30 / 0.16);
+  --ambientBeam: rgb(255 255 255 / 0.48);
+  --ambientBackground:
+    radial-gradient(70% 58% at 10% -8%, #ffffff 0%, transparent 64%),
+    radial-gradient(52% 44% at 88% 6%, #e9e2ee 0%, transparent 70%),
+    radial-gradient(64% 48% at 52% 112%, #ede6f0 0%, transparent 72%),
+    linear-gradient(180deg, #f8f6f9 0%, #f2eef4 100%);
 
   --systemStandardThinMaterialSover: #f6f6f67a;
   --systemStandardThickMaterialSover: #f6f6f6b8;
@@ -164,9 +187,8 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+:root[data-appearance='dark'] {
+  color-scheme: dark;
 
     /* True black, not dark grey: the AMOLED foundation the Android app moved
      * to in v2.2, kept in v2.5. Every surface above it is a neutral charcoal
@@ -180,12 +202,11 @@
     --systemQuaternary: #ffffff1a;
     --systemQuinary: #ffffff0a;
 
-    --keyColor: #ff4d67;
-    --keyColor-rgb: 255, 77, 103;
-    --keyColor-rollover: #ff6b82;
-    --keyColor-pressed: #e63a54;
-    --keyColorBG: #ff4d67;
-    --selectionColor: #ff4d67;
+    --keyColor: var(--accent-dark);
+    --keyColor-rollover: color-mix(in srgb, var(--keyColor) 82%, #ffffff);
+    --keyColor-pressed: color-mix(in srgb, var(--keyColor) 88%, #000000);
+    --keyColorBG: color-mix(in srgb, var(--keyColor) 55%, #000000);
+    --selectionColor: var(--keyColor);
 
     --systemRed: #ff6b6b;
     --systemGreen: #3ddc97;
@@ -200,10 +221,28 @@
     --labelDivider: #ffffff14;
     --vibrantDivider: #ffffff26;
 
-    --glassMaterialBackground: #0a0a0ccc;
+    --glassMaterialBackground: #0d0d11a8;
     --glassMaterialShadowColor: #00000066;
     --glassMaterialInnerStroke: #ffffff;
     --glassMaterialInnerStrokeAlpha: 0.12;
+
+    --glassFill: #17171ea8;
+    --glassFillStrong: #17171eeb;
+    --glassCardFill: #1a1a21b8;
+    --glassDialogFill: #121218f5;
+    --glassFieldFill: #121218a8;
+    --glassSheen: rgb(255 255 255 / 0.2);
+    --glassSheenSoft: rgb(255 255 255 / 0.07);
+    --glassRim: rgb(255 255 255 / 0.34);
+    --glassRimBottom: rgb(0 0 0 / 0.6);
+    --glassHairline: rgb(255 255 255 / 0.13);
+    --glassDrop: rgb(0 0 0 / 0.65);
+    --ambientBeam: rgb(191 195 214 / 0.18);
+    --ambientBackground:
+      radial-gradient(58% 62% at 7% -10%, #3d3d49 0%, transparent 64%),
+      radial-gradient(46% 42% at 92% 2%, #2a2a34 0%, transparent 70%),
+      radial-gradient(56% 44% at 48% 112%, #24242d 0%, transparent 72%),
+      linear-gradient(180deg, #08080a 0%, #000000 100%);
 
     --systemStandardThinMaterialSover: #101012cc;
     --systemStandardThickMaterialSover: #141417e6;
@@ -228,7 +267,50 @@
 
     --skeleton-fill: #ffffff12;
     --skeleton-shimmer: #ffffff14;
-  }
+}
+
+/*
+ * Accent palettes, each with a light cut for porcelain and a brighter dark cut.
+ * The names are the ones Settings uses; the first is crimson, the default.
+ */
+:root[data-accent='rose'] {
+  --accent-light: #a81248;
+  --accent-dark: #ff5c8a;
+}
+
+:root[data-accent='ember'] {
+  --accent-light: #a63d00;
+  --accent-dark: #ff8a4c;
+}
+
+:root[data-accent='amber'] {
+  --accent-light: #8a5a00;
+  --accent-dark: #ffc14d;
+}
+
+:root[data-accent='lime'] {
+  --accent-light: #456b00;
+  --accent-dark: #a8e05f;
+}
+
+:root[data-accent='teal'] {
+  --accent-light: #00665f;
+  --accent-dark: #3fd6c4;
+}
+
+:root[data-accent='blue'] {
+  --accent-light: #0057b8;
+  --accent-dark: #5aa9ff;
+}
+
+:root[data-accent='violet'] {
+  --accent-light: #6425b5;
+  --accent-dark: #b38cff;
+}
+
+:root[data-accent='graphite'] {
+  --accent-light: #4b4b55;
+  --accent-dark: #b8b8c4;
 }
 
 /* Increased contrast: drop the translucency, as Apple's _IC tokens do. */
@@ -241,8 +323,8 @@
   }
 }
 
-@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-  :root {
+@media (prefers-contrast: more) {
+  :root[data-appearance='dark'] {
     --glassMaterialBackground: #000000;
     --systemSecondary: #ffffffcc;
     --labelDivider: #ffffff4d;

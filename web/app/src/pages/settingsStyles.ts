@@ -13,7 +13,7 @@ export const settingsUi = {
   body: 'mx-(--body-gutter) mt-5 mb-[120px] max-w-[640px]',
   // One neutral panel with a hairline rim: the MusoPhone surface, at the
   // web's own radius step (12, between the 10px artwork and the 14px card).
-  group: 'overflow-hidden rounded-[12px] bg-(--systemStandardThinMaterialSover) ring-1 ring-inset ring-[color:var(--labelDivider)]',
+  group: 'glass-card overflow-hidden rounded-[12px]',
   sectionHeader: 'mx-4 mt-7 mb-2 type-subhead-emphasized uppercase text-secondary',
   footer: 'mx-4 mt-2 type-callout text-secondary',
 
@@ -23,6 +23,9 @@ export const settingsUi = {
   rowText: 'flex flex-col gap-0.5',
   rowDetail: 'type-callout text-secondary',
   value: 'inline-flex items-center gap-1.5 text-right type-body-reduced text-secondary',
+  /** A row's status/action: on a phone it moves under the name instead of overflowing beside it. */
+  integrationValue:
+    'inline-flex flex-wrap items-center gap-1.5 text-right type-body-reduced text-secondary max-sm:col-start-2 max-sm:row-start-2 max-sm:justify-self-start max-sm:text-left',
   dot: 'size-2 rounded-full bg-green',
 
   /** Download rows: browser logo, title and detail, chevron. */
@@ -36,7 +39,7 @@ export const settingsUi = {
   steps: 'mx-4 mt-2.5 list-decimal ps-[18px] type-body-tall text-secondary [&>li+li]:mt-1',
 
   /** Integration rows: a coloured app-icon square, the name, the state. */
-  integration: `${integration} grid-cols-[24px_minmax(0,1fr)_auto]`,
+  integration: `${integration} grid-cols-[24px_minmax(0,1fr)_auto] max-sm:grid-cols-[24px_minmax(0,1fr)] max-sm:gap-y-1`,
   /** An integration row without the icon square. */
   integrationPlain: `${integration} grid-cols-[minmax(0,1fr)_auto]`,
   integrationIcon: 'grid size-6 place-items-center rounded-[6px] text-white',
