@@ -55,29 +55,44 @@ const topText = 'flex min-w-0 flex-col gap-0.5';
 function TopResult({ item }: { item: MusicItem }) {
   const href = hrefFor(item);
   const playable = item.kind === 'song' || item.kind === 'video';
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('button, [data-track-menu], [role="menuitem"], a')) {
+      return;
+    }
+    if (playable) {
+      playTrack(item);
+    }
+  };
+
   const body = (
     <>
-      <div className="w-[84px]">
+      <div className="w-[84px] shrink-0">
         <Artwork src={item.thumbnail} displayWidth={84} radius={item.kind === 'artist' ? '50%' : '10px'} />
       </div>
       <div className={playable ? `${topText} pr-9` : topText}>
-        <span className="line-clamp-2 type-[600_13px/17px]">{item.title}</span>
+        <span className="line-clamp-2 type-[600_13px/17px] group-hover/top:text-primary">{item.title}</span>
         <span className="truncate type-callout text-secondary">
           {[KIND_LABEL[item.kind], item.kind === 'artist' ? null : item.artists.map((a) => a.name).join(', ')].filter(Boolean).join(' · ')}
         </span>
       </div>
     </>
   );
+
   return (
-    <div className={topCard}>
+    <div
+      className={`${topCard} cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:brightness-[1.04] active:scale-[0.99]`}
+      onClick={handleCardClick}
+    >
       {href ? (
         <PrefetchLink to={href} className={top}>
           {body}
         </PrefetchLink>
       ) : (
-        <button className={top} onClick={() => playTrack(item)}>
+        <div className={top}>
           {body}
-        </button>
+        </div>
       )}
       {playable && <TrackMenu track={toTrack(item)} className={topMenu} />}
     </div>

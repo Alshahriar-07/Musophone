@@ -148,22 +148,34 @@ export function CircleLockup({ item, width = 160 }: { item: MusicItem; width?: n
 /** A song row inside a shelf: 40px art, title, byline; the row lights on hover. */
 export function TrackLockup({ item, onPlay }: { item: MusicItem; onPlay?: () => void }) {
   const play = onPlay ?? (() => playTrack(item));
+
+  const handleRowClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('button, [data-track-menu], [role="menuitem"], a')) {
+      return;
+    }
+    play();
+  };
+
   return (
-    <div className="group/track -mx-1 grid h-[52px] grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-[13px] px-1 py-[6px] transition-colors duration-150 hover:bg-quinary">
-      <button className="group/art relative w-9 rounded-[9px]" aria-label={`Play ${item.title}`} onClick={play}>
+    <div
+      className="group/track -mx-1 grid h-[52px] grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-[13px] px-2 py-[6px] cursor-pointer transition-all duration-150 hover:bg-quinary active:scale-[0.99] select-none"
+      onClick={handleRowClick}
+    >
+      <div className="group/art relative w-9 shrink-0 rounded-[9px]" aria-hidden="true">
         <Artwork src={item.thumbnail} displayWidth={36} radius="var(--radius-artwork-small)" />
         <span
-          className="absolute inset-0 grid place-items-center rounded-[9px] bg-[rgb(0_0_0/0.42)] text-white opacity-0 transition-opacity duration-150 group-hover/track:opacity-100 group-focus-visible/art:opacity-100"
+          className="absolute inset-0 grid place-items-center rounded-[9px] bg-[rgb(0_0_0/0.42)] text-white opacity-0 transition-opacity duration-150 group-hover/track:opacity-100"
           aria-hidden="true"
         >
           <PlayIcon size={14} />
         </span>
-      </button>
+      </div>
       <div className="flex min-w-0 flex-col gap-px px-0.5">
         <div className="flex min-w-0 items-center gap-1 type-[600_12.5px/16px]">
-          <button className="min-w-0 truncate text-left" onClick={play}>
+          <span className="min-w-0 truncate text-left text-primary group-hover/track:text-primary">
             {item.title}
-          </button>
+          </span>
           {item.explicit && <ExplicitBadge />}
         </div>
         <div className="truncate type-[500_11px/14px] text-secondary">

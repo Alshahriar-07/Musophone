@@ -44,8 +44,8 @@
   /* ---- Layout ------------------------------------------------------------ */
   --app-frame-padding: 0px;
   --app-frame-gap: 0px;
-  --web-navigation-width: 248px;
-  --web-navigation-collapsed: 78px;
+  --web-navigation-width: 232px;
+  --web-navigation-collapsed: 72px;
   --appBackgroundImage: url('/musophone-background.jpg');
   /* The app is edge-to-edge; only the floating chrome keeps an inset. */
   --shell-inset: 12px;
@@ -245,11 +245,6 @@
   }
 }
 
-@media (min-width: 484px) and (max-width: 767.31px) {
-  :root {
-    --web-navigation-width: 33.8842975207vw;
-  }
-}
 
 :root[data-appearance='dark'] {
   color-scheme: dark;

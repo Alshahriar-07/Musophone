@@ -8,13 +8,13 @@
 /** What a shelf holds, named after it (Apple's letters in the comments). */
 export type ShelfKind = 'editorial' | 'square' | 'tracks' | 'horizontal' | 'video' | 'circle';
 
-export const shelfSection = 'pt-7';
+export const shelfSection = 'mt-9 first:mt-3';
 
-export const shelfHeader = 'mx-(--body-gutter) mb-3 flex min-h-[26px] items-center type-[700_19px/24px] tracking-[-0.02em]';
+export const shelfHeader = 'mx-(--body-gutter) mb-3 flex min-h-[26px] items-center text-[clamp(19px,1.6vw,22px)] font-bold tracking-[-0.025em]';
 
 /** The scrolling grid; a kind from `shelfKinds` fills in its rows, widths and column counts. */
 export const shelfList = [
-  'grid grid-flow-col grid-rows-[repeat(var(--rows),max-content)] auto-cols-(--xs-width) gap-x-2.5 gap-y-(--row-gap)',
+  'grid grid-flow-col grid-rows-[repeat(var(--rows),max-content)] auto-cols-(--xs-width) gap-x-3 gap-y-(--row-gap)',
   // Bleed so the slabs' lift and shadows aren't clipped by the scroll port.
   '-my-4 px-(--body-gutter) py-4 scroll-px-(--body-gutter)',
   'overflow-x-auto overflow-y-hidden overscroll-x-none snap-x snap-mandatory scroll-smooth motion-reduce:scroll-auto',

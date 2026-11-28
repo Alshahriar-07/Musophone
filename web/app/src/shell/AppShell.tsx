@@ -89,7 +89,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="relative isolate h-full overflow-hidden">
+    <div className="relative isolate flex h-full h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden">
       {/* The light field the glass refracts: three drifting lights and a beam. */}
       <div className="app-ambient" aria-hidden="true">
         <span className="app-ambient__light app-ambient__light--one" />
@@ -99,19 +99,19 @@ export function AppShell() {
         <span className="app-ambient__vignette" />
       </div>
 
-      <div className="flex h-full min-h-0 w-full">
+      <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
         <Sidebar />
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar />
-          <div className="relative min-h-0 flex-1">
+          <div className="relative min-h-0 flex-1 overflow-hidden">
             <main
               id="scrollable-page"
               className="content-veil absolute inset-0 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]"
             >
-              {/* Clears the floating dock: its height, its offset, and some air. */}
+              {/* Clears the floating dock: its height, its offset, and safe margin. */}
               <div
                 key={pathname}
-                className="animate-page min-h-full pb-[calc(var(--player-pill-height)+var(--player-bottom-offset)+88px)]"
+                className="animate-page min-h-full pb-[calc(var(--player-pill-height)+max(var(--shell-inset),env(safe-area-inset-bottom,12px))+96px)]"
               >
                 <Outlet />
               </div>

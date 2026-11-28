@@ -93,11 +93,11 @@ export function PlayerBar() {
 
   return (
     <div
-      className="pointer-events-none absolute inset-x-0 bottom-(--shell-inset) z-[calc(var(--z-web-chrome)-1)] flex px-(--shell-inset) transition-[padding-inline-end] duration-(--duration-panel) ease-glide data-[panel-open=true]:pe-[calc(var(--side-panel-width)+28px)]"
+      className="pointer-events-none absolute inset-x-0 bottom-[max(var(--shell-inset),env(safe-area-inset-bottom,12px))] z-[calc(var(--z-web-chrome)-1)] flex px-[max(var(--shell-inset),env(safe-area-inset-left,12px))] transition-[padding-inline-end] duration-(--duration-panel) ease-glide data-[panel-open=true]:pe-[calc(var(--side-panel-width)+24px)]"
       data-panel-open={sidePanel !== null}
     >
       <div
-        className="glass-dock pointer-events-auto relative grid h-(--player-pill-height) w-full animate-dock-in grid-cols-[minmax(0,1.15fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-dock px-4 max-sm:h-[70px] max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:gap-2 max-sm:px-3"
+        className="glass-dock pointer-events-auto relative grid h-(--player-pill-height) w-full animate-dock-in grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] items-center gap-2.5 rounded-dock px-4 shadow-[0_22px_60px_-20px_rgba(0,0,0,0.65)] sm:gap-3 max-sm:h-[68px] max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:px-3"
         role="region"
         aria-label="Player"
       >
@@ -105,7 +105,7 @@ export function PlayerBar() {
 
         <div className="flex items-center gap-0.5 sm:gap-1">
           <button
-            className={`${toggle} max-sm:hidden`}
+            className={`${toggle} max-md:hidden`}
             aria-label="Shuffle"
             aria-pressed={shuffle}
             onClick={toggleShuffle}
@@ -122,7 +122,9 @@ export function PlayerBar() {
             aria-label={playing ? 'Pause' : 'Play'}
             onClick={togglePlay}
           >
-            {playing ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
+            <span className="flex items-center justify-center transition-transform duration-150 active:scale-90">
+              {playing ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
+            </span>
           </button>
           <button
             className={`${transport} max-sm:size-8`}
@@ -133,7 +135,7 @@ export function PlayerBar() {
             <ForwardIcon size={20} />
           </button>
           <button
-            className={`${toggle} max-sm:hidden`}
+            className={`${toggle} max-md:hidden`}
             aria-label={repeat === 'one' ? 'Repeat one' : repeat === 'all' ? 'Repeat all' : 'Repeat'}
             aria-pressed={repeat !== 'off'}
             onClick={cycleRepeat}
@@ -150,9 +152,9 @@ export function PlayerBar() {
             if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setVolumeOpen(false);
           }}
         >
-          <FavoriteButton videoId={videoId} className={`${fading} ${action} max-sm:hidden`} />
-          {track && <TrackMenu track={track} className={`${fading} ${action} max-sm:hidden`} placement="above-end" />}
-          {/* Always here: the panel itself says whether this track has lyrics, and from where. */}
+          <FavoriteButton videoId={videoId} className={`${fading} ${action} max-lg:hidden`} />
+          {track && <TrackMenu track={track} className={`${fading} ${action} max-md:hidden`} placement="above-end" />}
+          {/* Always accessible: Lyrics and Queue (Up Next) */}
           <button
             className={`${fading} ${action}`}
             aria-label="Lyrics"
@@ -162,7 +164,7 @@ export function PlayerBar() {
             {sidePanel === 'lyrics' ? <LyricsActiveIcon size={18} /> : <LyricsIcon size={18} />}
           </button>
           <button
-            className={`${fading} max-sm:hidden`}
+            className={`${fading} ${action}`}
             aria-label="Up Next"
             aria-pressed={sidePanel === 'up-next'}
             onClick={() => toggleSidePanel('up-next')}

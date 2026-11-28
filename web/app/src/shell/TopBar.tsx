@@ -1,6 +1,7 @@
-import { Menu, Search } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { PrefetchLink } from '@/components/PrefetchLink';
 import { LogoMark } from '@/components/icons/LogoMark';
+import { SearchField } from '@/components/music/SearchField';
 import { useExtension, type ExtensionStatus } from '@/extension/useExtension';
 import { useUi } from '@/state/ui';
 import { useLocation } from 'react-router';
@@ -105,15 +106,11 @@ export function TopBar() {
 
       <div className="flex-1" />
 
-      <PrefetchLink
-        to="/search"
-        className="glass-field group hidden h-9 w-[min(310px,32vw)] items-center gap-2.5 rounded-pill px-3.5 text-secondary transition-colors hover:text-primary lg:flex"
-        aria-label="Search music"
-      >
-        <Search size={15} strokeWidth={2.2} className="text-tertiary group-hover:text-primary" />
-        <span className="type-body">Search music</span>
-        <kbd className="ms-auto rounded-[7px] bg-quinary px-1.5 py-0.5 type-caption-2 text-tertiary">/</kbd>
-      </PrefetchLink>
+      {pathname !== '/search' && (
+        <div className="hidden w-[min(310px,32vw)] lg:block">
+          <SearchField compact />
+        </div>
+      )}
 
       <ExtensionChip status={extension} />
     </header>

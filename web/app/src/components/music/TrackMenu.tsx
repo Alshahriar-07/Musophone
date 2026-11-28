@@ -125,6 +125,7 @@ export function TrackMenu({
         aria-label={`More options for ${track.title}`}
         aria-haspopup="menu"
         aria-expanded={anchor !== null}
+        data-track-menu=""
         data-open={anchor !== null || undefined}
         onClick={(event) => {
           event.stopPropagation();

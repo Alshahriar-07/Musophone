@@ -99,14 +99,23 @@ function Row({ track, variant, position, fallbackArtwork, onPlayRow }: RowProps)
   const unavailable = track.unavailable;
   const onPlay = () => (unavailable ? undefined : current ? togglePlay() : onPlayRow());
 
+  const handleRowClick = (e: React.MouseEvent) => {
+    if (unavailable) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('button, a, [data-track-menu], [role="menuitem"]')) {
+      return;
+    }
+    onPlay();
+  };
+
   return (
     <div
-      className={`${row} ${rowVariant[variant]}`}
+      className={`${row} ${rowVariant[variant]} cursor-pointer select-none`}
       data-variant={variant}
       data-current={current || undefined}
       data-unavailable={unavailable}
       title={unavailable === 'matching' ? 'Looking for this on YouTube Music…' : unavailable === 'missing' ? 'Not found on YouTube Music' : undefined}
-      onDoubleClick={onPlay}
+      onClick={handleRowClick}
     >
       <div className={`${cell} gap-3`}>
         <div className={`relative grid w-10 shrink-0 place-items-center${variant === 'playlist' ? ' ms-[7px]' : ''}`}>
@@ -139,7 +148,10 @@ function Row({ track, variant, position, fallbackArtwork, onPlayRow }: RowProps)
               variant === 'playlist' ? 'bg-lockup-hover text-white' : 'text-primary'
             }`}
             aria-label={playing ? `Pause ${track.title}` : `Play ${track.title}`}
-            onClick={onPlay}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlay();
+            }}
             disabled={!!unavailable}
           >
             {playing ? <PauseIcon size={variant === 'playlist' ? 18 : 16} /> : <PlayIcon size={variant === 'playlist' ? 18 : 16} />}
