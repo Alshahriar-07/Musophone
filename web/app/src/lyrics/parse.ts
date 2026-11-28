@@ -80,7 +80,13 @@ function collect(node: Node, out: Piece[], backing: Piece[], roman: Piece[] = []
       const role = qualified(element, 'ttm:role');
       if (SKIPPED_ROLES.has(role)) continue;
       if (role === ROMAN_ROLE) {
-        collect(element, roman, backing, roman);
+        const begin = ttmlTime(element.getAttribute('begin'));
+        const end = ttmlTime(element.getAttribute('end'));
+        if (begin !== null && end !== null && !hasTimedChild(element)) {
+          roman.push({ kind: 'timed', text: element.textContent ?? '', start: begin, end });
+        } else {
+          collect(element, roman, backing, roman);
+        }
         continue;
       }
       const sink = role === BACKGROUND_ROLE ? backing : out;

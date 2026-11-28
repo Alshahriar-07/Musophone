@@ -112,7 +112,7 @@ export function LyricsSettings({ onClose }: { onClose: () => void }) {
             <input type="checkbox" className={checkbox} checked={latinScript} onChange={(e) => setLatinScript(e.currentTarget.checked)} />
             <span className="flex min-w-0 flex-col">
               <span className="type-body-emphasized">Latin script</span>
-              <span className="truncate type-callout text-secondary">
+              <span className="type-callout text-secondary">
                 Bengali as Banglish and Hindi as Hinglish; English stays as written.
               </span>
             </span>
